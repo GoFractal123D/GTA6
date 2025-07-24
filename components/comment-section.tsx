@@ -59,40 +59,67 @@ export function CommentSection({
 
   async function fetchComments() {
     setIsLoading(true);
+    // 1. Récupérer les commentaires principaux sans jointure
     const { data, error } = await supabase
       .from("comments")
-      .select("*, profiles:author_id(username, avatar)")
+      .select("*")
       .eq("mod_id", itemId)
       .is("parent_id", null)
       .order("created_at", { ascending: false });
     if (data) {
-      // Charger les réponses pour chaque commentaire principal
+      // 2. Pour chaque commentaire, récupérer le profil de l'auteur et les réponses
       const commentsWithReplies = await Promise.all(
         data.map(async (comment: any) => {
+          // Récupérer le profil de l'auteur
+          let authorProfile = null;
+          if (comment.author_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username, avatar")
+              .eq("id", comment.author_id)
+              .single();
+            authorProfile = profile;
+          }
+          // Récupérer les réponses
           const { data: replies } = await supabase
             .from("comments")
-            .select("*, profiles:author_id(username, avatar)")
+            .select("*")
             .eq("parent_id", comment.id)
             .order("created_at", { ascending: true });
+          // Pour chaque réponse, récupérer le profil de l'auteur
+          const repliesWithAuthors = await Promise.all(
+            (replies || []).map(async (reply: any) => {
+              let replyProfile = null;
+              if (reply.author_id) {
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("username, avatar")
+                  .eq("id", reply.author_id)
+                  .single();
+                replyProfile = profile;
+              }
+              return {
+                id: reply.id,
+                author: {
+                  name: replyProfile?.username || "Utilisateur",
+                  avatar: replyProfile?.avatar_url || "/placeholder-user.jpg",
+                },
+                content: reply.content,
+                createdAt: reply.created_at,
+                votes: { up: reply.upvotes || 0, down: reply.downvotes || 0 },
+              };
+            })
+          );
           return {
             id: comment.id,
             author: {
-              name: comment.profiles?.username || "Utilisateur",
-              avatar: comment.profiles?.avatar || "/placeholder-user.jpg",
+              name: authorProfile?.username || "Utilisateur",
+              avatar: authorProfile?.avatar_url || "/placeholder-user.jpg",
             },
             content: comment.content,
             createdAt: comment.created_at,
             votes: { up: comment.upvotes || 0, down: comment.downvotes || 0 },
-            replies: (replies || []).map((reply: any) => ({
-              id: reply.id,
-              author: {
-                name: reply.profiles?.username || "Utilisateur",
-                avatar: reply.profiles?.avatar || "/placeholder-user.jpg",
-              },
-              content: reply.content,
-              createdAt: reply.created_at,
-              votes: { up: reply.upvotes || 0, down: reply.downvotes || 0 },
-            })),
+            replies: repliesWithAuthors,
           };
         })
       );
