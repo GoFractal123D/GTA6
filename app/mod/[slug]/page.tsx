@@ -251,7 +251,7 @@ export default function ModDetailPage({
                   <span className="flex items-center gap-1">
                     <User className="w-4 h-4" />
                     Publié le{" "}
-                    {new Date(mod.created_at).toLocaleDateString("fr-FR")}
+                    {new Date(mod.created_at).toISOString().split("T")[0]}
                   </span>
                 </div>
               )}
@@ -369,7 +369,7 @@ export default function ModDetailPage({
             </TabsContent>
 
             <TabsContent value="comments">
-              <CommentSection modId={mod.id as number} />
+              <CommentSection itemId={mod.id as number} itemType="mod" />
             </TabsContent>
           </Tabs>
         </div>
@@ -437,7 +437,7 @@ export default function ModDetailPage({
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Créé le</span>
                   <span className="text-sm font-medium">
-                    {new Date(mod.created_at).toLocaleDateString("fr-FR")}
+                    {new Date(mod.created_at).toISOString().split("T")[0]}
                   </span>
                 </div>
               )}
