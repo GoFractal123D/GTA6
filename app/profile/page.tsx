@@ -14,6 +14,7 @@ export default function ProfilePage() {
   const [comments, setComments] = useState<any[]>([]);
   const [votes, setVotes] = useState<any[]>([]);
   const [downloads, setDownloads] = useState<any[]>([]);
+  const [totalDownloadsOnMyMods, setTotalDownloadsOnMyMods] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function ProfilePage() {
     fetchUserComments();
     fetchUserVotes();
     fetchUserDownloads();
+    fetchTotalDownloadsOnMyMods();
   }, [user]);
 
   async function fetchProfile() {
@@ -60,6 +62,25 @@ export default function ProfilePage() {
       .select("*")
       .eq("user_id", user.id);
     setDownloads(data || []);
+  }
+
+  async function fetchTotalDownloadsOnMyMods() {
+    // Récupère tous les mods de l'utilisateur
+    const { data: myMods } = await supabase
+      .from("mods")
+      .select("id")
+      .eq("user_id", user.id);
+    if (!myMods || myMods.length === 0) {
+      setTotalDownloadsOnMyMods(0);
+      return;
+    }
+    const modIds = myMods.map((m) => m.id);
+    // Récupère tous les téléchargements pour ces mods
+    const { data: downloadsData } = await supabase
+      .from("downloads")
+      .select("id, mod_id")
+      .in("mod_id", modIds);
+    setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
   }
 
   if (!user) {
@@ -283,7 +304,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
             <span className="text-3xl font-bold text-blue-400">
-              {downloads.length}
+              {totalDownloadsOnMyMods}
             </span>
             <span className="text-sm text-muted-foreground mt-1">
               {t("profile.totalDownloads")}
