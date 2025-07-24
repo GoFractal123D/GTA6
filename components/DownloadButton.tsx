@@ -10,9 +10,7 @@ export default function DownloadButton({
   idx: number;
 }) {
   const handleDownload = () => {
-    console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-    // Test avec URL hardcodée
-    const url = `https://lxazszzgjjwwfifvkfue.supabase.co/storage/v1/object/public/mods-files/${file}`;
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
     const link = document.createElement("a");
     link.href = url;
     link.download = "";
