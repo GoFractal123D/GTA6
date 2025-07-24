@@ -203,6 +203,18 @@ export default function ModsPage() {
             className="rounded border px-3 py-2 bg-background text-foreground"
           >
             <option value="">Toutes catégories</option>
+            {/* Catégories fixes pertinentes */}
+            <option value="véhicules">Véhicules</option>
+            <option value="armes">Armes</option>
+            <option value="tenues">Tenues</option>
+            <option value="cartes">Cartes</option>
+            <option value="gameplay">Gameplay</option>
+            <option value="graphismes">Graphismes</option>
+            <option value="missions">Missions</option>
+            <option value="sons">Sons</option>
+            <option value="outils">Outils</option>
+            <option value="ui">UI</option>
+            {/* Catégories dynamiques */}
             {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
