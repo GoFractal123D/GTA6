@@ -9,8 +9,45 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { User, Download, Puzzle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
+  const [stats, setStats] = useState({
+    mods: 0,
+    downloads: 0,
+    users: 0,
+    loading: true,
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      setStats((s) => ({ ...s, loading: true }));
+      // Nombre de mods
+      const { count: modsCount } = await supabase
+        .from("mods")
+        .select("id", { count: "exact", head: true });
+      // Total téléchargements
+      const { data: modsData } = await supabase
+        .from("mods")
+        .select("downloads");
+      const downloadsTotal = modsData
+        ? modsData.reduce((acc, m) => acc + (m.downloads || 0), 0)
+        : 0;
+      // Nombre de membres
+      const { count: usersCount } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+      setStats({
+        mods: modsCount ?? 0,
+        downloads: downloadsTotal,
+        users: usersCount ?? 0,
+        loading: false,
+      });
+    }
+    fetchStats();
+  }, []);
+
   return (
     <div className="w-screen min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden pt-[45px]">
       {/* Hero immersive */}
@@ -68,20 +105,22 @@ export default function Home() {
         <div className="flex flex-wrap justify-center gap-8">
           <div className="bg-background/80 rounded-2xl p-8 shadow-xl flex flex-col items-center min-w-[180px] hover:scale-105 transition-transform">
             <Puzzle className="text-blue-400 mb-2" size={40} />
-            <span className="text-4xl font-extrabold text-blue-400">1 245</span>
+            <span className="text-4xl font-extrabold text-blue-400">
+              {stats.loading ? "..." : stats.mods}
+            </span>
             <span className="text-muted-foreground">Mods publiés</span>
           </div>
           <div className="bg-background/80 rounded-2xl p-8 shadow-xl flex flex-col items-center min-w-[180px] hover:scale-105 transition-transform">
             <User className="text-purple-400 mb-2" size={40} />
             <span className="text-4xl font-extrabold text-purple-400">
-              3 678
+              {stats.loading ? "..." : stats.users}
             </span>
             <span className="text-muted-foreground">Membres</span>
           </div>
           <div className="bg-background/80 rounded-2xl p-8 shadow-xl flex flex-col items-center min-w-[180px] hover:scale-105 transition-transform">
             <Download className="text-pink-400 mb-2" size={40} />
             <span className="text-4xl font-extrabold text-pink-400">
-              12 540
+              {stats.loading ? "..." : stats.downloads}
             </span>
             <span className="text-muted-foreground">Téléchargements</span>
           </div>
