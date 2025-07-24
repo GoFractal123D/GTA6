@@ -48,6 +48,7 @@ export function CommentSection({
   const [replyContent, setReplyContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isReplyLoading, setIsReplyLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const { user } = useAuth();
 
   // Charger les commentaires depuis Supabase
@@ -60,7 +61,7 @@ export function CommentSection({
     setIsLoading(true);
     const { data, error } = await supabase
       .from("comments")
-      .select("*, author:profiles(username, avatar)")
+      .select("*, profiles:author_id(username, avatar)")
       .eq("mod_id", itemId)
       .is("parent_id", null)
       .order("created_at", { ascending: false });
@@ -70,14 +71,14 @@ export function CommentSection({
         data.map(async (comment: any) => {
           const { data: replies } = await supabase
             .from("comments")
-            .select("*, author:profiles(username, avatar)")
+            .select("*, profiles:author_id(username, avatar)")
             .eq("parent_id", comment.id)
             .order("created_at", { ascending: true });
           return {
             id: comment.id,
             author: {
-              name: comment.author?.username || "Utilisateur",
-              avatar: comment.author?.avatar || "/placeholder-user.jpg",
+              name: comment.profiles?.username || "Utilisateur",
+              avatar: comment.profiles?.avatar || "/placeholder-user.jpg",
             },
             content: comment.content,
             createdAt: comment.created_at,
@@ -85,8 +86,8 @@ export function CommentSection({
             replies: (replies || []).map((reply: any) => ({
               id: reply.id,
               author: {
-                name: reply.author?.username || "Utilisateur",
-                avatar: reply.author?.avatar || "/placeholder-user.jpg",
+                name: reply.profiles?.username || "Utilisateur",
+                avatar: reply.profiles?.avatar || "/placeholder-user.jpg",
               },
               content: reply.content,
               createdAt: reply.created_at,
@@ -103,28 +104,55 @@ export function CommentSection({
   async function handleSubmitComment() {
     if (!newComment.trim() || !user) return;
     setIsLoading(true);
+    setErrorMsg("");
+    console.log("[DEBUG] Tentative d'insertion commentaire", {
+      mod_id: itemId,
+      content: newComment,
+      author_id: user.id,
+    });
     const { error } = await supabase.from("comments").insert({
       mod_id: itemId,
       content: newComment,
       author_id: user.id,
     });
-    setNewComment("");
-    await fetchComments();
+    if (error) {
+      setErrorMsg(
+        "Erreur lors de la publication du commentaire : " + error.message
+      );
+      console.error("[DEBUG] Erreur insertion commentaire", error);
+    } else {
+      setNewComment("");
+      await fetchComments();
+    }
     setIsLoading(false);
   }
 
   async function handleSubmitReply(parentId: number) {
     if (!replyContent.trim() || !user) return;
     setIsReplyLoading(true);
+    setErrorMsg("");
+    console.log("[DEBUG] Tentative d'insertion réponse", {
+      mod_id: itemId,
+      content: replyContent,
+      parent_id: parentId,
+      author_id: user.id,
+    });
     const { error } = await supabase.from("comments").insert({
       mod_id: itemId,
       content: replyContent,
       parent_id: parentId,
       author_id: user.id,
     });
-    setReplyContent("");
-    setReplyingTo(null);
-    await fetchComments();
+    if (error) {
+      setErrorMsg(
+        "Erreur lors de la publication de la réponse : " + error.message
+      );
+      console.error("[DEBUG] Erreur insertion réponse", error);
+    } else {
+      setReplyContent("");
+      setReplyingTo(null);
+      await fetchComments();
+    }
     setIsReplyLoading(false);
   }
 
@@ -268,6 +296,11 @@ export function CommentSection({
       {/* New Comment Form */}
       <Card>
         <CardContent className="p-4 space-y-4">
+          {errorMsg && (
+            <div className="text-red-600 text-sm font-semibold mb-2">
+              {errorMsg}
+            </div>
+          )}
           {isLoading ? (
             <Skeleton className="h-12 w-full" />
           ) : (
