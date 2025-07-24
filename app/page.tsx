@@ -12,7 +12,7 @@ import { User, Download, Puzzle } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="w-screen min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden pt-20">
+    <div className="w-screen min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden pt-[45px]">
       {/* Hero immersive */}
       <div className="relative w-screen min-h-[60vh] py-20 mb-10 overflow-hidden">
         <Image
