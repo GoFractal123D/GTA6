@@ -16,21 +16,15 @@ export default function Home() {
       {/* Hero immersive */}
       <div className="relative w-screen min-h-[60vh] py-20 mb-10 overflow-hidden">
         <Image
-          src="/gta6-hero.jpg"
+          src="/gta6-city.jpg"
           alt="GTA 6 City"
           fill
           className="object-cover object-center absolute left-0 top-0 w-full h-full opacity-40"
           priority
         />
-        <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
-          <h1 className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg animate-fade-in">
-            GTA 6 Community
-          </h1>
-          <p className="mt-6 text-2xl md:text-3xl text-gray-200 max-w-2xl mx-auto animate-fade-in">
-            La plateforme ultime pour partager, découvrir et voter sur les mods,
-            guides, vidéos et plus autour de GTA 6.
-          </p>
-          <div className="mt-10 flex gap-6 animate-fade-in">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
+          <div className="flex-1" />
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6 animate-fade-in">
             <Button
               asChild
               size="lg"
