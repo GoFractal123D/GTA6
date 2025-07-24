@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Star, Download, MessageCircle, Flame, Clock } from "lucide-react";
+import DownloadButton from "@/components/DownloadButton";
 
 export default function ModsPage() {
   const { t } = useTranslation();
@@ -311,12 +312,9 @@ export default function ModsPage() {
               <Button asChild size="sm" variant="default" className="w-full">
                 <Link href={`/mod/${mod.id}`}>Voir le mod</Link>
               </Button>
-              <Button asChild size="sm" variant="secondary" className="w-full">
-                <a href={mod.file_url || "#"} download>
-                  {" "}
-                  Télécharger{" "}
-                </a>
-              </Button>
+              {mod.files && mod.files.length > 0 && (
+                <DownloadButton file={mod.files[0]} idx={0} />
+              )}
             </div>
           </div>
         ))}
