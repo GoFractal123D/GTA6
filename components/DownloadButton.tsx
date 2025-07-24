@@ -9,6 +9,7 @@ export default function DownloadButton({
   file: string;
   idx: number;
 }) {
+  if (!file) return null; // Ne rien afficher si le chemin est vide
   const handleDownload = () => {
     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
     const link = document.createElement("a");
