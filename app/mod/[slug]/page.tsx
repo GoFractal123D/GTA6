@@ -13,6 +13,7 @@ import { Download, User, Star, AlertTriangle } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import CommentSection from "@/components/CommentSection";
 import DownloadButton from "@/components/DownloadButton";
+import StarRatingClient from "@/components/StarRatingClient";
 
 export const dynamic = "force-dynamic";
 
@@ -225,10 +226,7 @@ export default async function ModDetailPage({
                 <span className="text-sm text-muted-foreground">
                   Note moyenne
                 </span>
-                <span className="text-sm font-medium flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  {mod.rating ? mod.rating.toFixed(1) : "0.0"}/5
-                </span>
+                <StarRatingClient modId={mod.id} initialAvg={mod.rating ?? 0} />
               </div>
               {mod.created_at && (
                 <div className="flex justify-between">
