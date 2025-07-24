@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Download, User, Star, AlertTriangle } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import CommentSection from "@/components/CommentSection";
+import DownloadButton from "@/components/DownloadButton";
 
 export const dynamic = "force-dynamic";
 
@@ -200,24 +201,7 @@ export default async function ModDetailPage({
               </CardHeader>
               <CardContent className="space-y-2">
                 {mod.files.map((file: string, idx: number) => (
-                  <Button
-                    key={idx}
-                    onClick={() => {
-                      const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
-                      const link = document.createElement("a");
-                      link.href = url;
-                      link.download = "";
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 hover:text-white active:scale-110 transition-transform transition-colors"
-                    style={{ marginBottom: 8 }}
-                    type="button"
-                  >
-                    <Download className="w-4 h-4" />
-                    Télécharger le fichier {idx + 1}
-                  </Button>
+                  <DownloadButton key={idx} file={file} idx={idx} />
                 ))}
               </CardContent>
             </Card>
