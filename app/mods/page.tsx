@@ -165,17 +165,9 @@ export default function ModsPage() {
                   >
                     <Link href={`/mod/${mod.id}`}>Voir le mod</Link>
                   </Button>
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    <a href={mod.file_url || "#"} download>
-                      {" "}
-                      Télécharger{" "}
-                    </a>
-                  </Button>
+                  {mod.files && mod.files.length > 0 && (
+                    <DownloadButton file={mod.files[0]} idx={0} />
+                  )}
                 </div>
               </div>
             ))}
