@@ -46,7 +46,7 @@ export default async function ModDetailPage({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pt-[70px]">
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-start justify-between">
