@@ -134,42 +134,52 @@ export default function Home() {
       </section>
 
       {/* FAQ / Guide de démarrage */}
-      <section className="w-full max-w-4xl mx-auto mb-32 px-4 pt-8">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-white">
-          FAQ & Guide de démarrage
-        </h2>
-        <Accordion type="single" collapsible className="space-y-2">
-          <AccordionItem value="item-1">
-            <AccordionTrigger>Comment publier un mod ?</AccordionTrigger>
-            <AccordionContent>
-              Crée un compte, va dans "Publier un mod" et remplis le formulaire
-              avec tes fichiers et une description.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-2">
-            <AccordionTrigger>Comment voter ou commenter ?</AccordionTrigger>
-            <AccordionContent>
-              Connecte-toi, puis utilise les boutons de vote ou le champ de
-              commentaire sous chaque mod.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-3">
-            <AccordionTrigger>Est-ce gratuit ?</AccordionTrigger>
-            <AccordionContent>
-              Oui, la plateforme est 100% gratuite pour tous les membres.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-4">
-            <AccordionTrigger>Où trouver plus d'aide ?</AccordionTrigger>
-            <AccordionContent>
-              Consulte la{" "}
-              <Link href="/faq" className="underline">
-                FAQ complète
-              </Link>{" "}
-              ou contacte le support.
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+      <section className="w-full max-w-4xl mx-auto mb-32 px-4 pt-8 relative overflow-hidden">
+        <Image
+          src="/gta6-plan.jpg"
+          alt="Plan GTA 6"
+          fill
+          className="object-cover object-center absolute left-0 top-0 w-full h-full opacity-40 z-0"
+          priority={false}
+        />
+        <div className="absolute inset-0 bg-black/60 z-10" />
+        <div className="relative z-20">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-white">
+            FAQ & Guide de démarrage
+          </h2>
+          <Accordion type="single" collapsible className="space-y-2">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Comment publier un mod ?</AccordionTrigger>
+              <AccordionContent>
+                Crée un compte, va dans "Publier un mod" et remplis le formulaire
+                avec tes fichiers et une description.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger>Comment voter ou commenter ?</AccordionTrigger>
+              <AccordionContent>
+                Connecte-toi, puis utilise les boutons de vote ou le champ de
+                commentaire sous chaque mod.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger>Est-ce gratuit ?</AccordionTrigger>
+              <AccordionContent>
+                Oui, la plateforme est 100% gratuite pour tous les membres.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4">
+              <AccordionTrigger>Où trouver plus d'aide ?</AccordionTrigger>
+              <AccordionContent>
+                Consulte la{" "}
+                <Link href="/faq" className="underline">
+                  FAQ complète
+                </Link>{" "}
+                ou contacte le support.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       </section>
 
       {/* Témoignages utilisateurs */}
