@@ -64,12 +64,12 @@ export default function Home() {
             {/* Le logo 'VI' est déjà sur l'image de fond */}
             <div className="mt-[320px]" />{" "}
             {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
-            <div className="flex justify-center gap-6 mt-8 animate-fade-in">
+            <div className="flex flex-col md:flex-row justify-center gap-4 w-full max-w-xs mx-auto mt-8 animate-fade-in">
               <Button
                 asChild
                 size="lg"
                 variant="default"
-                className="text-lg px-8 py-4 shadow-xl text-white hover:text-white"
+                className="w-full text-lg px-8 py-4 shadow-xl text-white hover:text-white"
               >
                 <Link href="/register">Rejoindre la communauté</Link>
               </Button>
@@ -77,7 +77,7 @@ export default function Home() {
                 asChild
                 size="lg"
                 variant="secondary"
-                className="text-lg px-8 py-4 shadow-xl"
+                className="w-full text-lg px-8 py-4 shadow-xl"
               >
                 <Link href="/mods">Découvrir les mods</Link>
               </Button>
