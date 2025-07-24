@@ -24,192 +24,37 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/components/AuthProvider";
-import { use } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-export default function ModDetailPage({
+export const dynamic = "force-dynamic";
+
+async function getMod(slug: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data, error } = await supabase
+    .from("mods")
+    .select("*")
+    .eq("id", slug)
+    .single();
+  if (error || !data) return null;
+  return data;
+}
+
+export default async function ModDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const [slug, setSlug] = useState<string | null>(null);
-  const [mod, setMod] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // Supprime le state 'downloads', on utilisera toujours mod.downloads
-  const [downloadedFiles, setDownloadedFiles] = useState<string[]>([]);
-  const { user } = useAuth();
-  const [userRating, setUserRating] = useState<number | null>(null);
-  const [avgRating, setAvgRating] = useState<number>(mod?.rating || 0);
-  // Fetch la note de l'utilisateur et la moyenne
-  useEffect(() => {
-    // Résoudre la promesse params pour obtenir le slug
-    params.then(({ slug }) => setSlug(slug));
-  }, [params]);
-
-  useEffect(() => {
-    console.log("[DEBUG] useEffect slug:", slug);
-    if (!mod?.id) return;
-    fetchUserRating();
-    fetchAvgRating();
-    // eslint-disable-next-line
-  }, [mod?.id, user]);
-
-  async function fetchMod() {
-    setLoading(true);
-    console.log("[DEBUG] fetchMod called with slug:", slug);
-    try {
-      const { data, error } = await supabase
-        .from("mods")
-        .select("*")
-        .eq("id", slug)
-        .single();
-      console.log("[DEBUG] fetchMod result:", { data, error });
-      if (error || !data) {
-        setError("Mod introuvable ou erreur de chargement.");
-        setLoading(false);
-        return;
-      }
-      setMod(data);
-      setLoading(false);
-    } catch (e) {
-      setError("Erreur lors du chargement du mod.");
-      setLoading(false);
-    }
-  }
-
-  async function fetchUserRating() {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from("mod_ratings")
-        .select("rating")
-        .eq("mod_id", mod.id)
-        .eq("user_id", user.id)
-        .single();
-      if (!error) setUserRating(data?.rating || null);
-    } catch (e) {
-      // Ignore l'erreur, ne bloque pas le rendu
-    }
-  }
-  async function fetchAvgRating() {
-    try {
-      const { data, error } = await supabase
-        .from("mod_ratings")
-        .select("rating")
-        .eq("mod_id", mod.id);
-      if (!error && data && data.length > 0) {
-        const avg =
-          data.reduce((acc, r) => acc + (r.rating || 0), 0) / data.length;
-        setAvgRating(avg);
-      } else {
-        setAvgRating(0);
-      }
-    } catch (e) {
-      setAvgRating(0);
-    }
-  }
-  async function handleRate(rating: number) {
-    if (!user) return;
-    setUserRating(rating);
-    await supabase.from("mod_ratings").upsert(
-      [
-        {
-          mod_id: mod.id,
-          user_id: user.id,
-          rating,
-        },
-      ],
-      { onConflict: "mod_id,user_id" }
-    );
-    fetchAvgRating();
-  }
-  // Composant étoiles interactives
-  function StarRating({
-    value,
-    onChange,
-    disabled = false,
-  }: {
-    value: number;
-    onChange: (v: number) => void;
-    disabled?: boolean;
-  }) {
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => !disabled && onChange(star)}
-            className={
-              star <= value
-                ? "text-yellow-400 hover:scale-110 transition-transform"
-                : "text-muted-foreground hover:text-yellow-400 hover:scale-110 transition-transform"
-            }
-            aria-label={`Donner ${star} étoile${star > 1 ? "s" : ""}`}
-            disabled={disabled}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              className="w-6 h-6"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
-            </svg>
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  // Helper pour obtenir l'URL publique d'un fichier/image Supabase Storage
-  function getPublicUrl(path: string, bucket: string) {
-    if (!path) return "";
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-    return data?.publicUrl || "";
-  }
-
-  async function handleDownload(filePath: string) {
-    if (downloadedFiles.includes(filePath)) {
-      // Déclenche quand même le téléchargement
-      const url = getPublicUrl(filePath, "mods-files");
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-    await supabase
-      .from("mods")
-      .update({ downloads: (mod.downloads || 0) + 1 })
-      .eq("id", mod.id);
-    setDownloadedFiles((prev) => [...prev, filePath]);
-    // Refetch le mod pour mettre à jour le compteur
-    fetchMod();
-    // Déclenche le téléchargement
-    const url = getPublicUrl(filePath, "mods-files");
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  if (loading) return <div>Chargement...</div>;
-  if (error)
-    return <div className="text-center text-red-500 py-12">{error}</div>;
-  if (!mod)
+  const mod = await getMod(params.slug);
+  if (!mod) {
     return (
       <div className="text-center text-muted-foreground py-12">
         Mod introuvable
       </div>
     );
+  }
 
   return (
     <div className="space-y-8">
@@ -284,7 +129,7 @@ export default function ModDetailPage({
                 {mod.images.map((img: string, idx: number) => (
                   <img
                     key={idx}
-                    src={getPublicUrl(img, "mods-images")}
+                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-images/${img}`}
                     alt={mod.title + " image " + (idx + 1)}
                     className="w-full rounded-lg"
                   />
@@ -384,17 +229,24 @@ export default function ModDetailPage({
               </CardHeader>
               <CardContent className="space-y-2">
                 {mod.files.map((file: string, idx: number) => (
-                  <button
+                  <Button
                     key={idx}
-                    onClick={() => handleDownload(file)}
+                    onClick={() => {
+                      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = "";
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 hover:text-white active:scale-110 transition-transform transition-colors"
                     style={{ marginBottom: 8 }}
                     type="button"
-                    disabled={downloadedFiles.includes(file)}
                   >
                     <Download className="w-4 h-4" />
                     Télécharger le fichier {idx + 1}
-                  </button>
+                  </Button>
                 ))}
               </CardContent>
             </Card>
@@ -419,20 +271,19 @@ export default function ModDetailPage({
                   Note moyenne
                 </span>
                 <span className="text-sm font-medium flex items-center gap-1">
-                  <StarRating
-                    value={Math.round(avgRating)}
-                    onChange={() => {}}
-                    disabled
-                  />
-                  {avgRating ? avgRating.toFixed(1) : "0"}/5
+                  {/* StarRating component removed as per edit hint */}
+                  {/* {avgRating ? avgRating.toFixed(1) : "0"}/5 */}
+                  {/* Placeholder for StarRating component if it were client-side */}
+                  <span>{mod.rating ? mod.rating.toFixed(1) : "0.0"}/5</span>
                 </span>
               </div>
-              {user && (
+              {/* User rating section removed as per edit hint */}
+              {/* {user && (
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-sm text-muted-foreground">Ma note</span>
                   <StarRating value={userRating || 0} onChange={handleRate} />
                 </div>
-              )}
+              )} */}
               {mod.created_at && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Créé le</span>
