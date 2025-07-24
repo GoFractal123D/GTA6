@@ -12,17 +12,17 @@ import { User, Download, Puzzle } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="w-screen min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden">
       {/* Hero immersive */}
-      <div className="relative w-full flex flex-col items-center justify-center min-h-[60vh] py-20 mb-10 overflow-hidden">
+      <div className="relative w-screen min-h-[60vh] py-20 mb-10 overflow-hidden">
         <Image
           src="/gta6-hero.jpg"
           alt="GTA 6 City"
           fill
-          className="object-cover object-center absolute inset-0 w-full h-full opacity-40"
+          className="object-cover object-center absolute left-0 top-0 w-full h-full opacity-40"
           priority
         />
-        <div className="relative z-10 flex flex-col items-center justify-center text-center">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
           <h1 className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg animate-fade-in">
             GTA 6 Community
           </h1>
