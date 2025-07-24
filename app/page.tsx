@@ -23,24 +23,28 @@ export default function Home() {
           priority
         />
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
-          <div className="flex-1" />
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6 animate-fade-in">
-            <Button
-              asChild
-              size="lg"
-              variant="default"
-              className="text-lg px-8 py-4 shadow-xl"
-            >
-              <Link href="/register">Rejoindre la communauté</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="text-lg px-8 py-4 shadow-xl"
-            >
-              <Link href="/mods">Découvrir les mods</Link>
-            </Button>
+          <div className="flex flex-col items-center justify-center h-full">
+            {/* Le logo 'VI' est déjà sur l'image de fond */}
+            <div className="mt-[320px]" />{" "}
+            {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
+            <div className="flex justify-center gap-6 mt-8 animate-fade-in">
+              <Button
+                asChild
+                size="lg"
+                variant="default"
+                className="text-lg px-8 py-4 shadow-xl"
+              >
+                <Link href="/register">Rejoindre la communauté</Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="text-lg px-8 py-4 shadow-xl"
+              >
+                <Link href="/mods">Découvrir les mods</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
