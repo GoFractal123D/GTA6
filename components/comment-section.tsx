@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "./AuthProvider";
 
 interface Comment {
   id: number;
@@ -46,57 +48,85 @@ export function CommentSection({
   const [replyContent, setReplyContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isReplyLoading, setIsReplyLoading] = useState(false);
+  const { user } = useAuth();
 
-  const handleSubmitComment = () => {
-    if (!newComment.trim()) return;
+  // Charger les commentaires depuis Supabase
+  useEffect(() => {
+    fetchComments();
+    // eslint-disable-next-line
+  }, [itemId]);
+
+  async function fetchComments() {
     setIsLoading(true);
-    setTimeout(() => {
-      const comment: Comment = {
-        id: Date.now(),
-        author: {
-          name: "Utilisateur",
-          avatar: "/placeholder-user.jpg",
-        },
-        content: newComment,
-        createdAt: new Date().toISOString(),
-        votes: { up: 0, down: 0 },
-      };
-      setComments((prev) => [comment, ...prev]);
-      setNewComment("");
-      setIsLoading(false);
-    }, 900);
-  };
-
-  const handleSubmitReply = (parentId: number) => {
-    if (!replyContent.trim()) return;
-    setIsReplyLoading(true);
-    setTimeout(() => {
-      const reply: Comment = {
-        id: Date.now(),
-        author: {
-          name: "Utilisateur",
-          avatar: "/placeholder-user.jpg",
-        },
-        content: replyContent,
-        createdAt: new Date().toISOString(),
-        votes: { up: 0, down: 0 },
-      };
-      setComments((prev) =>
-        prev.map((comment) => {
-          if (comment.id === parentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), reply],
-            };
-          }
-          return comment;
+    const { data, error } = await supabase
+      .from("comments")
+      .select("*, author:profiles(username, avatar)")
+      .eq("mod_id", itemId)
+      .is("parent_id", null)
+      .order("created_at", { ascending: false });
+    if (data) {
+      // Charger les réponses pour chaque commentaire principal
+      const commentsWithReplies = await Promise.all(
+        data.map(async (comment: any) => {
+          const { data: replies } = await supabase
+            .from("comments")
+            .select("*, author:profiles(username, avatar)")
+            .eq("parent_id", comment.id)
+            .order("created_at", { ascending: true });
+          return {
+            id: comment.id,
+            author: {
+              name: comment.author?.username || "Utilisateur",
+              avatar: comment.author?.avatar || "/placeholder-user.jpg",
+            },
+            content: comment.content,
+            createdAt: comment.created_at,
+            votes: { up: comment.upvotes || 0, down: comment.downvotes || 0 },
+            replies: (replies || []).map((reply: any) => ({
+              id: reply.id,
+              author: {
+                name: reply.author?.username || "Utilisateur",
+                avatar: reply.author?.avatar || "/placeholder-user.jpg",
+              },
+              content: reply.content,
+              createdAt: reply.created_at,
+              votes: { up: reply.upvotes || 0, down: reply.downvotes || 0 },
+            })),
+          };
         })
       );
-      setReplyContent("");
-      setReplyingTo(null);
-      setIsReplyLoading(false);
-    }, 900);
-  };
+      setComments(commentsWithReplies);
+    }
+    setIsLoading(false);
+  }
+
+  async function handleSubmitComment() {
+    if (!newComment.trim() || !user) return;
+    setIsLoading(true);
+    const { error } = await supabase.from("comments").insert({
+      mod_id: itemId,
+      content: newComment,
+      author_id: user.id,
+    });
+    setNewComment("");
+    await fetchComments();
+    setIsLoading(false);
+  }
+
+  async function handleSubmitReply(parentId: number) {
+    if (!replyContent.trim() || !user) return;
+    setIsReplyLoading(true);
+    const { error } = await supabase.from("comments").insert({
+      mod_id: itemId,
+      content: replyContent,
+      parent_id: parentId,
+      author_id: user.id,
+    });
+    setReplyContent("");
+    setReplyingTo(null);
+    await fetchComments();
+    setIsReplyLoading(false);
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -251,7 +281,7 @@ export function CommentSection({
               <div className="flex justify-end">
                 <Button
                   onClick={handleSubmitComment}
-                  disabled={!newComment.trim()}
+                  disabled={!newComment.trim() || !user}
                 >
                   Publier le commentaire
                 </Button>

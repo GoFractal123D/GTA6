@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Download, User, Star, AlertTriangle } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import CommentSection from "@/components/CommentSection";
+import { CommentSection } from "@/components/comment-section";
 import DownloadButton from "@/components/DownloadButton";
 import StarRatingClient from "@/components/StarRatingClient";
 
@@ -187,7 +187,7 @@ export default async function ModDetailPage({
             </TabsContent>
 
             <TabsContent value="comments">
-              <CommentSection modId={mod.id} />
+              <CommentSection itemId={mod.id} itemType="mod" />
             </TabsContent>
           </Tabs>
         </div>
