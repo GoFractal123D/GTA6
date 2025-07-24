@@ -63,7 +63,7 @@ export default function Home() {
       </div>
 
       {/* Statistiques */}
-      <section className="w-full mb-16 px-8 sm:px-4">
+      <section className="w-full max-w-5xl mx-auto mb-16 px-4">
         <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-white">
           Statistiques de la communauté
         </h2>
@@ -91,7 +91,7 @@ export default function Home() {
       </section>
 
       {/* À propos */}
-      <section className="w-full mb-16 px-8 sm:px-4">
+      <section className="w-full max-w-5xl mx-auto mb-16 px-4">
         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-white">
           Qu'est-ce que GTA 6 Community ?
         </h2>
@@ -134,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* FAQ / Guide de démarrage */}
-      <section className="w-full mb-16 px-8 sm:px-4">
+      <section className="w-full max-w-4xl mx-auto mb-16 px-4">
         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-white">
           FAQ & Guide de démarrage
         </h2>
@@ -173,7 +173,7 @@ export default function Home() {
       </section>
 
       {/* Témoignages utilisateurs */}
-      <section className="w-full mb-24 px-8 sm:px-4">
+      <section className="w-full max-w-5xl mx-auto mb-24 px-4">
         <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-white">
           Ils parlent de nous
         </h2>
