@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --background: 245 20% 98%;
+  --foreground: 245 15% 10%;
+  --primary: 246 100% 65%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 280 100% 70%;
+  --accent-foreground: 0 0% 100%;
+  --card: 245 20% 100%;
+  --card-foreground: 245 15% 10%;
+  --border: 245 20% 90%;
+  --muted: 245 20% 95%;
+  --muted-foreground: 245 10% 50%;
+}
+.dark {
+  --background: 245 15% 8%;
+  --foreground: 245 20% 98%;
+  --primary: 246 100% 65%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 280 100% 70%;
+  --accent-foreground: 0 0% 100%;
+  --card: 245 15% 12%;
+  --card-foreground: 245 20% 98%;
+  --border: 245 15% 20%;
+  --muted: 245 15% 15%;
+  --muted-foreground: 245 10% 60%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+@layer base {
+  *:focus {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+  a {
+    @apply transition-colors duration-200 hover:text-primary;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes neon-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 16px 4px rgba(255, 77, 166, 0.7),
+      0 0 32px 8px rgba(143, 0, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 32px 8px rgba(255, 77, 166, 1),
+      0 0 64px 16px rgba(143, 0, 255, 0.5);
+  }
+}
+.animate-neon-glow {
+  animation: neon-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes gta6-loader {
+  0%,
+  100% {
+    filter: brightness(1) drop-shadow(0 0 16px #ff4da6)
+      drop-shadow(0 0 32px #8f00ff);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 32px #ff4da6)
+      drop-shadow(0 0 64px #00f0ff);
+  }
+}
+.animate-gta6-loader {
+  animation: gta6-loader 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes gta6-light {
+  0% {
+    left: -60%;
+  }
+  100% {
+    left: 120%;
+  }
+}
+.animate-gta6-light {
+  animation: gta6-light 1.5s linear infinite;
+  position: absolute;
+  width: 60%;
+  height: 100%;
+  top: 0;
+}

@@ -1,0 +1,53 @@
+{
+  "home": {
+    "cityAlt": "Ville GTA 6",
+    "communityButton": "Communauté",
+    "modsButton": "Mods",
+    "newBadge": "Nouveau",
+    "marqueeText": "La plateforme communautaire ultime pour partager, découvrir et voter sur les mods, guides, vidéos, théories et plus encore autour de GTA 6.",
+    "whatIsTitle": "Qu'est-ce que GTA 6 Community ?",
+    "publishContentTitle": "Publie du contenu",
+    "publishContentDesc": "Mods, guides, vidéos, théories, images, changelogs…",
+    "voteCommentTitle": "Vote & commente",
+    "voteCommentDesc": "Soutiens les meilleures créations, donne ton avis, fais grandir la communauté.",
+    "discoverTitle": "Découvre & classe",
+    "discoverDesc": "Explore les contenus populaires, récents ou sponsorisés, découvre de nouveaux talents."
+  },
+  "profile": {
+    "username": "Nom d'utilisateur",
+    "login": "Se connecter",
+    "noCommentsYet": "Aucun commentaire pour le moment.",
+    "memberSince": "Membre depuis",
+    "description": "Bienvenue sur ton profil !",
+    "myPublishedMods": "Mes mods publiés",
+    "noModsPublishedYet": "Aucun mod publié pour le moment.",
+    "viewMod": "Voir le mod",
+    "edit": "Éditer",
+    "delete": "Supprimer",
+    "myComments": "Mes commentaires",
+    "postedOn": "Posté le",
+    "myVotes": "Mes votes",
+    "noVotesYet": "Aucun vote pour le moment.",
+    "rating": "Note",
+    "givenOn": "Donné le",
+    "myDownloadHistory": "Mon historique de téléchargements",
+    "noDownloadsYet": "Aucun téléchargement pour le moment.",
+    "file": "Fichier",
+    "downloadedOn": "Téléchargé le",
+    "personalStats": "Statistiques personnelles",
+    "modsPublished": "Mods publiés",
+    "totalDownloads": "Téléchargements totaux",
+    "averageRating": "Note moyenne",
+    "commentsReceived": "Commentaires reçus"
+  },
+  "mods": {
+    "title": "ModHub",
+    "subtitle": "Découvrez et téléchargez les meilleurs mods pour GTA 6",
+    "publish": "Publier un mod",
+    "searchPlaceholder": "Rechercher un mod par titre...",
+    "loading": "Chargement...",
+    "noModsFound": "Aucun mod trouvé.",
+    "noCategory": "Sans catégorie",
+    "viewMod": "Voir le mod"
+  }
+} 
