@@ -32,7 +32,7 @@ export default function Home() {
                 asChild
                 size="lg"
                 variant="default"
-                className="text-lg px-8 py-4 shadow-xl"
+                className="text-lg px-8 py-4 shadow-xl text-white hover:text-white"
               >
                 <Link href="/register">Rejoindre la communauté</Link>
               </Button>
