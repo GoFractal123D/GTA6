@@ -11,13 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Download, User, Star, AlertTriangle } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import NextDynamic from "next/dynamic";
-
-// Import dynamique du composant client pour les commentaires
-const CommentSection = NextDynamic(
-  () => import("@/components/CommentSection"),
-  { ssr: false }
-);
+import CommentSection from "@/components/CommentSection";
 
 export const dynamic = "force-dynamic";
 
