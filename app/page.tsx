@@ -190,7 +190,7 @@ export default function Home() {
       {/* Témoignages utilisateurs */}
       <section className="w-full max-w-5xl mx-auto mb-32 px-4 pt-8">
         <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-white">
-          Ils parlent de nous
+          Témoignages
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-background/80 rounded-2xl p-8 shadow-xl flex flex-col items-center hover:scale-105 transition-transform">
