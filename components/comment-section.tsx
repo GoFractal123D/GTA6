@@ -75,10 +75,11 @@ export function CommentSection({
           if (comment.author_id) {
             const { data: profile } = await supabase
               .from("profiles")
-              .select("username, avatar")
+              .select("username, avatar_url")
               .eq("id", comment.author_id)
               .single();
             authorProfile = profile;
+            console.log("[DEBUG] Profil auteur commentaire", comment.author_id, authorProfile);
           }
           // Récupérer les réponses
           const { data: replies } = await supabase
@@ -93,10 +94,11 @@ export function CommentSection({
               if (reply.author_id) {
                 const { data: profile } = await supabase
                   .from("profiles")
-                  .select("username, avatar")
+                  .select("username, avatar_url")
                   .eq("id", reply.author_id)
                   .single();
                 replyProfile = profile;
+                console.log("[DEBUG] Profil auteur réponse", reply.author_id, replyProfile);
               }
               return {
                 id: reply.id,
