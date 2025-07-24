@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,27 +9,22 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { VoteSystem } from "@/components/vote-system";
-import { CommentSection } from "@/components/comment-section";
-import {
-  Download,
-  Eye,
-  Calendar,
-  User,
-  Star,
-  Shield,
-  AlertTriangle,
-} from "lucide-react";
-import Image from "next/image";
+import { Download, User, Star, AlertTriangle } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import NextDynamic from "next/dynamic";
+
+// Import dynamique du composant client pour les commentaires
+const CommentSection = NextDynamic(
+  () => import("@/components/CommentSection"),
+  { ssr: false }
+);
 
 export const dynamic = "force-dynamic";
 
 async function getMod(slug: string) {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!
   );
   const { data, error } = await supabase
     .from("mods")
@@ -75,33 +68,17 @@ export default async function ModDetailPage({
           </div>
         </div>
 
-        {/* Author and Stats */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage
-                src={mod.author_avatar || "/placeholder-user.jpg"}
-                alt={mod.author_name || "Auteur"}
-              />
-              <AvatarFallback>{mod.author_name?.[0] || "A"}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">
-                  {mod.author_name || mod.author_id || "Auteur inconnu"}
-                </span>
-              </div>
-              {mod.created_at && (
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <User className="w-4 h-4" />
-                    Publié le{" "}
-                    {new Date(mod.created_at).toISOString().split("T")[0]}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Auteur et date */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <User className="w-4 h-4" />
+            {mod.author_name || mod.author_id || "Auteur inconnu"}
+          </span>
+          {mod.created_at && (
+            <span className="flex items-center gap-1">
+              Publié le {new Date(mod.created_at).toISOString().split("T")[0]}
+            </span>
+          )}
         </div>
 
         {/* Tags */}
@@ -129,7 +106,7 @@ export default async function ModDetailPage({
                 {mod.images.map((img: string, idx: number) => (
                   <img
                     key={idx}
-                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-images/${img}`}
+                    src={`${process.env.SUPABASE_URL}/storage/v1/object/public/mods-images/${img}`}
                     alt={mod.title + " image " + (idx + 1)}
                     className="w-full rounded-lg"
                   />
@@ -214,7 +191,7 @@ export default async function ModDetailPage({
             </TabsContent>
 
             <TabsContent value="comments">
-              <CommentSection itemId={mod.id as number} itemType="mod" />
+              <CommentSection modId={mod.id} />
             </TabsContent>
           </Tabs>
         </div>
@@ -232,7 +209,7 @@ export default async function ModDetailPage({
                   <Button
                     key={idx}
                     onClick={() => {
-                      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
+                      const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
                       const link = document.createElement("a");
                       link.href = url;
                       link.download = "";
@@ -271,19 +248,10 @@ export default async function ModDetailPage({
                   Note moyenne
                 </span>
                 <span className="text-sm font-medium flex items-center gap-1">
-                  {/* StarRating component removed as per edit hint */}
-                  {/* {avgRating ? avgRating.toFixed(1) : "0"}/5 */}
-                  {/* Placeholder for StarRating component if it were client-side */}
-                  <span>{mod.rating ? mod.rating.toFixed(1) : "0.0"}/5</span>
+                  <Star className="w-4 h-4 text-yellow-400" />
+                  {mod.rating ? mod.rating.toFixed(1) : "0.0"}/5
                 </span>
               </div>
-              {/* User rating section removed as per edit hint */}
-              {/* {user && (
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted-foreground">Ma note</span>
-                  <StarRating value={userRating || 0} onChange={handleRate} />
-                </div>
-              )} */}
               {mod.created_at && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Créé le</span>
@@ -292,20 +260,6 @@ export default async function ModDetailPage({
                   </span>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Report */}
-          <Card>
-            <CardContent className="pt-6">
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                size="sm"
-              >
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Signaler ce mod
-              </Button>
             </CardContent>
           </Card>
         </div>
