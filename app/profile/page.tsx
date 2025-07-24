@@ -75,6 +75,12 @@ export default function ProfilePage() {
       return;
     }
     const modIds = myMods.map((m) => m.id);
+    console.log("[DEBUG] modIds pour downloads :", modIds);
+    // Si modIds est vide, on ne fait pas la requête
+    if (!modIds.length) {
+      setTotalDownloadsOnMyMods(0);
+      return;
+    }
     // Récupère tous les téléchargements pour ces mods
     const { data: downloadsData } = await supabase
       .from("downloads")
