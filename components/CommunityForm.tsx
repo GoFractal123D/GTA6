@@ -253,6 +253,28 @@ export default function CommunityForm() {
         </Card>
       )}
 
+      {type === "event" && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-purple-500" />
+              <Label className="font-medium">
+                Ressources Event (optionnel)
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Ajoutez des images, affiches, programmes ou autres ressources pour
+              votre événement.
+            </p>
+            <Input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.txt"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Bouton de publication */}
       <Button
         type="submit"
