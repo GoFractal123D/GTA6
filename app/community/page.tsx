@@ -626,7 +626,7 @@ export default function CommunityPage() {
               {/* Barre latérale */}
               <div className="w-80 flex-shrink-0 space-y-6">
                 {/* Cartes d'annonces et publicités flottantes */}
-                <div className="relative z-20 max-w-7xl mx-auto px-4 mt-8">
+                <div className="relative z-20 max-w-7xl mx-auto px-4 ">
                   <div className="flex justify-end">
                     <div className="w-80 space-y-4">
                       {/* Carte Annonce importante */}
