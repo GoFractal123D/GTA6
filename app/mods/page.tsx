@@ -40,7 +40,22 @@ export default function ModsPage() {
         .select("*")
         .order("downloads", { ascending: false })
         .limit(5);
-      setFeatured(data || []);
+
+      // Calculer le nombre de commentaires pour chaque mod en vedette
+      const featuredWithComments = await Promise.all(
+        (data || []).map(async (mod) => {
+          const { count } = await supabase
+            .from("comments")
+            .select("*", { count: "exact", head: true })
+            .eq("mod_id", mod.id);
+          return {
+            ...mod,
+            comments_count: count || 0,
+          };
+        })
+      );
+
+      setFeatured(featuredWithComments || []);
     }
     fetchFeatured();
   }, []);
@@ -69,8 +84,22 @@ export default function ModsPage() {
     query = query.range(from, to);
     const { data, error } = await query;
     if (!error) {
-      if (page === 1) setMods(data || []);
-      else setMods((prev) => [...prev, ...(data || [])]);
+      // Calculer le nombre de commentaires pour chaque mod
+      const modsWithComments = await Promise.all(
+        (data || []).map(async (mod) => {
+          const { count } = await supabase
+            .from("comments")
+            .select("*", { count: "exact", head: true })
+            .eq("mod_id", mod.id);
+          return {
+            ...mod,
+            comments_count: count || 0,
+          };
+        })
+      );
+
+      if (page === 1) setMods(modsWithComments || []);
+      else setMods((prev) => [...prev, ...(modsWithComments || [])]);
       setHasMore((data || []).length === pageSize);
     }
     setLoading(false);
