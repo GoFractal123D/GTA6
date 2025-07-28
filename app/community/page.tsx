@@ -12,6 +12,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Users,
   Trophy,
@@ -21,9 +22,12 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  Search,
+  Filter,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 const carouselItems = [
   {
@@ -96,7 +100,33 @@ const carouselItems = [
   },
 ];
 
+const filterCategories = [
+  { id: "all", label: "Tous", icon: TrendingUp, color: "text-gray-500" },
+  { id: "guide", label: "Guide", icon: Users, color: "text-blue-500" },
+  { id: "theory", label: "Théorie", icon: Star, color: "text-yellow-500" },
+  { id: "rp", label: "RP", icon: Heart, color: "text-green-500" },
+  { id: "event", label: "Event", icon: Calendar, color: "text-purple-500" },
+];
+
 export default function CommunityPage() {
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const getSearchPlaceholder = () => {
+    switch (selectedCategory) {
+      case "guide":
+        return "Rechercher un guide...";
+      case "theory":
+        return "Rechercher une théorie...";
+      case "rp":
+        return "Rechercher un scénario RP...";
+      case "event":
+        return "Rechercher un événement...";
+      default:
+        return "Rechercher dans la communauté...";
+    }
+  };
+
   return (
     <AuthProvider>
       <div className="w-full">
@@ -195,6 +225,46 @@ export default function CommunityPage() {
               <CarouselPrevious className="left-4 bg-background/80 backdrop-blur-sm border-0 shadow-lg" />
               <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm border-0 shadow-lg" />
             </Carousel>
+          </div>
+        </section>
+
+        {/* Navigation et Filtres */}
+        <section className="w-full bg-background/50 backdrop-blur-sm border-b border-border/50">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+              {/* Filtres par catégorie */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                {filterCategories.map((category) => {
+                  const Icon = category.icon;
+                  const isActive = selectedCategory === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium border transition-all whitespace-nowrap ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-lg border-primary"
+                          : "bg-background/80 text-muted-foreground hover:bg-background border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${category.color}`} />
+                      {category.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Barre de recherche */}
+              <div className="relative w-full lg:w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={getSearchPlaceholder()}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-background/80 backdrop-blur-sm border-border focus:border-primary"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
