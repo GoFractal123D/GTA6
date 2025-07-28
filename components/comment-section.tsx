@@ -54,8 +54,26 @@ export function CommentSection({
   // Charger les commentaires depuis Supabase
   useEffect(() => {
     fetchComments();
+    // Initialiser le compteur de commentaires si nécessaire
+    if (itemType === "mod") {
+      initializeCommentsCount();
+    }
     // eslint-disable-next-line
   }, [itemId]);
+
+  async function initializeCommentsCount() {
+    // Vérifier si le mod a déjà un compteur de commentaires
+    const { data: mod } = await supabase
+      .from("mods")
+      .select("comments_count")
+      .eq("id", itemId)
+      .single();
+
+    // Si le compteur n'existe pas ou est null, le calculer
+    if (!mod || mod.comments_count === null) {
+      await updateModCommentsCount();
+    }
+  }
 
   async function fetchComments() {
     setIsLoading(true);
@@ -79,7 +97,11 @@ export function CommentSection({
               .eq("id", comment.author_id)
               .single();
             authorProfile = profile;
-            console.log("[DEBUG] Profil auteur commentaire", comment.author_id, authorProfile);
+            console.log(
+              "[DEBUG] Profil auteur commentaire",
+              comment.author_id,
+              authorProfile
+            );
           }
           // Récupérer les réponses
           const { data: replies } = await supabase
@@ -98,7 +120,11 @@ export function CommentSection({
                   .eq("id", reply.author_id)
                   .single();
                 replyProfile = profile;
-                console.log("[DEBUG] Profil auteur réponse", reply.author_id, replyProfile);
+                console.log(
+                  "[DEBUG] Profil auteur réponse",
+                  reply.author_id,
+                  replyProfile
+                );
               }
               return {
                 id: reply.id,
@@ -152,8 +178,26 @@ export function CommentSection({
     } else {
       setNewComment("");
       await fetchComments();
+      // Mettre à jour le compteur de commentaires dans la table mods
+      await updateModCommentsCount();
     }
     setIsLoading(false);
+  }
+
+  async function updateModCommentsCount() {
+    if (itemType === "mod") {
+      // Compter tous les commentaires pour ce mod
+      const { count } = await supabase
+        .from("comments")
+        .select("*", { count: "exact", head: true })
+        .eq("mod_id", itemId);
+
+      // Mettre à jour le compteur dans la table mods
+      await supabase
+        .from("mods")
+        .update({ comments_count: count || 0 })
+        .eq("id", itemId);
+    }
   }
 
   async function handleSubmitReply(parentId: number) {
@@ -181,6 +225,8 @@ export function CommentSection({
       setReplyContent("");
       setReplyingTo(null);
       await fetchComments();
+      // Mettre à jour le compteur de commentaires dans la table mods
+      await updateModCommentsCount();
     }
     setIsReplyLoading(false);
   }
