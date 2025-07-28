@@ -7,17 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, FileText, Video, Lightbulb, Link } from "lucide-react";
+import { Upload, FileText, Lightbulb, Users } from "lucide-react";
 
 const TYPES = [
   { value: "guide", label: "Guide", icon: FileText, color: "text-blue-500" },
-  { value: "video", label: "Vidéo", icon: Video, color: "text-red-500" },
   {
     value: "theory",
     label: "Théorie",
     icon: Lightbulb,
     color: "text-yellow-500",
   },
+  { value: "rp", label: "RP", icon: Users, color: "text-green-500" },
 ];
 
 export default function CommunityForm() {
@@ -26,7 +26,6 @@ export default function CommunityForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -51,7 +50,7 @@ export default function CommunityForm() {
     }
 
     // Pour les vidéos, utiliser l'URL au lieu du fichier uploadé
-    const finalFileUrl = type === "video" && videoUrl ? videoUrl : fileUrl;
+    const finalFileUrl = fileUrl;
 
     const { error: insertError } = await supabase.from("community").insert({
       author_id: user.id,
@@ -66,7 +65,6 @@ export default function CommunityForm() {
       setTitle("");
       setContent("");
       setFile(null);
-      setVideoUrl("");
       setSuccess("Contenu publié !");
     }
     setLoading(false);
@@ -76,10 +74,10 @@ export default function CommunityForm() {
     switch (type) {
       case "guide":
         return "Étapes détaillées, instructions, conseils pratiques...";
-      case "video":
-        return "Description de la vidéo, contexte, points clés...";
       case "theory":
         return "Hypothèses, analyses, spéculations, théories...";
+      case "rp":
+        return "Scénario RP, personnages, règles, événements, histoires...";
       default:
         return "Contenu, description, lien vidéo, etc.";
     }
@@ -89,10 +87,10 @@ export default function CommunityForm() {
     switch (type) {
       case "guide":
         return "Titre du guide (ex: Comment installer les mods GTA 6)";
-      case "video":
-        return "Titre de la vidéo (ex: Gameplay GTA 6 - Première mission)";
       case "theory":
         return "Titre de la théorie (ex: Théorie sur la fin de GTA 6)";
+      case "rp":
+        return "Titre du RP (ex: Scénario Mafia - Les Corleone)";
       default:
         return "Titre du contenu";
     }
@@ -102,10 +100,10 @@ export default function CommunityForm() {
     switch (type) {
       case "guide":
         return "Titre du guide";
-      case "video":
-        return "Titre de la vidéo";
       case "theory":
         return "Titre de la théorie";
+      case "rp":
+        return "Titre du RP";
       default:
         return "Titre";
     }
@@ -115,10 +113,10 @@ export default function CommunityForm() {
     switch (type) {
       case "guide":
         return "Contenu du guide";
-      case "video":
-        return "Description de la vidéo";
       case "theory":
         return "Explication de la théorie";
+      case "rp":
+        return "Description du RP";
       default:
         return "Description";
     }
@@ -206,35 +204,6 @@ export default function CommunityForm() {
         </Card>
       )}
 
-      {type === "video" && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Video className="w-5 h-5 text-red-500" />
-              <Label className="font-medium">Lien de la vidéo</Label>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Collez le lien YouTube, Twitch ou autre plateforme vidéo.
-            </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://youtube.com/watch?v=..."
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setVideoUrl("")}
-              >
-                <Link className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {type === "theory" && (
         <Card>
           <CardContent className="p-4 space-y-3">
@@ -249,6 +218,26 @@ export default function CommunityForm() {
             <Input
               type="file"
               accept="image/*"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {type === "rp" && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-green-500" />
+              <Label className="font-medium">Ressources RP (optionnel)</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Ajoutez des images de personnages, cartes, règles ou autres
+              ressources pour votre scénario RP.
+            </p>
+            <Input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.txt"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </CardContent>
