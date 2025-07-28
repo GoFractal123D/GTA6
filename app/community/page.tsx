@@ -149,6 +149,17 @@ export default function CommunityPage() {
 
           {/* Contenu du carrousel */}
           <div className="relative z-10 max-w-6xl mx-auto px-4">
+            {/* Titre et description */}
+            <div className="text-center mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Communauté GTA 6
+              </h1>
+              <p className="text-xl text-purple-200 max-w-2xl mx-auto">
+                Découvrez, partagez et participez à la plus grande communauté de
+                moddeurs et joueurs GTA 6
+              </p>
+            </div>
+
             <Carousel className="w-full max-w-4xl mx-auto">
               <CarouselContent>
                 {carouselItems.map((item) => {
