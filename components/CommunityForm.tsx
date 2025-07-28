@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, FileText, Lightbulb, Users } from "lucide-react";
+import { Upload, FileText, Lightbulb, Users, Calendar } from "lucide-react";
 
 const TYPES = [
   { value: "guide", label: "Guide", icon: FileText, color: "text-blue-500" },
@@ -18,6 +18,7 @@ const TYPES = [
     color: "text-yellow-500",
   },
   { value: "rp", label: "RP", icon: Users, color: "text-green-500" },
+  { value: "event", label: "Event", icon: Calendar, color: "text-purple-500" },
 ];
 
 export default function CommunityForm() {
@@ -78,6 +79,8 @@ export default function CommunityForm() {
         return "Hypothèses, analyses, spéculations, théories...";
       case "rp":
         return "Scénario RP, personnages, règles, événements, histoires...";
+      case "event":
+        return "Date, heure, lieu, programme, participants, récompenses...";
       default:
         return "Contenu, description, lien vidéo, etc.";
     }
@@ -91,6 +94,8 @@ export default function CommunityForm() {
         return "Titre de la théorie (ex: Théorie sur la fin de GTA 6)";
       case "rp":
         return "Titre du RP (ex: Scénario Mafia - Les Corleone)";
+      case "event":
+        return "Titre de l'événement (ex: Tournoi Racing - Circuit Urbain)";
       default:
         return "Titre du contenu";
     }
@@ -104,6 +109,8 @@ export default function CommunityForm() {
         return "Titre de la théorie";
       case "rp":
         return "Titre du RP";
+      case "event":
+        return "Titre de l'événement";
       default:
         return "Titre";
     }
@@ -117,6 +124,8 @@ export default function CommunityForm() {
         return "Explication de la théorie";
       case "rp":
         return "Description du RP";
+      case "event":
+        return "Description de l'événement";
       default:
         return "Description";
     }
