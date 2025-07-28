@@ -98,6 +98,32 @@ export default function CommunityForm() {
     }
   };
 
+  const getTitleLabel = () => {
+    switch (type) {
+      case "guide":
+        return "Titre du guide";
+      case "video":
+        return "Titre de la vidéo";
+      case "theory":
+        return "Titre de la théorie";
+      default:
+        return "Titre";
+    }
+  };
+
+  const getContentLabel = () => {
+    switch (type) {
+      case "guide":
+        return "Contenu du guide";
+      case "video":
+        return "Description de la vidéo";
+      case "theory":
+        return "Explication de la théorie";
+      default:
+        return "Description";
+    }
+  };
+
   if (!user)
     return (
       <div className="text-center text-muted-foreground">
@@ -134,7 +160,7 @@ export default function CommunityForm() {
 
       {/* Titre */}
       <div className="space-y-2">
-        <Label htmlFor="title">Titre</Label>
+        <Label htmlFor="title">{getTitleLabel()}</Label>
         <Input
           id="title"
           placeholder={getTitlePlaceholder()}
@@ -146,7 +172,7 @@ export default function CommunityForm() {
 
       {/* Contenu */}
       <div className="space-y-2">
-        <Label htmlFor="content">Description</Label>
+        <Label htmlFor="content">{getContentLabel()}</Label>
         <Textarea
           id="content"
           placeholder={getPlaceholder()}
