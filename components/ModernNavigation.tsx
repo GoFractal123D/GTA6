@@ -30,7 +30,7 @@ export default function Navigation() {
         <nav className="container mx-auto flex items-center justify-between h-20 px-8">
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-2xl tracking-tight hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 font-bold text-2xl tracking-tight hover:opacity-80 transition-opacity focus:outline-none focus:ring-0"
           >
             <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               GTA 6 Mods
@@ -40,7 +40,7 @@ export default function Navigation() {
           <div className="hidden md:flex items-center gap-10">
             <Link
               href="/"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out"
+              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
             >
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300 drop-shadow-sm">
                 Accueil
@@ -49,7 +49,7 @@ export default function Navigation() {
             </Link>
             <Link
               href="/community"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out"
+              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
             >
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300 drop-shadow-sm">
                 Communauté
@@ -58,7 +58,7 @@ export default function Navigation() {
             </Link>
             <Link
               href="/mods"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out"
+              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
             >
               <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent group-hover:from-green-500 group-hover:to-blue-500 transition-all duration-300 drop-shadow-sm">
                 Mods
@@ -67,7 +67,7 @@ export default function Navigation() {
             </Link>
             <Link
               href="/sponsors"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out"
+              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
             >
               <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent group-hover:from-orange-500 group-hover:to-red-500 transition-all duration-300 drop-shadow-sm">
                 Sponsors
@@ -77,7 +77,7 @@ export default function Navigation() {
           </div>
           {/* Mobile hamburger menu */}
           <button
-            className="md:hidden p-2 rounded hover:bg-muted transition z-50 absolute right-4 top-6"
+            className="md:hidden p-2 rounded hover:bg-muted transition z-50 absolute right-4 top-6 focus:outline-none focus:ring-0"
             onClick={() => setDrawerOpen(true)}
             aria-label="Ouvrir le menu"
             style={{ background: "rgba(20,20,20,0.8)" }}
@@ -114,28 +114,28 @@ export default function Navigation() {
             <Link
               href="/"
               onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:from-blue-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+              className="text-xl font-bold tracking-wide bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:from-blue-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
             >
               Accueil
             </Link>
             <Link
               href="/community"
               onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent hover:from-purple-500 hover:to-pink-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+              className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent hover:from-purple-500 hover:to-pink-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
             >
               Communauté
             </Link>
             <Link
               href="/mods"
               onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+              className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
             >
               Mods
             </Link>
             <Link
               href="/sponsors"
               onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent hover:from-orange-500 hover:to-red-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+              className="text-xl font-bold tracking-wide bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent hover:from-orange-500 hover:to-red-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
             >
               Sponsors
             </Link>
@@ -143,7 +143,7 @@ export default function Navigation() {
               <Link
                 href="/profile"
                 onClick={() => setDrawerOpen(false)}
-                className="text-xl font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+                className="text-xl font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
               >
                 Profil
               </Link>
@@ -151,7 +151,7 @@ export default function Navigation() {
               <Link
                 href="/login"
                 onClick={() => setDrawerOpen(false)}
-                className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm"
+                className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
               >
                 Se connecter
               </Link>
@@ -164,7 +164,7 @@ export default function Navigation() {
       {mounted && (
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg bg-background border border-border hover:bg-muted transition-colors"
+          className="fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg bg-background border border-border hover:bg-muted transition-colors focus:outline-none focus:ring-0"
           title="Changer de thème"
         >
           {theme === "dark" ? (
