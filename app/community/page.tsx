@@ -270,7 +270,6 @@ export default function CommunityPage() {
 
         {/* Contenu principal */}
         <div className="max-w-2xl mx-auto w-full flex flex-col gap-8 py-12 px-4">
-          <CommunityForm />
           <CommunityFeed />
         </div>
       </div>
