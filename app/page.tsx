@@ -56,7 +56,7 @@ export default function Home() {
           src="/gta6-city.jpg"
           alt="GTA 6 City"
           fill
-          className="object-cover object-center absolute left-0 top-0 w-full h-full opacity-40"
+          className="object-cover object-center absolute left-0 top-0 w-full h-full"
           priority
         />
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
@@ -64,24 +64,6 @@ export default function Home() {
             {/* Le logo 'VI' est déjà sur l'image de fond */}
             <div className="mt-[320px]" />{" "}
             {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
-            <div className="flex flex-col md:flex-row justify-center gap-4 w-full max-w-xs mx-auto mt-8 animate-fade-in">
-              <Button
-                asChild
-                size="lg"
-                variant="default"
-                className="w-full text-lg px-8 py-4 shadow-xl text-white hover:text-white"
-              >
-                <Link href="/register">Rejoindre la communauté</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="w-full text-lg px-8 py-4 shadow-xl"
-              >
-                <Link href="/mods">Découvrir les mods</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>
