@@ -232,6 +232,76 @@ export default function CommunityPage() {
               <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm border-0 shadow-lg" />
             </Carousel>
           </div>
+
+          {/* Cartes d'annonces et publicités flottantes */}
+          <div className="relative z-20 max-w-7xl mx-auto px-4 mt-8">
+            <div className="flex justify-end">
+              <div className="w-80 space-y-4">
+                {/* Carte Annonce importante */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="font-bold text-lg">Annonce importante</h3>
+                    </div>
+                    <p className="text-blue-100 mb-4">
+                      🎉 Nouvelle fonctionnalité disponible ! Vous pouvez
+                      maintenant créer des posts directement depuis la barre
+                      latérale.
+                    </p>
+                    <Button className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
+                      En savoir plus
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Carte Publicité */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-400 to-red-500 text-white">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="font-bold text-lg mb-2">Sponsorisé</h3>
+                      <p className="text-orange-100 mb-4">
+                        Découvrez les derniers mods premium avec 50% de
+                        réduction !
+                      </p>
+                      <Button className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
+                        Voir l'offre
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Navigation et Filtres */}
