@@ -5,7 +5,8 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -18,7 +19,7 @@ import { Menu } from "lucide-react";
 export default function Navigation() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -101,14 +102,25 @@ export default function Navigation() {
               Se connecter
             </Link>
           ) : (
-            <Link href="/profile" className="ml-4 hidden md:inline-block">
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" alt="@user" />
-                <AvatarFallback>
-                  {user.email?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
+            <div className="ml-4 hidden md:flex items-center gap-3">
+              <Link href="/profile">
+                <Avatar>
+                  <AvatarImage src="/placeholder-user.jpg" alt="@user" />
+                  <AvatarFallback>
+                    {user.email?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                title="Se déconnecter"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </nav>
       </header>
@@ -148,13 +160,25 @@ export default function Navigation() {
               Sponsors
             </Link>
             {user ? (
-              <Link
-                href="/profile"
-                onClick={() => setDrawerOpen(false)}
-                className="text-xl font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
-              >
-                Profil
-              </Link>
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setDrawerOpen(false)}
+                  className="text-xl font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
+                >
+                  Profil
+                </Link>
+                <button
+                  onClick={() => {
+                    signOut();
+                    setDrawerOpen(false);
+                  }}
+                  className="text-xl font-bold tracking-wide bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent hover:from-red-500 hover:to-red-700 transition-all duration-300 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 drop-shadow-sm focus:outline-none focus:ring-0 flex items-center gap-2"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Se déconnecter
+                </button>
+              </>
             ) : (
               <Link
                 href="/login"
