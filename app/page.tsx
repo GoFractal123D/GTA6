@@ -66,7 +66,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-24">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden py-8">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
 
@@ -139,7 +139,7 @@ export default function Home() {
             </div>
 
             {/* Right Content - Image with diagonal cut */}
-            <div className="relative h-[600px] lg:h-[700px] lg:ml-8 lg:mt-12">
+            <div className="relative h-[400px] md:h-[500px] lg:h-[700px] lg:ml-24 lg:mt-12 -mr-12 lg:mr-0">
               <div className="absolute inset-0 transform -skew-x-12 origin-top-left overflow-hidden rounded-2xl ">
                 <Image
                   src="/city.png"
