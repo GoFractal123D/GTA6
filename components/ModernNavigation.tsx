@@ -40,6 +40,9 @@ export default function Navigation() {
               height={40}
               className="rounded-lg"
             />
+            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              VIverse
+            </span>
           </Link>
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center gap-10">
