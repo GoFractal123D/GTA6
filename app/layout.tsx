@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navigation from "@/components/ModernNavigation";
+import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import I18nProvider from "@/components/I18nProvider";
 
@@ -26,13 +27,8 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Navigation />
-              <main className="flex-1 container mx-auto px-4 py-8 flex flex-col items-center justify-center">
-                {children}
-              </main>
-              <footer className="w-full text-center text-xs text-muted-foreground py-4 border-t bg-background/80 backdrop-blur">
-                © {new Date().getFullYear()} GTA 6 Mods. Design inspiré de
-                Linear, Framer, Leonardo.ai.
-              </footer>
+              <main className="flex-1">{children}</main>
+              <Footer />
             </ThemeProvider>
           </AuthProvider>
         </I18nProvider>
