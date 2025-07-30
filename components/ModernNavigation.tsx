@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
@@ -30,8 +31,15 @@ export default function Navigation() {
         <nav className="container mx-auto flex items-center justify-between h-20 px-8">
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-2xl tracking-tight hover:opacity-80 transition-opacity focus:outline-none focus:ring-0"
+            className="flex items-center gap-3 font-bold text-2xl tracking-tight hover:opacity-80 transition-opacity focus:outline-none focus:ring-0"
           >
+            <Image
+              src="/logo-site.png"
+              alt="GTA6 Community Logo"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
             <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               GTA 6 Mods
             </span>

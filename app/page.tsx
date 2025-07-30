@@ -61,8 +61,18 @@ export default function Home() {
         />
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
           <div className="flex flex-col items-center justify-center h-full">
+            {/* Logo du site */}
+            <div className="mb-8">
+              <Image
+                src="/logo-site.png"
+                alt="GTA6 Community Logo"
+                width={120}
+                height={120}
+                className="rounded-2xl shadow-2xl"
+              />
+            </div>
             {/* Le logo 'VI' est déjà sur l'image de fond */}
-            <div className="mt-[320px]" />{" "}
+            <div className="mt-[200px]" />{" "}
             {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
           </div>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Facebook,
   Twitter,
@@ -25,6 +26,13 @@ export default function Footer() {
           {/* Logo et description */}
           <div className="lg:col-span-1">
             <div className="flex items-center mb-4">
+              <Image
+                src="/logo-site.png"
+                alt="GTA6 Community Logo"
+                width={48}
+                height={48}
+                className="rounded-lg mr-3"
+              />
               <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                 GTA6 Community
               </div>
