@@ -19,7 +19,7 @@ export default function LoginPage() {
         <h1 className="text-3xl font-extrabold mb-6 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent text-center drop-shadow-lg">
           Connexion
         </h1>
-        <LoginForm />
+        <LoginForm initialMode="login" />
         <p className="mt-6 text-center text-muted-foreground">
           Pas encore de compte ?{" "}
           <Link href="/register" className="text-pink-400 hover:underline">

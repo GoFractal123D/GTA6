@@ -1,32 +1,58 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  initialMode?: "login" | "register";
+}
+
+export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
+    
     if (isLogin) {
+      // Connexion
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      setError(error?.message || "");
-      if (!error) setSuccess("Connexion réussie !");
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess("Connexion réussie ! Redirection...");
+        // Redirection vers la page communauté après connexion
+        setTimeout(() => {
+          router.push("/community");
+        }, 1500);
+      }
     } else {
+      // Inscription
       const { error } = await supabase.auth.signUp({ email, password });
-      setError(error?.message || "");
-      if (!error) setSuccess("Inscription réussie ! Vérifie tes mails.");
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess("Inscription réussie ! Redirection vers la page de connexion...");
+        // Redirection vers la page de connexion après inscription
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
     }
+    
     setLoading(false);
   };
 
