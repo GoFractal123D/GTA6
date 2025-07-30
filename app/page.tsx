@@ -107,7 +107,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-2 border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm transition-all duration-300"
+                    className="border-2 border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm transition-all duration-300 dark:text-white text-black"
                   >
                     <Play className="mr-2 h-5 w-5" />
                     Explorer les mods
@@ -308,7 +308,7 @@ export default function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-2 border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm transition-all duration-300"
+                  className="border-2 border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm transition-all duration-300 dark:text-white text-black"
                 >
                   Voir les mods populaires
                 </Button>
