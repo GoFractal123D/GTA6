@@ -181,10 +181,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Communauté</h3>
             <div className="space-y-3">
-              <div className="flex items-center text-gray-400 text-sm">
+              {/* <div className="flex items-center text-gray-400 text-sm">
                 <Users size={16} className="mr-2" />
                 <span>+10,000 membres</span>
-              </div>
+              </div> */}
               <div className="flex items-center text-gray-400 text-sm">
                 <Shield size={16} className="mr-2" />
                 <span>Plateforme sécurisée</span>
@@ -200,7 +200,7 @@ export default function Footer() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white dark:text-white text-black"
                 asChild
               >
                 <Link href="mailto:contact@gta6community.com">
