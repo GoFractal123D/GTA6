@@ -62,7 +62,6 @@ export default function Home() {
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
           <div className="flex flex-col items-center justify-center h-full">
             {/* Logo du site */}
-            
             {/* Le logo 'VI' est déjà sur l'image de fond */}
             <div className="mt-[200px]" />{" "}
             {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
