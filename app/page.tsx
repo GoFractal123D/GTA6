@@ -64,11 +64,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 pt-24">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden py-8">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+        <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-purple-500/10 to-pink-500/10 dark:from-purple-500/10 dark:to-pink-500/10"></div>
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center lg:gap-20">
@@ -81,13 +81,13 @@ export default function Home() {
                 >
                   🚀 Plateforme officielle
                 </Badge>
-                <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
+                <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 dark:text-white leading-tight">
                   Découvrez{" "}
-                  <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 dark:from-purple-400 dark:via-pink-400 dark:to-blue-400 bg-clip-text text-transparent">
                     VIverse
                   </span>
                 </h1>
-                <p className="text-xl lg:text-2xl text-gray-300 leading-relaxed">
+                <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 leading-relaxed">
                   La communauté ultime pour les mods GTA 6. Partagez, découvrez
                   et téléchargez les meilleures créations.
                 </p>
@@ -118,22 +118,28 @@ export default function Home() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-6 pt-8 mb-12">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white">
                     {stats.loading ? "..." : stats.mods.toLocaleString()}
                   </div>
-                  <div className="text-gray-400 text-sm">Mods créés</div>
+                  <div className="text-gray-600 dark:text-gray-400 text-sm">
+                    Mods créés
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white">
                     {stats.loading ? "..." : stats.downloads.toLocaleString()}
                   </div>
-                  <div className="text-gray-400 text-sm">Téléchargements</div>
+                  <div className="text-gray-600 dark:text-gray-400 text-sm">
+                    Téléchargements
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white">
                     {stats.loading ? "..." : stats.users.toLocaleString()}
                   </div>
-                  <div className="text-gray-400 text-sm">Membres actifs</div>
+                  <div className="text-gray-600 dark:text-gray-400 text-sm">
+                    Membres actifs
+                  </div>
                 </div>
               </div>
             </div>
@@ -176,99 +182,99 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-black/20">
+      <section className="py-20 bg-gray-100/50 dark:bg-black/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Pourquoi choisir VIverse ?
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Une plateforme moderne conçue pour les créateurs et les joueurs
               passionnés
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Zap className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Upload rapide
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Publiez vos mods en quelques clics avec notre interface
                   intuitive
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Shield className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Sécurisé
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Tous les mods sont vérifiés et sécurisés pour votre protection
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Users className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Communauté active
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Rejoignez des milliers de joueurs passionnés et créateurs
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Tendances en temps réel
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Découvrez les mods les plus populaires et les nouveautés
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Award className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Système de récompenses
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Gagnez des points et des badges pour vos contributions
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all duration-300 group">
+            <Card className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-lg">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Globe className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Accessible partout
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300">
                   Accédez à vos mods favoris depuis n'importe quel appareil
                 </p>
               </CardContent>
@@ -280,11 +286,11 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-3xl p-12 text-center backdrop-blur-sm border border-white/10">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+          <div className="bg-gradient-to-r from-purple-100/80 to-pink-100/80 dark:from-purple-600/20 dark:to-pink-600/20 rounded-3xl p-12 text-center backdrop-blur-sm border border-gray-200/50 dark:border-white/10 shadow-lg">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Prêt à rejoindre l'aventure ?
             </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               Créez votre compte gratuitement et commencez à explorer, partager
               et créer dès aujourd'hui
             </p>
@@ -313,16 +319,16 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/10">
+      <footer className="py-12 border-t border-gray-200/50 dark:border-white/10">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="flex items-center justify-center mb-6">
               <Heart className="h-5 w-5 text-red-500 mr-2" />
-              <span className="text-gray-300">
+              <span className="text-gray-600 dark:text-gray-300">
                 Fait avec passion pour la communauté GTA 6
               </span>
             </div>
-            <p className="text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400">
               © 2024 VIverse. Tous droits réservés.
             </p>
           </div>
