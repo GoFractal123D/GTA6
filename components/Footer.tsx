@@ -166,6 +166,14 @@ export default function Footer() {
                   Directives communautaires
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/dmca"
+                  className="text-gray-400 hover:text-white transition-colors text-sm"
+                >
+                  Politique DMCA
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -209,51 +217,47 @@ export default function Footer() {
 
       {/* Section mention légale */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-800">
-          <div className="flex items-start mb-4">
-            <Shield
-              className="text-blue-500 mr-3 mt-1 flex-shrink-0"
-              size={20}
-            />
-            <h3 className="text-white font-semibold text-lg">
-              🔐 Clause de non-affiliation – GTA6 / Rockstar Games
-            </h3>
-          </div>
-
-          <div className="text-gray-300 text-sm leading-relaxed space-y-3">
-            <p>
-              Ce site est une plateforme indépendante créée par des fans et
-              n'est en aucun cas affiliée, sponsorisée ou approuvée par Rockstar
-              Games, Take-Two Interactive, ou toute entité associée.
-            </p>
-
-            <p>
-              <strong>Grand Theft Auto®</strong>, <strong>GTA®</strong>,{" "}
-              <strong>GTA6®</strong>,<strong>Rockstar Games®</strong> et tous
-              les noms, marques, logos, personnages, graphismes et autres
-              éléments associés sont des marques déposées et propriétés
-              exclusives de leurs titulaires respectifs.
-            </p>
-
-            <p>
-              Toute référence à "GTA6" sur ce site est faite à des fins
-              informatives, communautaires ou culturelles, dans le respect des
-              droits de propriété intellectuelle.
-            </p>
-
-            <p>
-              Si vous êtes représentant légal de Rockstar Games ou Take-Two
-              Interactive et souhaitez signaler un contenu, merci de nous
-              contacter à{" "}
-              <Link
-                href="mailto:legal@gta6community.com"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                legal@gta6community.com
-              </Link>{" "}
-              pour que nous puissions agir rapidement.
-            </p>
-          </div>
+        <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-lg">
+          <h4 className="font-semibold text-white mb-2 flex items-center">
+            <Shield className="h-4 w-4 mr-2 text-red-500" />
+            🔐 Clause de non-affiliation – GTA6 / Rockstar Games
+          </h4>
+          <p className="text-gray-300 text-sm mb-3">
+            Ce site est une plateforme indépendante créée par des fans et n'est
+            en aucun cas affiliée, sponsorisée ou approuvée par Rockstar Games,
+            Take-Two Interactive, ou toute entité associée.
+          </p>
+          <p className="text-gray-300 text-sm mb-3">
+            <strong>Grand Theft Auto®</strong>, <strong>GTA®</strong>,{" "}
+            <strong>GTA6®</strong>,<strong>Rockstar Games®</strong> et tous les
+            noms, marques, logos, caractères, graphismes et autres éléments
+            associés sont des marques déposées et propriétés exclusives de leurs
+            titulaires respectifs.
+          </p>
+          <p className="text-gray-300 text-sm mb-3">
+            Toute référence à "GTA6" sur ce site est faite à des fins
+            informatives, communautaires ou culturelles, dans le respect des
+            droits de propriété intellectuelle.
+          </p>
+          <p className="text-gray-300 text-sm mb-3">
+            <strong>Images et contenu visuel :</strong> Les images utilisées sur
+            ce site sont soit des créations originales, soit utilisées dans le
+            cadre du fair use à des fins éducatives et informatives. Nous ne
+            revendiquons aucun droit de propriété sur les éléments visuels
+            appartenant à Rockstar Games.
+          </p>
+          <p className="text-gray-300 text-sm">
+            Si vous êtes représentant légal de Rockstar Games ou Take-Two
+            Interactive et souhaitez signaler un contenu, merci de nous
+            contacter à{" "}
+            <a
+              href="mailto:legal@gta6community.com"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              legal@gta6community.com
+            </a>{" "}
+            pour que nous puissions agir rapidement.
+          </p>
         </div>
       </div>
 
@@ -283,6 +287,9 @@ export default function Footer() {
               className="hover:text-white transition-colors"
             >
               Cookies
+            </Link>
+            <Link href="/dmca" className="hover:text-white transition-colors">
+              DMCA
             </Link>
           </div>
         </div>

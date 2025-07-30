@@ -147,6 +147,28 @@ export default function TermsPage() {
                 Vous êtes entièrement responsable du contenu que vous publiez, partagez ou créez sur la plateforme.
               </p>
             </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-semibold text-white">Obligations légales spécifiques :</h4>
+              <ul className="list-disc list-inside space-y-2 text-sm">
+                <li><strong>Droits d'auteur :</strong> Vous devez posséder les droits ou avoir l'autorisation d'utiliser tout contenu que vous publiez</li>
+                <li><strong>Contenu original :</strong> Les mods doivent être vos créations originales ou avoir les autorisations nécessaires</li>
+                <li><strong>Respect des marques :</strong> Interdiction d'utiliser des marques déposées sans autorisation</li>
+                <li><strong>Contenu illégal :</strong> Aucun contenu illégal, diffamatoire ou nuisible n'est autorisé</li>
+                <li><strong>Fair use :</strong> Toute utilisation de contenu protégé doit respecter les principes du fair use</li>
+              </ul>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <h4 className="font-semibold text-red-400 mb-2">Conséquences des violations :</h4>
+              <ul className="list-disc list-inside space-y-2 text-sm">
+                <li>Retrait immédiat du contenu violateur</li>
+                <li>Suspension temporaire ou permanente du compte</li>
+                <li>Signalement aux autorités compétentes si nécessaire</li>
+                <li>Responsabilité légale personnelle pour les dommages causés</li>
+                <li>Possibilité de poursuites judiciaires</li>
+              </ul>
+            </div>
             <div className="space-y-3">
               <h4 className="font-semibold text-white">Responsabilité de GTA6 Community</h4>
               <ul className="list-disc list-inside space-y-2 text-sm">

@@ -8,8 +8,15 @@ import {
   Flag,
   Ban,
   Award,
+  Palette,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 
@@ -118,14 +125,28 @@ export default function GuidelinesPage() {
           <CardContent className="text-gray-300 space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <h4 className="font-semibold text-red-400">Contenu illégal</h4>
+                <h4 className="font-semibold text-red-400">
+                  Violations de droits d'auteur
+                </h4>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Mods contenant du contenu piraté</li>
-                  <li>Logiciels malveillants ou cheats</li>
-                  <li>Violation de droits d'auteur</li>
-                  <li>Contenu pédopornographique</li>
+                  <li>Contenu protégé par copyright</li>
+                  <li>Mods utilisant des assets non autorisés</li>
+                  <li>Reproduction de contenu commercial</li>
+                  <li>Utilisation non autorisée de marques</li>
+                  <li>Contenu piraté ou modifié illégalement</li>
                 </ul>
               </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold text-red-400">Contenu illégal</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Logiciels malveillants ou cheats</li>
+                  <li>Contenu pédopornographique</li>
+                  <li>Contenu diffamatoire</li>
+                  <li>Violation de la vie privée</li>
+                </ul>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <h4 className="font-semibold text-red-400">
                   Contenu inapproprié
@@ -135,6 +156,17 @@ export default function GuidelinesPage() {
                   <li>Violence graphique excessive</li>
                   <li>Discours haineux ou discriminatoire</li>
                   <li>Harcèlement ou intimidation</li>
+                </ul>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold text-red-400">
+                  Comportements toxiques
+                </h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Spam ou publicité non autorisée</li>
+                  <li>Trolling ou comportement disruptif</li>
+                  <li>Usurpation d'identité</li>
+                  <li>Partage d'informations personnelles</li>
                 </ul>
               </div>
             </div>
@@ -149,6 +181,138 @@ export default function GuidelinesPage() {
                 <li>Partage d'informations personnelles</li>
               </ul>
             </div>
+
+            <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-lg">
+              <h4 className="font-semibold text-white mb-2">
+                ⚠️ Zéro tolérance pour :
+              </h4>
+              <ul className="text-gray-300 text-sm space-y-1">
+                <li>
+                  • <strong>Violations de droits d'auteur :</strong> Retrait
+                  immédiat et signalement DMCA
+                </li>
+                <li>
+                  • <strong>Contenu commercial non autorisé :</strong>{" "}
+                  Bannissement immédiat
+                </li>
+                <li>
+                  • <strong>Logiciels malveillants :</strong> Signalement aux
+                  autorités
+                </li>
+                <li>
+                  • <strong>Harcèlement grave :</strong> Suspension permanente
+                </li>
+              </ul>
+            </div>
+
+            <Card className="bg-gray-900/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-white">
+                  <Palette className="h-5 w-5 mr-2 text-purple-500" />
+                  Création de contenu inspiré
+                </CardTitle>
+                <CardDescription className="text-gray-300">
+                  Directives pour la création d'images et de contenu original
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-green-900/20 border border-green-500/30 p-4 rounded-lg">
+                  <h4 className="font-semibold text-white mb-2">
+                    ✅ Contenu autorisé :
+                  </h4>
+                  <ul className="text-gray-300 text-sm space-y-1">
+                    <li>
+                      • <strong>Inspiration générale :</strong> Style urbain,
+                      ambiance similaire
+                    </li>
+                    <li>
+                      • <strong>Éléments génériques :</strong> Voitures,
+                      architecture, mode urbaine
+                    </li>
+                    <li>
+                      • <strong>Contenu original :</strong> Vos propres
+                      créations et designs
+                    </li>
+                    <li>
+                      • <strong>Parodies créatives :</strong> Hommages
+                      respectueux et originaux
+                    </li>
+                    <li>
+                      • <strong>Fan art original :</strong> Votre interprétation
+                      personnelle
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-lg">
+                  <h4 className="font-semibold text-white mb-2">
+                    ❌ Contenu interdit :
+                  </h4>
+                  <ul className="text-gray-300 text-sm space-y-1">
+                    <li>
+                      • <strong>Logos officiels :</strong> Rockstar, GTA,
+                      marques déposées
+                    </li>
+                    <li>
+                      • <strong>Personnages spécifiques :</strong> Trevor,
+                      Michael, Franklin
+                    </li>
+                    <li>
+                      • <strong>Lieux reconnaissables :</strong> Los Santos,
+                      Liberty City
+                    </li>
+                    <li>
+                      • <strong>Assets directs :</strong> Interface, police,
+                      éléments de jeu
+                    </li>
+                    <li>
+                      • <strong>Contenu commercial :</strong> Vente d'images
+                      inspirées
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg">
+                  <h4 className="font-semibold text-white mb-2">
+                    📋 Bonnes pratiques :
+                  </h4>
+                  <ul className="text-gray-300 text-sm space-y-1">
+                    <li>
+                      • <strong>Créez du contenu original :</strong> Votre
+                      propre style et vision
+                    </li>
+                    <li>
+                      • <strong>Utilisez des références indirectes :</strong>{" "}
+                      "Style urbain" plutôt que "GTA"
+                    </li>
+                    <li>
+                      • <strong>Respectez les droits d'auteur :</strong> Ne
+                      copiez pas d'assets officiels
+                    </li>
+                    <li>
+                      • <strong>Ajoutez des disclaimers :</strong> "Inspiré de"
+                      plutôt que "Fan art de"
+                    </li>
+                    <li>
+                      • <strong>Évitez l'usage commercial :</strong> Contenu
+                      communautaire uniquement
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-lg">
+                  <h4 className="font-semibold text-white mb-2">
+                    ⚠️ Avertissement légal :
+                  </h4>
+                  <p className="text-gray-300 text-sm">
+                    Même le contenu inspiré peut être contesté. En cas de doute,
+                    privilégiez toujours la création originale. GTA6 Community
+                    ne peut garantir la légalité de votre contenu et décline
+                    toute responsabilité en cas de litige.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
 

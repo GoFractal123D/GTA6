@@ -49,12 +49,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden pt-[45px]">
+    <div className="w-full min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden pt-[100px]">
       {/* Hero immersive */}
       <div className="relative w-full min-h-[60vh] py-20 mb-10 overflow-hidden">
         <Image
-          src="/gta6-city.jpg"
-          alt="GTA 6 City"
+          src="/city.jpg"
+          alt="Ville moderne"
           fill
           className="object-cover object-center absolute left-0 top-0 w-full h-full"
           priority
