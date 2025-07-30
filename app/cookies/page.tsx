@@ -1,33 +1,41 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { 
-  Cookie, 
-  Shield, 
-  Settings, 
-  Eye, 
-  BarChart3, 
-  Users, 
+import {
+  Cookie,
+  Shield,
+  Settings,
+  Eye,
+  BarChart3,
+  Users,
   Lock,
   ExternalLink,
-  Mail
+  Mail,
 } from "lucide-react";
 
 export default function CookiesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 pt-[100px]">
       <div className="container mx-auto px-4 py-8">
         {/* En-tête */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Cookie className="h-12 w-12 text-blue-500 mr-3" />
-            <h1 className="text-4xl font-bold text-white">Politique des Cookies</h1>
+            <h1 className="text-4xl font-bold text-white">
+              Politique des Cookies
+            </h1>
           </div>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Découvrez comment nous utilisons les cookies pour améliorer votre expérience 
-            sur GTA6 Community et comment vous pouvez les gérer.
+            Découvrez comment nous utilisons les cookies pour améliorer votre
+            expérience sur GTA6 Community et comment vous pouvez les gérer.
           </p>
         </div>
 
@@ -45,17 +53,32 @@ export default function CookiesPage() {
             </CardHeader>
             <CardContent className="text-gray-300 space-y-4">
               <p>
-                Un cookie est un petit fichier texte stocké sur votre appareil (ordinateur, 
-                tablette, smartphone) lorsque vous visitez un site web. Les cookies permettent 
-                au site de "se souvenir" de vos actions et préférences sur une période donnée.
+                Un cookie est un petit fichier texte stocké sur votre appareil
+                (ordinateur, tablette, smartphone) lorsque vous visitez un site
+                web. Les cookies permettent au site de "se souvenir" de vos
+                actions et préférences sur une période donnée.
               </p>
               <div className="bg-gray-800/50 p-4 rounded-lg">
-                <h4 className="font-semibold text-white mb-2">Fonctions principales :</h4>
+                <h4 className="font-semibold text-white mb-2">
+                  Fonctions principales :
+                </h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• <strong>Authentification :</strong> Maintenir votre connexion entre les sessions</li>
-                  <li>• <strong>Préférences :</strong> Sauvegarder vos choix (thème, langue, etc.)</li>
-                  <li>• <strong>Analytics :</strong> Comprendre l'utilisation du site pour l'améliorer</li>
-                  <li>• <strong>Sécurité :</strong> Protéger contre les attaques et fraudes</li>
+                  <li>
+                    • <strong>Authentification :</strong> Maintenir votre
+                    connexion entre les sessions
+                  </li>
+                  <li>
+                    • <strong>Préférences :</strong> Sauvegarder vos choix
+                    (thème, langue, etc.)
+                  </li>
+                  <li>
+                    • <strong>Analytics :</strong> Comprendre l'utilisation du
+                    site pour l'améliorer
+                  </li>
+                  <li>
+                    • <strong>Sécurité :</strong> Protéger contre les attaques
+                    et fraudes
+                  </li>
                 </ul>
               </div>
             </CardContent>
@@ -80,12 +103,22 @@ export default function CookiesPage() {
                   Cookies essentiels (obligatoires)
                 </h4>
                 <p className="text-gray-300 text-sm mb-2">
-                  Ces cookies sont nécessaires au fonctionnement du site et ne peuvent pas être désactivés.
+                  Ces cookies sont nécessaires au fonctionnement du site et ne
+                  peuvent pas être désactivés.
                 </p>
                 <ul className="text-gray-300 text-sm space-y-1">
-                  <li>• <strong>Session :</strong> Maintien de votre connexion utilisateur</li>
-                  <li>• <strong>Sécurité :</strong> Protection CSRF et authentification</li>
-                  <li>• <strong>Préférences techniques :</strong> Thème, langue, paramètres d'affichage</li>
+                  <li>
+                    • <strong>Session :</strong> Maintien de votre connexion
+                    utilisateur
+                  </li>
+                  <li>
+                    • <strong>Sécurité :</strong> Protection CSRF et
+                    authentification
+                  </li>
+                  <li>
+                    • <strong>Préférences techniques :</strong> Thème, langue,
+                    paramètres d'affichage
+                  </li>
                 </ul>
               </div>
 
@@ -96,12 +129,22 @@ export default function CookiesPage() {
                   Cookies analytiques (optionnels)
                 </h4>
                 <p className="text-gray-300 text-sm mb-2">
-                  Ces cookies nous aident à comprendre comment le site est utilisé pour l'améliorer.
+                  Ces cookies nous aident à comprendre comment le site est
+                  utilisé pour l'améliorer.
                 </p>
                 <ul className="text-gray-300 text-sm space-y-1">
-                  <li>• <strong>Google Analytics :</strong> Statistiques de visite et comportement utilisateur</li>
-                  <li>• <strong>Performance :</strong> Mesure des temps de chargement et erreurs</li>
-                  <li>• <strong>Navigation :</strong> Pages les plus visitées et parcours utilisateur</li>
+                  <li>
+                    • <strong>Google Analytics :</strong> Statistiques de visite
+                    et comportement utilisateur
+                  </li>
+                  <li>
+                    • <strong>Performance :</strong> Mesure des temps de
+                    chargement et erreurs
+                  </li>
+                  <li>
+                    • <strong>Navigation :</strong> Pages les plus visitées et
+                    parcours utilisateur
+                  </li>
                 </ul>
               </div>
 
@@ -112,12 +155,22 @@ export default function CookiesPage() {
                   Cookies de fonctionnalité (optionnels)
                 </h4>
                 <p className="text-gray-300 text-sm mb-2">
-                  Ces cookies améliorent votre expérience en mémorisant vos préférences.
+                  Ces cookies améliorent votre expérience en mémorisant vos
+                  préférences.
                 </p>
                 <ul className="text-gray-300 text-sm space-y-1">
-                  <li>• <strong>Personnalisation :</strong> Contenu recommandé selon vos intérêts</li>
-                  <li>• <strong>Interface :</strong> Disposition et options d'affichage personnalisées</li>
-                  <li>• <strong>Social :</strong> Intégration avec les réseaux sociaux</li>
+                  <li>
+                    • <strong>Personnalisation :</strong> Contenu recommandé
+                    selon vos intérêts
+                  </li>
+                  <li>
+                    • <strong>Interface :</strong> Disposition et options
+                    d'affichage personnalisées
+                  </li>
+                  <li>
+                    • <strong>Social :</strong> Intégration avec les réseaux
+                    sociaux
+                  </li>
                 </ul>
               </div>
             </CardContent>
@@ -137,24 +190,40 @@ export default function CookiesPage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-gray-800/50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-white mb-2">Paramètres du navigateur</h4>
+                  <h4 className="font-semibold text-white mb-2">
+                    Paramètres du navigateur
+                  </h4>
                   <p className="text-gray-300 text-sm mb-3">
-                    Vous pouvez configurer votre navigateur pour refuser tous les cookies ou 
-                    être informé quand un cookie est envoyé.
+                    Vous pouvez configurer votre navigateur pour refuser tous
+                    les cookies ou être informé quand un cookie est envoyé.
                   </p>
                   <div className="space-y-2 text-sm text-gray-300">
-                    <p><strong>Chrome :</strong> Paramètres → Confidentialité et sécurité → Cookies</p>
-                    <p><strong>Firefox :</strong> Options → Confidentialité et sécurité → Cookies</p>
-                    <p><strong>Safari :</strong> Préférences → Confidentialité → Cookies</p>
-                    <p><strong>Edge :</strong> Paramètres → Cookies et autorisations de site</p>
+                    <p>
+                      <strong>Chrome :</strong> Paramètres → Confidentialité et
+                      sécurité → Cookies
+                    </p>
+                    <p>
+                      <strong>Firefox :</strong> Options → Confidentialité et
+                      sécurité → Cookies
+                    </p>
+                    <p>
+                      <strong>Safari :</strong> Préférences → Confidentialité →
+                      Cookies
+                    </p>
+                    <p>
+                      <strong>Edge :</strong> Paramètres → Cookies et
+                      autorisations de site
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-800/50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-white mb-2">Notre panneau de gestion</h4>
+                  <h4 className="font-semibold text-white mb-2">
+                    Notre panneau de gestion
+                  </h4>
                   <p className="text-gray-300 text-sm mb-3">
-                    Utilisez notre interface pour contrôler précisément quels types de cookies 
-                    vous acceptez sur notre site.
+                    Utilisez notre interface pour contrôler précisément quels
+                    types de cookies vous acceptez sur notre site.
                   </p>
                   <Button className="w-full" variant="outline">
                     <Settings className="h-4 w-4 mr-2" />
@@ -169,9 +238,18 @@ export default function CookiesPage() {
                   Important à savoir
                 </h4>
                 <ul className="text-gray-300 text-sm space-y-1">
-                  <li>• La désactivation de certains cookies peut affecter le fonctionnement du site</li>
-                  <li>• Les cookies essentiels ne peuvent pas être désactivés pour des raisons de sécurité</li>
-                  <li>• Vos préférences sont sauvegardées localement sur votre appareil</li>
+                  <li>
+                    • La désactivation de certains cookies peut affecter le
+                    fonctionnement du site
+                  </li>
+                  <li>
+                    • Les cookies essentiels ne peuvent pas être désactivés pour
+                    des raisons de sécurité
+                  </li>
+                  <li>
+                    • Vos préférences sont sauvegardées localement sur votre
+                    appareil
+                  </li>
                   <li>• Vous pouvez modifier vos choix à tout moment</li>
                 </ul>
               </div>
@@ -186,7 +264,8 @@ export default function CookiesPage() {
                 Cookies tiers
               </CardTitle>
               <CardDescription className="text-gray-300">
-                Services externes qui peuvent placer des cookies sur votre appareil
+                Services externes qui peuvent placer des cookies sur votre
+                appareil
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -194,7 +273,8 @@ export default function CookiesPage() {
                 <div className="border-l-4 border-orange-500 pl-4">
                   <h4 className="font-semibold text-white">Google Analytics</h4>
                   <p className="text-gray-300 text-sm">
-                    Utilisé pour analyser l'utilisation du site et améliorer nos services.
+                    Utilisé pour analyser l'utilisation du site et améliorer nos
+                    services.
                   </p>
                 </div>
 
@@ -215,8 +295,9 @@ export default function CookiesPage() {
 
               <div className="bg-orange-900/20 border border-orange-500/30 p-4 rounded-lg">
                 <p className="text-gray-300 text-sm">
-                  <strong>Note :</strong> Ces services tiers ont leurs propres politiques de confidentialité. 
-                  Nous vous encourageons à les consulter pour plus d'informations.
+                  <strong>Note :</strong> Ces services tiers ont leurs propres
+                  politiques de confidentialité. Nous vous encourageons à les
+                  consulter pour plus d'informations.
                 </p>
               </div>
             </CardContent>
@@ -232,16 +313,18 @@ export default function CookiesPage() {
             </CardHeader>
             <CardContent className="text-gray-300 space-y-4">
               <p>
-                Cette politique des cookies peut être mise à jour périodiquement pour refléter 
-                les changements dans nos pratiques ou pour d'autres raisons opérationnelles, 
-                légales ou réglementaires.
+                Cette politique des cookies peut être mise à jour périodiquement
+                pour refléter les changements dans nos pratiques ou pour
+                d'autres raisons opérationnelles, légales ou réglementaires.
               </p>
               <div className="bg-gray-800/50 p-4 rounded-lg">
-                <h4 className="font-semibold text-white mb-2">Dernière mise à jour :</h4>
+                <h4 className="font-semibold text-white mb-2">
+                  Dernière mise à jour :
+                </h4>
                 <p className="text-gray-300">Décembre 2024</p>
                 <p className="text-gray-300 text-sm mt-2">
-                  Nous vous informerons de tout changement significatif via une notification 
-                  sur le site ou par email.
+                  Nous vous informerons de tout changement significatif via une
+                  notification sur le site ou par email.
                 </p>
               </div>
             </CardContent>
@@ -257,14 +340,15 @@ export default function CookiesPage() {
             </CardHeader>
             <CardContent className="text-gray-300">
               <p className="mb-4">
-                Si vous avez des questions concernant notre utilisation des cookies ou 
-                souhaitez exercer vos droits, n'hésitez pas à nous contacter :
+                Si vous avez des questions concernant notre utilisation des
+                cookies ou souhaitez exercer vos droits, n'hésitez pas à nous
+                contacter :
               </p>
               <div className="space-y-2">
                 <p>
                   <strong>Email :</strong>{" "}
-                  <a 
-                    href="mailto:privacy@gta6community.com" 
+                  <a
+                    href="mailto:privacy@gta6community.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
                     privacy@gta6community.com
@@ -272,8 +356,8 @@ export default function CookiesPage() {
                 </p>
                 <p>
                   <strong>DPO :</strong>{" "}
-                  <a 
-                    href="mailto:dpo@gta6community.com" 
+                  <a
+                    href="mailto:dpo@gta6community.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
                     dpo@gta6community.com
@@ -286,4 +370,4 @@ export default function CookiesPage() {
       </div>
     </div>
   );
-} 
+}
