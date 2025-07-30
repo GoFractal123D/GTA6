@@ -35,7 +35,7 @@ export default function Navigation() {
           >
             <Image
               src="/logo-site.png"
-              alt="GTA6 Community Logo"
+              alt="VIverse Logo"
               width={40}
               height={40}
               className="rounded-lg"

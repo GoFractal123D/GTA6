@@ -47,7 +47,7 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="text-gray-300 space-y-4">
             <p>
-              Chez GTA6 Community, nous respectons votre vie privée et nous nous
+              Chez VIverse, nous respectons votre vie privée et nous nous
               engageons à protéger vos données personnelles. Cette politique
               explique comment nous collectons, utilisons et protégeons vos
               informations.

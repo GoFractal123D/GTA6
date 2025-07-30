@@ -54,9 +54,9 @@ export default function GuidelinesPage() {
           </CardHeader>
           <CardContent className="text-gray-300 space-y-4">
             <p>
-              GTA6 Community est plus qu'une simple plateforme de partage de
-              mods. C'est un espace où les passionnés se rencontrent, partagent
-              leurs créations et construisent ensemble une communauté forte et
+              VIverse est plus qu'une simple plateforme de partage de mods.
+              C'est un espace où les passionnés se rencontrent, partagent leurs
+              créations et construisent ensemble une communauté forte et
               respectueuse.
             </p>
             <p>
@@ -306,9 +306,9 @@ export default function GuidelinesPage() {
                   </h4>
                   <p className="text-gray-300 text-sm">
                     Même le contenu inspiré peut être contesté. En cas de doute,
-                    privilégiez toujours la création originale. GTA6 Community
-                    ne peut garantir la légalité de votre contenu et décline
-                    toute responsabilité en cas de litige.
+                    privilégiez toujours la création originale. VIverse ne peut
+                    garantir la légalité de votre contenu et décline toute
+                    responsabilité en cas de litige.
                   </p>
                 </div>
               </CardContent>

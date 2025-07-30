@@ -35,7 +35,7 @@ export default function CookiesPage() {
           </div>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
             Découvrez comment nous utilisons les cookies pour améliorer votre
-            expérience sur GTA6 Community et comment vous pouvez les gérer.
+            expérience sur VIverse et comment vous pouvez les gérer.
           </p>
         </div>
 

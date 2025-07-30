@@ -32,7 +32,7 @@ export default function FAQPage() {
             Questions fréquentes
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Trouvez rapidement les réponses à vos questions sur GTA6 Community
+            Trouvez rapidement les réponses à vos questions sur VIverse
           </p>
         </div>
 
@@ -89,9 +89,7 @@ export default function FAQPage() {
                 Comment créer un compte ?
               </AccordionTrigger>
               <AccordionContent className="text-gray-300 px-6 pb-6">
-                <p className="mb-3">
-                  Pour créer un compte sur GTA6 Community :
-                </p>
+                <p className="mb-3">Pour créer un compte sur VIverse :</p>
                 <ol className="list-decimal list-inside space-y-1 text-sm">
                   <li>Cliquez sur "Se connecter" en haut à droite</li>
                   <li>Choisissez "Créer un compte"</li>
@@ -187,9 +185,7 @@ export default function FAQPage() {
                 Comment publier un mod ?
               </AccordionTrigger>
               <AccordionContent className="text-gray-300 px-6 pb-6">
-                <p className="mb-3">
-                  Pour publier votre mod sur GTA6 Community :
-                </p>
+                <p className="mb-3">Pour publier votre mod sur VIverse :</p>
                 <ol className="list-decimal list-inside space-y-1 text-sm">
                   <li>Connectez-vous à votre compte</li>
                   <li>Cliquez sur "Publier un mod" dans le menu</li>

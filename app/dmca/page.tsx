@@ -59,8 +59,8 @@ export default function DMCAPage() {
                   Notre engagement :
                 </h4>
                 <p className="text-sm">
-                  GTA6 Community respecte les droits de propriété intellectuelle
-                  et s'engage à répondre rapidement aux signalements de contenu
+                  VIverse respecte les droits de propriété intellectuelle et
+                  s'engage à répondre rapidement aux signalements de contenu
                   protégé par les droits d'auteur.
                 </p>
               </div>
@@ -309,8 +309,8 @@ export default function DMCAPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-300">
-                GTA6 Community applique une politique stricte contre les
-                violations répétées des droits d'auteur.
+                VIverse applique une politique stricte contre les violations
+                répétées des droits d'auteur.
               </p>
 
               <div className="space-y-3">

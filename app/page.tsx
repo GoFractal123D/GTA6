@@ -62,15 +62,7 @@ export default function Home() {
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full">
           <div className="flex flex-col items-center justify-center h-full">
             {/* Logo du site */}
-            <div className="mb-8">
-              <Image
-                src="/logo-site.png"
-                alt="GTA6 Community Logo"
-                width={120}
-                height={120}
-                className="rounded-2xl shadow-2xl"
-              />
-            </div>
+            
             {/* Le logo 'VI' est déjà sur l'image de fond */}
             <div className="mt-[200px]" />{" "}
             {/* Ajuste cette valeur pour placer les boutons juste sous le logo selon la hauteur de l'image/logo */}
@@ -81,8 +73,8 @@ export default function Home() {
       {/* Bannière d’actualité */}
       <div className="w-full flex justify-center mb-10 animate-pulse">
         <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl shadow-lg max-w-3xl w-full text-center">
-          🚨 Dernière news : Lancement officiel de GTA 6 Community ! Découvrez
-          les nouveaux mods et fonctionnalités.{" "}
+          🚨 Dernière news : Lancement officiel de VIverse ! Découvrez les
+          nouveaux mods et fonctionnalités.{" "}
           <Link href="/community" className="underline font-semibold ml-2">
             En savoir plus
           </Link>
@@ -122,15 +114,15 @@ export default function Home() {
       {/* À propos */}
       <section className="w-full max-w-5xl mx-auto mb-32 px-4 pt-8">
         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-white">
-          Qu'est-ce que GTA 6 Community ?
+          Qu'est-ce que VIverse ?
         </h2>
         <p className="text-center text-muted-foreground text-lg mb-8">
-          GTA 6 Community est un espace ouvert où chaque joueur peut publier,
-          commenter, voter et partager ses créations ou découvertes : mods,
-          guides, vidéos, théories, etc.
+          VIverse est un espace ouvert où chaque joueur peut publier, commenter,
+          voter et partager ses créations ou découvertes : mods, guides, vidéos,
+          théories, etc.
           <br />
-          Notre mission : rassembler la meilleure communauté autour de GTA 6,
-          dans un environnement moderne, sécurisé et immersif.
+          Notre mission : rassembler la meilleure communauté de jeux vidéo, dans
+          un environnement moderne, sécurisé et immersif.
         </p>
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-background/80 rounded-xl p-6 shadow flex flex-col items-center hover:scale-105 transition-transform">

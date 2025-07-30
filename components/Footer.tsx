@@ -28,17 +28,17 @@ export default function Footer() {
             <div className="flex items-center mb-4">
               <Image
                 src="/logo-site.png"
-                alt="GTA6 Community Logo"
+                alt="VIverse Logo"
                 width={48}
                 height={48}
                 className="rounded-lg mr-3"
               />
               <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                GTA6 Community
+                VIverse
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              La plateforme communautaire ultime pour les fans de GTA 6.
+              La plateforme communautaire ultime pour les fans de jeux vidéo.
               Partagez, découvrez et votez pour les meilleurs mods et contenus.
             </p>
             <div className="flex space-x-4">
@@ -267,7 +267,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
           <div className="mb-4 md:mb-0">
-            © {currentYear} GTA6 Community. Tous droits réservés.
+            © {currentYear} VIverse. Tous droits réservés.
             <span className="ml-2">
               Créé avec ❤️ par des fans pour des fans.
             </span>
