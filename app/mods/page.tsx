@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Star, Download, MessageCircle, Flame, Clock } from "lucide-react";
 import DownloadButton from "@/components/DownloadButton";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function ModsPage() {
   const { t } = useTranslation();
@@ -124,7 +125,8 @@ export default function ModsPage() {
   }
 
   return (
-    <div className="pt-24 max-w-6xl mx-auto px-4">
+    <ProtectedRoute>
+      <div className="pt-24 max-w-6xl mx-auto px-4">
       {/* Section Mods du moment */}
       {featured.length > 0 && (
         <div className="mb-12">
@@ -347,6 +349,7 @@ export default function ModsPage() {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

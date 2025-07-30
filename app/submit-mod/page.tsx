@@ -25,6 +25,7 @@ import { Upload, X, FileArchive, ImageIcon, FileText } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function SubmitModPage() {
   const [modFiles, setModFiles] = useState<File[]>([]);
@@ -168,7 +169,8 @@ export default function SubmitModPage() {
   };
 
   return (
-    <div className="max-w-full w-full sm:max-w-2xl mx-auto pt-28 px-2 sm:px-4 space-y-8">
+    <ProtectedRoute>
+      <div className="max-w-full w-full sm:max-w-2xl mx-auto pt-28 px-2 sm:px-4 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Publier un mod</h1>
         <p className="text-muted-foreground mt-2">
@@ -477,6 +479,7 @@ export default function SubmitModPage() {
           </CardContent>
         </Card>
       </form>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

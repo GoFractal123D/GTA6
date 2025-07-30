@@ -56,24 +56,28 @@ export default function Navigation() {
               </span>
               <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
             </Link>
-            <Link
-              href="/community"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
-            >
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300 drop-shadow-sm">
-                Communauté
-              </span>
-              <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
-            </Link>
-            <Link
-              href="/mods"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
-            >
-              <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent group-hover:from-green-500 group-hover:to-blue-500 transition-all duration-300 drop-shadow-sm">
-                Mods
-              </span>
-              <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
-            </Link>
+            {user && (
+              <>
+                <Link
+                  href="/community"
+                  className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
+                >
+                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300 drop-shadow-sm">
+                    Communauté
+                  </span>
+                  <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
+                </Link>
+                <Link
+                  href="/mods"
+                  className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
+                >
+                  <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent group-hover:from-green-500 group-hover:to-blue-500 transition-all duration-300 drop-shadow-sm">
+                    Mods
+                  </span>
+                  <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
+                </Link>
+              </>
+            )}
             <Link
               href="/sponsors"
               className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
@@ -138,20 +142,24 @@ export default function Navigation() {
             >
               Accueil
             </Link>
-            <Link
-              href="/community"
-              onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent hover:from-purple-500 hover:to-pink-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
-            >
-              Communauté
-            </Link>
-            <Link
-              href="/mods"
-              onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
-            >
-              Mods
-            </Link>
+            {user && (
+              <>
+                <Link
+                  href="/community"
+                  onClick={() => setDrawerOpen(false)}
+                  className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent hover:from-purple-500 hover:to-pink-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
+                >
+                  Communauté
+                </Link>
+                <Link
+                  href="/mods"
+                  onClick={() => setDrawerOpen(false)}
+                  className="text-xl font-bold tracking-wide bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent hover:from-green-500 hover:to-blue-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
+                >
+                  Mods
+                </Link>
+              </>
+            )}
             <Link
               href="/sponsors"
               onClick={() => setDrawerOpen(false)}

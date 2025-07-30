@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import Link from "next/link";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function ProfilePage() {
   const { t } = useTranslation();
@@ -89,27 +90,9 @@ export default function ProfilePage() {
     setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
   }
 
-  if (!user) {
-    return (
-      <div className="pt-24 max-w-2xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-4 text-pink-500">
-          {t("profile.username")}
-        </h2>
-        <p className="text-lg text-muted-foreground mb-6">
-          {t("profile.noCommentsYet")}
-        </p>
-        <Link
-          href="/login"
-          className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors"
-        >
-          {t("profile.login")}
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative min-h-screen w-full">
+    <ProtectedRoute>
+            <div className="relative min-h-screen w-full">
       {/* Arrière-plan */}
       <div className="absolute inset-0 -z-10">
         <img
@@ -345,6 +328,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

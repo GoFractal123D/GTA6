@@ -2,6 +2,7 @@
 import CommunityForm from "@/components/CommunityForm";
 import CommunityFeed from "@/components/CommunityFeed";
 import { AuthProvider } from "@/components/AuthProvider";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Carousel,
   CarouselContent,
@@ -128,8 +129,9 @@ export default function CommunityPage() {
   };
 
   return (
-    <AuthProvider>
-      <div className="w-full pt-20">
+    <ProtectedRoute>
+      <AuthProvider>
+        <div className="w-full pt-20">
         {/* Carrousel Hero */}
         <section className="w-full relative py-12">
           {/* Image de fond - pleine largeur absolue */}
@@ -981,7 +983,8 @@ export default function CommunityPage() {
             </div>
           </div>
         </section>
-      </div>
-    </AuthProvider>
+        </div>
+      </AuthProvider>
+    </ProtectedRoute>
   );
 }
