@@ -20,11 +20,18 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  Wifi,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { ErrorHandler } from "@/lib/errorHandler";
+import {
+  testSupabaseConnection,
+  testSupabaseStorage,
+} from "@/lib/supabaseTest";
+import { DataValidator } from "@/lib/dataValidator";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 
@@ -176,32 +183,100 @@ export default function CreatePostPage() {
     });
   };
 
-  const uploadFile = async (
-    file: File,
-    userId: string
-  ): Promise<string | null> => {
+  // Fonction pour tester la connexion Supabase
+  const testConnection = async () => {
+    setLoading(true);
     try {
-      const fileName = `${userId}/${Date.now()}_${file.name}`;
-      console.log("Tentative d'upload:", fileName);
+      const isConnected = await testSupabaseConnection();
+      if (isConnected) {
+        toast({
+          title: "Test réussi",
+          description: "La connexion à Supabase fonctionne correctement.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Test échoué",
+          description: "Problème de connexion à Supabase.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      ErrorHandler.logError("Test de connexion", error);
+      toast({
+        title: "Erreur de test",
+        description: "Erreur lors du test de connexion.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const { data, error } = await supabase.storage
-        .from("community-uploads")
-        .upload(fileName, file);
+  // Fonction pour tester la connexion au stockage Supabase
+  const testStorageConnection = async () => {
+    setLoading(true);
+    try {
+      const result = await testSupabaseStorage();
+      if (result.success) {
+        toast({
+          title: "Test de stockage réussi",
+          description:
+            "La connexion au stockage Supabase fonctionne correctement.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Test de stockage échoué",
+          description:
+            result.error || "Problème de connexion au stockage Supabase.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      ErrorHandler.logError("Test de stockage", error);
+      toast({
+        title: "Erreur de test",
+        description: "Erreur lors du test de stockage.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour valider la connexion Supabase
+  const validateSupabaseConnection = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        ErrorHandler.logError("Validation connexion Supabase", error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      ErrorHandler.logError("Validation connexion Supabase", error);
+      return false;
+    }
+  };
+
+  // Fonction pour vérifier la structure de la table community
+  const validateTableStructure = async (): Promise<boolean> => {
+    try {
+      // Essayer de récupérer un enregistrement pour vérifier la structure
+      const { data, error } = await supabase
+        .from("community")
+        .select("id, author_id, type, title, content, file_url, created_at")
+        .limit(1);
 
       if (error) {
-        console.error("Erreur upload Supabase:", error);
-        return null;
+        ErrorHandler.logError("Validation structure table", error);
+        return false;
       }
-
-      if (data) {
-        console.log("Upload réussi:", data.path);
-        return data.path;
-      }
-
-      return null;
+      return true;
     } catch (error) {
-      console.error("Exception upload:", error);
-      return null;
+      ErrorHandler.logError("Validation structure table", error);
+      return false;
     }
   };
 
@@ -209,17 +284,39 @@ export default function CreatePostPage() {
     try {
       console.log("Tentative de création du post:", postData);
 
-      const { error } = await supabase.from("community").insert(postData);
+      // Validation des données avec le validateur
+      const validation = DataValidator.validateCommunityPost(postData);
 
-      if (error) {
-        console.error("Erreur création post:", error);
+      if (!validation.isValid) {
+        console.error("Données de post invalides:", validation.errors);
         return false;
       }
 
-      console.log("Post créé avec succès");
+      const validatedData = validation.validatedData!;
+      console.log("Données validées:", validatedData);
+      console.log("Envoi des données à Supabase...");
+
+      const { data, error } = await supabase
+        .from("community")
+        .insert([validatedData])
+        .select();
+
+      console.log("Réponse Supabase - data:", data, "error:", error);
+
+      if (error) {
+        ErrorHandler.logError("Création de post", error);
+        return false;
+      }
+
+      if (!data || data.length === 0) {
+        console.error("Aucune donnée retournée lors de la création du post");
+        return false;
+      }
+
+      console.log("Post créé avec succès:", data[0]);
       return true;
     } catch (error) {
-      console.error("Exception création post:", error);
+      ErrorHandler.logError("Création de post", error);
       return false;
     }
   };
@@ -241,15 +338,129 @@ export default function CreatePostPage() {
     setLoading(true);
 
     try {
+      // Valider la connexion Supabase
+      const isConnected = await validateSupabaseConnection();
+      if (!isConnected) {
+        toast({
+          title: "Erreur de connexion",
+          description:
+            "Impossible de se connecter au serveur. Veuillez réessayer.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Valider la structure de la table
+      const isTableValid = await validateTableStructure();
+      if (!isTableValid) {
+        toast({
+          title: "Erreur de base de données",
+          description:
+            "Problème avec la structure de la base de données. Veuillez contacter l'administrateur.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       // Upload du fichier si sélectionné
       let fileUrl = null;
       if (files.length > 0) {
-        fileUrl = await uploadFile(files[0], user.id);
-        if (fileUrl === null) {
+        console.log("Début de l'upload du fichier:", files[0].name);
+        console.log("Taille du fichier:", files[0].size, "bytes");
+        console.log("Type du fichier:", files[0].type);
+
+        // Utiliser une méthode plus simple pour l'upload
+        try {
+          const fileName = `${user.id}/${Date.now()}_${files[0].name}`;
+          console.log("Nom du fichier:", fileName);
+
+          // Vérifier que le bucket existe
+          console.log("Vérification du bucket community-uploads...");
+          const { data: bucketData, error: bucketError } =
+            await supabase.storage
+              .from("community-uploads")
+              .list("", { limit: 1 });
+
+          if (bucketError) {
+            console.error("Erreur bucket:", bucketError);
+            toast({
+              title: "Erreur de configuration",
+              description:
+                "Le bucket de stockage n'est pas accessible. Veuillez contacter l'administrateur.",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+
+          console.log("Bucket accessible, début de l'upload...");
+          const { data, error } = await supabase.storage
+            .from("community-uploads")
+            .upload(fileName, files[0], {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          console.log("Réponse upload - data:", data, "error:", error);
+
+          if (error) {
+            console.error("Erreur upload:", error);
+            console.error("Type d'erreur:", typeof error);
+            console.error("Message d'erreur:", error.message);
+
+            // Gestion spécifique des erreurs Supabase
+            if (error.message?.includes("JSON")) {
+              toast({
+                title: "Erreur de communication",
+                description:
+                  "Erreur de communication avec le serveur de stockage. Veuillez réessayer.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Erreur upload",
+                description:
+                  error.message ||
+                  "Impossible d'uploader le fichier. Veuillez réessayer.",
+                variant: "destructive",
+              });
+            }
+            setLoading(false);
+            return;
+          }
+
+          if (data && data.path) {
+            console.log("Upload réussi:", data.path);
+            fileUrl = DataValidator.validateFileUrl(data.path);
+            console.log("URL validée:", fileUrl);
+          } else {
+            console.error("Données d'upload invalides:", data);
+            console.error("Type de data:", typeof data);
+            toast({
+              title: "Erreur upload",
+              description: "Réponse d'upload invalide. Veuillez réessayer.",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+        } catch (uploadError) {
+          console.error("Exception upload complète:", uploadError);
+          console.error("Type d'exception:", typeof uploadError);
+          console.error(
+            "Message d'exception:",
+            (uploadError as Error)?.message
+          );
+          console.error("Stack trace:", (uploadError as Error)?.stack);
+
+          ErrorHandler.logError("Upload de fichier", uploadError);
+
+          const errorMessage = ErrorHandler.getErrorMessage(uploadError);
           toast({
             title: "Erreur upload",
-            description:
-              "Impossible d'uploader le fichier. Veuillez réessayer.",
+            description: errorMessage,
             variant: "destructive",
           });
           setLoading(false);
@@ -266,6 +477,8 @@ export default function CreatePostPage() {
         file_url: fileUrl,
       };
 
+      console.log("Données du post:", postData);
+
       const success = await createPost(postData);
 
       if (success) {
@@ -279,17 +492,29 @@ export default function CreatePostPage() {
           router.push("/community");
         }, 1500);
       } else {
-        toast({
-          title: "Erreur lors de la création",
-          description: "Impossible de créer le post. Veuillez réessayer.",
-          variant: "destructive",
-        });
+        // Vérifier s'il y a des erreurs de validation
+        const validation = DataValidator.validateCommunityPost(postData);
+        if (!validation.isValid && validation.errors) {
+          toast({
+            title: "Données invalides",
+            description: validation.errors.join(", "),
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erreur lors de la création",
+            description: "Impossible de créer le post. Veuillez réessayer.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
-      console.error("Erreur générale:", error);
+      ErrorHandler.logError("Soumission du formulaire", error);
+
+      const errorMessage = ErrorHandler.getErrorMessage(error);
       toast({
         title: "Erreur",
-        description: "Une erreur inattendue s'est produite.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -335,6 +560,34 @@ export default function CreatePostPage() {
                   Retour
                 </Button>
               </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testConnection}
+                disabled={loading}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <Wifi className="w-4 h-4 mr-2" />
+                )}
+                Test Connexion
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testStorageConnection}
+                disabled={loading}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                Test Stockage
+              </Button>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-white">Créer un post</h1>
                 <p className="text-muted-foreground">
