@@ -92,12 +92,22 @@ export default function CreatePostPage() {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Validation de la taille du fichier (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validation de la taille du fichier (50MB max pour les images, 20MB pour les autres)
+    const maxSizeImages = 50 * 1024 * 1024; // 50MB pour les images
+    const maxSizeOthers = 20 * 1024 * 1024; // 20MB pour les autres fichiers
+
+    const maxSize = selectedFile.type.startsWith("image/")
+      ? maxSizeImages
+      : maxSizeOthers;
+
     if (selectedFile.size > maxSize) {
       toast({
         title: "Fichier trop volumineux",
-        description: `${selectedFile.name} dépasse la limite de 10MB.`,
+        description: `${selectedFile.name} dépasse la limite de ${(
+          maxSize /
+          1024 /
+          1024
+        ).toFixed(0)}MB.`,
         variant: "warning",
       });
       return;
@@ -409,11 +419,20 @@ export default function CreatePostPage() {
           console.log("Nom du fichier:", fileName);
 
           // Vérifier la taille du fichier
-          const maxSize = 10 * 1024 * 1024; // 10MB
+          const maxSizeImages = 50 * 1024 * 1024; // 50MB pour les images
+          const maxSizeOthers = 20 * 1024 * 1024; // 20MB pour les autres fichiers
+          const maxSize = files[0].type.startsWith("image/")
+            ? maxSizeImages
+            : maxSizeOthers;
+
           if (files[0].size > maxSize) {
             toast({
               title: "Fichier trop volumineux",
-              description: `Le fichier dépasse la limite de 10MB. Taille actuelle: ${(
+              description: `Le fichier dépasse la limite de ${(
+                maxSize /
+                1024 /
+                1024
+              ).toFixed(0)}MB. Taille actuelle: ${(
                 files[0].size /
                 1024 /
                 1024
@@ -424,10 +443,14 @@ export default function CreatePostPage() {
             return;
           }
 
-          // Compresser l'image si nécessaire
+          // Compression optionnelle pour les images moyennes (seulement si > 10MB et < 20MB)
           let fileToUpload = files[0];
-          if (files[0].type.startsWith("image/")) {
-            console.log("Compression de l'image...");
+          if (
+            files[0].type.startsWith("image/") &&
+            files[0].size > 10 * 1024 * 1024 &&
+            files[0].size < 20 * 1024 * 1024
+          ) {
+            console.log("Compression optionnelle de l'image...");
             try {
               fileToUpload = await ImageCompressor.compressIfNeeded(files[0]);
               console.log(
@@ -442,6 +465,10 @@ export default function CreatePostPage() {
               );
               fileToUpload = files[0];
             }
+          } else if (files[0].type.startsWith("image/")) {
+            console.log(
+              "Image de grande taille, pas de compression automatique"
+            );
           }
 
           console.log("Début de l'upload...");
@@ -833,8 +860,8 @@ export default function CreatePostPage() {
                       Choisir un fichier
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Formats acceptés : Images, Vidéos (max 10 min), PDF,
-                      Documents (max 10MB)
+                      Formats acceptés : Images (max 50MB), Vidéos (max 10 min,
+                      20MB), PDF, Documents (max 20MB)
                     </p>
                   </div>
 
@@ -927,10 +954,12 @@ export default function CreatePostPage() {
                         📎 Médias acceptés
                       </h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Images (JPG, PNG, GIF)</li>
-                        <li>• Vidéos (MP4, WebM) - max 10 minutes</li>
-                        <li>• Documents (PDF, DOC, TXT)</li>
-                        <li>• Taille max : 10MB (1 fichier par post)</li>
+                        <li>• Images (JPG, PNG, GIF) - max 50MB</li>
+                        <li>• Vidéos (MP4, WebM) - max 10 minutes, 20MB</li>
+                        <li>• Documents (PDF, DOC, TXT) - max 20MB</li>
+                        <li>
+                          • Compression automatique pour les images moyennes
+                        </li>
                       </ul>
                     </div>
                   </div>

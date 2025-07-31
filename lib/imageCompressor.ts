@@ -1,6 +1,6 @@
 // Compresseur d'images pour réduire la taille avant upload
 export class ImageCompressor {
-  static async compressImage(file: File, maxSizeMB: number = 5): Promise<File> {
+  static async compressImage(file: File, maxSizeMB: number = 20): Promise<File> {
     return new Promise((resolve, reject) => {
       // Si le fichier n'est pas une image, le retourner tel quel
       if (!file.type.startsWith('image/')) {
@@ -20,9 +20,9 @@ export class ImageCompressor {
       const img = new Image();
 
       img.onload = () => {
-        // Calculer les nouvelles dimensions
+        // Calculer les nouvelles dimensions (plus conservateur)
         let { width, height } = img;
-        const maxDimension = 1920; // Dimension maximale
+        const maxDimension = 2560; // Dimension maximale augmentée
 
         if (width > height && width > maxDimension) {
           height = (height * maxDimension) / width;
@@ -39,7 +39,7 @@ export class ImageCompressor {
         // Dessiner l'image redimensionnée
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // Convertir en blob avec compression
+        // Convertir en blob avec compression moins agressive
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -56,7 +56,7 @@ export class ImageCompressor {
             }
           },
           file.type,
-          0.8 // Qualité de compression (0.8 = 80%)
+          0.9 // Qualité de compression augmentée (0.9 = 90%)
         );
       };
 
@@ -70,7 +70,7 @@ export class ImageCompressor {
   }
 
   static async compressIfNeeded(file: File): Promise<File> {
-    const maxSizeMB = 5; // 5MB max
+    const maxSizeMB = 20; // 20MB max (augmenté)
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     if (file.size <= maxSizeBytes) {
