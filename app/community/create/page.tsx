@@ -33,6 +33,7 @@ import {
   diagnoseStorageIssue,
 } from "@/lib/supabaseTest";
 import { DataValidator } from "@/lib/dataValidator";
+import { ImageCompressor } from "@/lib/imageCompressor";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 
@@ -407,13 +408,56 @@ export default function CreatePostPage() {
           const fileName = `${user.id}/${Date.now()}_${files[0].name}`;
           console.log("Nom du fichier:", fileName);
 
+          // Vérifier la taille du fichier
+          const maxSize = 10 * 1024 * 1024; // 10MB
+          if (files[0].size > maxSize) {
+            toast({
+              title: "Fichier trop volumineux",
+              description: `Le fichier dépasse la limite de 10MB. Taille actuelle: ${(
+                files[0].size /
+                1024 /
+                1024
+              ).toFixed(2)}MB`,
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+
+          // Compresser l'image si nécessaire
+          let fileToUpload = files[0];
+          if (files[0].type.startsWith("image/")) {
+            console.log("Compression de l'image...");
+            try {
+              fileToUpload = await ImageCompressor.compressIfNeeded(files[0]);
+              console.log(
+                "Taille après compression:",
+                fileToUpload.size,
+                "bytes"
+              );
+            } catch (compressionError) {
+              console.warn(
+                "Erreur de compression, utilisation du fichier original:",
+                compressionError
+              );
+              fileToUpload = files[0];
+            }
+          }
+
           console.log("Début de l'upload...");
+
+          // Options d'upload optimisées pour les gros fichiers
+          const uploadOptions = {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: fileToUpload.type, // Spécifier le type MIME
+          };
+
+          console.log("Options d'upload:", uploadOptions);
+
           const { data, error } = await supabase.storage
             .from("community-uploads")
-            .upload(fileName, files[0], {
-              cacheControl: "3600",
-              upsert: false,
-            });
+            .upload(fileName, fileToUpload, uploadOptions);
 
           console.log("Réponse upload - data:", data, "error:", error);
 
@@ -427,7 +471,7 @@ export default function CreatePostPage() {
               toast({
                 title: "Erreur de communication",
                 description:
-                  "Erreur de communication avec le serveur de stockage. Veuillez réessayer.",
+                  "Erreur de communication avec le serveur de stockage. Le fichier est peut-être trop volumineux.",
                 variant: "destructive",
               });
             } else if (
@@ -438,6 +482,16 @@ export default function CreatePostPage() {
                 title: "Erreur de configuration",
                 description:
                   "Le bucket de stockage n'est pas accessible. Veuillez contacter l'administrateur.",
+                variant: "destructive",
+              });
+            } else if (
+              error.message?.includes("size") ||
+              error.message?.includes("large")
+            ) {
+              toast({
+                title: "Fichier trop volumineux",
+                description:
+                  "Le fichier est trop volumineux pour être uploadé. Veuillez le compresser ou choisir un fichier plus petit.",
                 variant: "destructive",
               });
             } else {
