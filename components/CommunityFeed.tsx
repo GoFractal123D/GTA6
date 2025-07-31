@@ -24,9 +24,6 @@ export default function CommunityFeed() {
   async function fetchFeed() {
     setLoading(true);
     try {
-      console.log("Récupération des posts de la communauté...");
-
-      // Récupérer les posts sans jointure (la table profiles n'existe pas ou n'est pas liée)
       const { data, error } = await supabase
         .from("community")
         .select("*")
@@ -36,14 +33,6 @@ export default function CommunityFeed() {
         console.error("Erreur lors de la récupération des posts:", error);
         setItems([]);
       } else {
-        console.log("Posts récupérés:", data);
-        console.log("Détail du premier post:", data[0]);
-        console.log("TYPE_LABELS disponibles:", Object.keys(TYPE_LABELS));
-        console.log("Type du premier post:", data[0]?.type);
-        console.log(
-          "Est-ce que le type existe dans TYPE_LABELS?",
-          TYPE_LABELS[data[0]?.type]
-        );
         setItems(data || []);
       }
     } catch (error) {
@@ -64,10 +53,6 @@ export default function CommunityFeed() {
       </div>
     );
 
-  console.log("État actuel - items:", items);
-  console.log("Nombre d'items:", items.length);
-  console.log("Items est un array?", Array.isArray(items));
-
   if (!items.length)
     return (
       <div className="text-center py-12">
@@ -82,7 +67,7 @@ export default function CommunityFeed() {
     );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ position: "relative", zIndex: 1000 }}>
       {/* En-tête avec bouton de rafraîchissement */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Publications récentes</h2>
@@ -92,21 +77,14 @@ export default function CommunityFeed() {
         </Button>
       </div>
 
-      {/* Debug temporaire */}
-      <div className="bg-yellow-100 p-4 rounded-lg border">
-        <h3 className="font-bold mb-2">Debug Info:</h3>
-        <p>Nombre d'items: {items.length}</p>
-        <p>Items: {JSON.stringify(items, null, 2)}</p>
-      </div>
-
       {/* Liste des publications */}
       <div className="flex flex-col gap-6">
         {items.map((item, index) => {
-          console.log(`Rendu de l'item ${index}:`, item);
           return (
             <div
               key={item.id}
               className="bg-card/80 shadow-smooth rounded-xl p-6 animate-fade-in"
+              style={{ position: "relative", zIndex: 1001 }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-2 py-0.5 rounded bg-primary text-primary-foreground text-xs font-semibold">
