@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "./AuthProvider";
 
 const TYPE_LABELS = {
   guide: "Guide",
@@ -15,16 +16,14 @@ const TYPE_LABELS = {
 export default function CommunityFeed() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchFeed();
-  }, []);
+  }, [user]); // Recharger quand l'utilisateur change
 
   // Fonction pour gérer les likes
   const handleLike = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour liker");
       return;
@@ -85,9 +84,6 @@ export default function CommunityFeed() {
 
   // Fonction pour gérer les commentaires
   const handleComment = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour commenter");
       return;
@@ -104,9 +100,6 @@ export default function CommunityFeed() {
 
   // Fonction pour gérer les partages
   const handleShare = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour partager");
       return;
@@ -123,15 +116,10 @@ export default function CommunityFeed() {
 
   // Fonction pour gérer les favoris
   const handleFavorite = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour sauvegarder");
       return;
     }
-
-    setInteracting((prev) => ({ ...prev, [`favorite-${postId}`]: true }));
 
     try {
       // Vérifier si l'utilisateur a déjà mis en favori
@@ -145,34 +133,37 @@ export default function CommunityFeed() {
 
       if (existingFavorite) {
         // Supprimer le favori
-        await supabase.from("post").delete().eq("id", existingFavorite.id);
-
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === postId ? { ...item, favorite: false } : item
-          )
-        );
+        await supabase
+          .from("post")
+          .delete()
+          .eq("id", existingFavorite.id);
+        
+        setItems(prev => prev.map(item => 
+          item.id === postId 
+            ? { ...item, favorite: false }
+            : item
+        ));
         toast.success("Retiré des favoris");
       } else {
         // Ajouter le favori
-        await supabase.from("post").insert({
-          user_id: user.id,
-          post_id: postId,
-          action_type: "favorite",
-        });
-
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === postId ? { ...item, favorite: true } : item
-          )
-        );
+        await supabase
+          .from("post")
+          .insert({
+            user_id: user.id,
+            post_id: postId,
+            action_type: "favorite"
+          });
+        
+        setItems(prev => prev.map(item => 
+          item.id === postId 
+            ? { ...item, favorite: true }
+            : item
+        ));
         toast.success("Ajouté aux favoris !");
       }
     } catch (error) {
       console.error("Erreur lors du favori:", error);
       toast.error("Erreur lors de la sauvegarde");
-    } finally {
-      setInteracting((prev) => ({ ...prev, [`favorite-${postId}`]: false }));
     }
   };
 
@@ -190,11 +181,6 @@ export default function CommunityFeed() {
         setItems([]);
         return;
       }
-
-      // Récupérer l'utilisateur actuel
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
 
       // Pour chaque publication, récupérer les statistiques d'interaction
       const postsWithStats = await Promise.all(
@@ -220,30 +206,35 @@ export default function CommunityFeed() {
             .eq("post_id", post.id)
             .eq("action_type", "share");
 
-          // Vérifier les interactions de l'utilisateur actuel
+          // Vérifier les interactions de l'utilisateur actuel (seulement si connecté)
           let userHasLiked = false;
           let isFavorited = false;
 
           if (user) {
-            // Vérifier si l'utilisateur a liké
-            const { data: userLike } = await supabase
-              .from("post")
-              .select("*")
-              .eq("post_id", post.id)
-              .eq("user_id", user.id)
-              .eq("action_type", "like")
-              .single();
-            userHasLiked = !!userLike;
+            try {
+              // Vérifier si l'utilisateur a liké
+              const { data: userLike } = await supabase
+                .from("post")
+                .select("*")
+                .eq("post_id", post.id)
+                .eq("user_id", user.id)
+                .eq("action_type", "like")
+                .single();
+              userHasLiked = !!userLike;
 
-            // Vérifier si l'utilisateur a mis en favori
-            const { data: userFavorite } = await supabase
-              .from("post")
-              .select("*")
-              .eq("post_id", post.id)
-              .eq("user_id", user.id)
-              .eq("action_type", "favorite")
-              .single();
-            isFavorited = !!userFavorite;
+              // Vérifier si l'utilisateur a mis en favori
+              const { data: userFavorite } = await supabase
+                .from("post")
+                .select("*")
+                .eq("post_id", post.id)
+                .eq("user_id", user.id)
+                .eq("action_type", "favorite")
+                .single();
+              isFavorited = !!userFavorite;
+            } catch (error) {
+              // Erreur normale si l'utilisateur n'a pas d'interactions
+              console.log("Aucune interaction trouvée pour cet utilisateur");
+            }
           }
 
           return {
@@ -252,7 +243,7 @@ export default function CommunityFeed() {
             comments: comments || 0,
             share: shares || 0,
             favorite: isFavorited,
-            userHasLiked: userHasLiked,
+            userHasLiked: userHasLiked
           };
         })
       );
