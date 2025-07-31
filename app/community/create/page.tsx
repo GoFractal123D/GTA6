@@ -87,6 +87,19 @@ export default function CreatePostPage() {
   useEffect(() => {
     const checkDatabase = async () => {
       try {
+        // Test de connexion Supabase
+        console.log("Test de connexion Supabase...");
+        const { data: testData, error: testError } = await supabase
+          .from("community")
+          .select("count")
+          .limit(1);
+
+        if (testError) {
+          console.error("Erreur de connexion Supabase:", testError);
+        } else {
+          console.log("Connexion Supabase OK");
+        }
+
         const result = await setupDatabase();
         console.log(
           "Résultat de la vérification de la base de données:",
@@ -241,18 +254,31 @@ export default function CreatePostPage() {
         const fileName = `${user.id}/${Date.now()}_${file.name}`;
 
         console.log("Tentative d'upload du fichier:", fileName);
+        console.log("Type de fichier:", file.type);
+        console.log("Taille du fichier:", file.size);
 
-        const { data, error } = await supabase.storage
-          .from("community-uploads")
-          .upload(fileName, file);
+        try {
+          // Utiliser fetch directement pour éviter les problèmes JSON
+          const formData = new FormData();
+          formData.append("file", file);
 
-        if (error) {
-          console.error("Erreur upload fichier:", error);
-          throw new Error(`Erreur upload fichier: ${error.message}`);
+          const response = await fetch(`/api/upload`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur upload: ${errorText}`);
+          }
+
+          const result = await response.json();
+          fileUrl = result.path;
+          console.log("Fichier uploadé avec succès:", fileUrl);
+        } catch (uploadError) {
+          console.error("Exception lors de l'upload:", uploadError);
+          throw uploadError;
         }
-
-        fileUrl = data.path;
-        console.log("Fichier uploadé avec succès:", fileUrl);
       }
 
       // Préparer les données du post
@@ -261,23 +287,31 @@ export default function CreatePostPage() {
         type: selectedType,
         title: title.trim(),
         content: content.trim(),
-        file_url: fileUrl,
+        file_url: fileUrl || null, // Utiliser null si pas de fichier
       };
 
       console.log("Tentative d'insertion du post:", postData);
 
-      // Créer le post avec la structure existante
-      const { data: insertData, error: insertError } = await supabase
-        .from("community")
-        .insert(postData)
-        .select();
+      try {
+        // Utiliser fetch directement pour éviter les problèmes JSON
+        const response = await fetch("/api/community/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(postData),
+        });
 
-      if (insertError) {
-        console.error("Erreur insertion post:", insertError);
-        throw new Error(`Erreur insertion post: ${insertError.message}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erreur insertion post: ${errorText}`);
+        }
+
+        console.log("Post créé avec succès");
+      } catch (insertException) {
+        console.error("Exception lors de l'insertion:", insertException);
+        throw insertException;
       }
-
-      console.log("Post créé avec succès:", insertData);
 
       // Notification de succès
       toast({
@@ -292,11 +326,20 @@ export default function CreatePostPage() {
       }, 1500);
     } catch (error) {
       console.error("Erreur détaillée lors de la création du post:", error);
+      console.error("Type d'erreur:", typeof error);
+      console.error(
+        "Stack trace:",
+        error instanceof Error ? error.stack : "Pas de stack trace"
+      );
 
       let errorMessage =
         "Une erreur est survenue lors de la publication de votre post.";
       if (error instanceof Error) {
         errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else {
+        errorMessage = JSON.stringify(error);
       }
 
       toast({
@@ -646,6 +689,151 @@ export default function CreatePostPage() {
                       Publier le post
                     </div>
                   )}
+                </Button>
+              </div>
+
+              {/* Boutons de test */}
+              <div className="flex justify-center gap-4 mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!selectedType || !title.trim() || !content.trim()) {
+                      toast({
+                        title: "Informations manquantes",
+                        description:
+                          "Veuillez remplir le type, le titre et le contenu.",
+                        variant: "warning",
+                      });
+                      return;
+                    }
+
+                    setLoading(true);
+                    try {
+                      const postData = {
+                        author_id: user?.id,
+                        type: selectedType,
+                        title: title.trim(),
+                        content: content.trim(),
+                        file_url: null,
+                      };
+
+                      console.log(
+                        "Test - Tentative d'insertion du post:",
+                        postData
+                      );
+
+                      const { error: insertError } = await supabase
+                        .from("community")
+                        .insert(postData);
+
+                      if (insertError) {
+                        throw new Error(
+                          `Erreur insertion post: ${insertError.message}`
+                        );
+                      }
+
+                      toast({
+                        title: "Test réussi !",
+                        description: "Post créé sans fichier.",
+                        variant: "success",
+                      });
+
+                      setTimeout(() => {
+                        router.push("/community");
+                      }, 1500);
+                    } catch (error) {
+                      console.error("Erreur test:", error);
+                      toast({
+                        title: "Erreur test",
+                        description:
+                          error instanceof Error
+                            ? error.message
+                            : "Erreur inconnue",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading || !dbReady}
+                  className="text-xs"
+                >
+                  Test sans fichier
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!selectedType || !title.trim() || !content.trim()) {
+                      toast({
+                        title: "Informations manquantes",
+                        description:
+                          "Veuillez remplir le type, le titre et le contenu.",
+                        variant: "warning",
+                      });
+                      return;
+                    }
+
+                    if (files.length === 0) {
+                      toast({
+                        title: "Aucun fichier sélectionné",
+                        description:
+                          "Veuillez sélectionner un fichier pour tester l'upload.",
+                        variant: "warning",
+                      });
+                      return;
+                    }
+
+                    setLoading(true);
+                    try {
+                      const file = files[0];
+                      console.log("Test upload - Fichier:", file.name);
+                      console.log("Type:", file.type);
+                      console.log("Taille:", file.size);
+
+                      // Utiliser l'API route pour l'upload
+                      const formData = new FormData();
+                      formData.append("file", file);
+
+                      const response = await fetch("/api/upload", {
+                        method: "POST",
+                        body: formData,
+                      });
+
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Erreur upload: ${errorText}`);
+                      }
+
+                      const result = await response.json();
+                      console.log("Upload test réussi:", result.path);
+                      toast({
+                        title: "Test upload réussi !",
+                        description: `Fichier uploadé: ${result.path}`,
+                        variant: "success",
+                      });
+                    } catch (error) {
+                      console.error("Erreur test upload:", error);
+                      toast({
+                        title: "Erreur test upload",
+                        description:
+                          error instanceof Error
+                            ? error.message
+                            : "Erreur inconnue",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading || !dbReady || files.length === 0}
+                  className="text-xs"
+                >
+                  Test upload fichier
                 </Button>
               </div>
             </form>
