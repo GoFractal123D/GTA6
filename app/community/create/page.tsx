@@ -92,9 +92,9 @@ export default function CreatePostPage() {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Validation de la taille du fichier (50MB max pour les images, 20MB pour les autres)
-    const maxSizeImages = 50 * 1024 * 1024; // 50MB pour les images
-    const maxSizeOthers = 20 * 1024 * 1024; // 20MB pour les autres fichiers
+    // Validation de la taille du fichier (200MB max pour les images, 50MB pour les autres)
+    const maxSizeImages = 200 * 1024 * 1024; // 200MB pour les images
+    const maxSizeOthers = 50 * 1024 * 1024; // 50MB pour les autres fichiers
 
     const maxSize = selectedFile.type.startsWith("image/")
       ? maxSizeImages
@@ -419,8 +419,8 @@ export default function CreatePostPage() {
           console.log("Nom du fichier:", fileName);
 
           // Vérifier la taille du fichier
-          const maxSizeImages = 50 * 1024 * 1024; // 50MB pour les images
-          const maxSizeOthers = 20 * 1024 * 1024; // 20MB pour les autres fichiers
+          const maxSizeImages = 200 * 1024 * 1024; // 200MB pour les images
+          const maxSizeOthers = 50 * 1024 * 1024; // 50MB pour les autres fichiers
           const maxSize = files[0].type.startsWith("image/")
             ? maxSizeImages
             : maxSizeOthers;
@@ -443,37 +443,19 @@ export default function CreatePostPage() {
             return;
           }
 
-          // Compression optionnelle pour les images moyennes (seulement si > 10MB et < 20MB)
+          // Pas de compression automatique pour les gros fichiers - upload direct
           let fileToUpload = files[0];
-          if (
-            files[0].type.startsWith("image/") &&
-            files[0].size > 10 * 1024 * 1024 &&
-            files[0].size < 20 * 1024 * 1024
-          ) {
-            console.log("Compression optionnelle de l'image...");
-            try {
-              fileToUpload = await ImageCompressor.compressIfNeeded(files[0]);
-              console.log(
-                "Taille après compression:",
-                fileToUpload.size,
-                "bytes"
-              );
-            } catch (compressionError) {
-              console.warn(
-                "Erreur de compression, utilisation du fichier original:",
-                compressionError
-              );
-              fileToUpload = files[0];
-            }
-          } else if (files[0].type.startsWith("image/")) {
-            console.log(
-              "Image de grande taille, pas de compression automatique"
-            );
-          }
+          console.log(
+            `Upload direct du fichier: ${(
+              fileToUpload.size /
+              1024 /
+              1024
+            ).toFixed(2)}MB`
+          );
 
           console.log("Début de l'upload...");
 
-          // Options d'upload optimisées pour les gros fichiers
+          // Options d'upload optimisées pour les très gros fichiers
           const uploadOptions = {
             cacheControl: "3600",
             upsert: false,
@@ -481,6 +463,18 @@ export default function CreatePostPage() {
           };
 
           console.log("Options d'upload:", uploadOptions);
+
+          // Gestion spéciale pour les très gros fichiers
+          const isLargeFile = fileToUpload.size > 50 * 1024 * 1024; // > 50MB
+          if (isLargeFile) {
+            console.log("Fichier volumineux détecté, upload en cours...");
+            toast({
+              title: "Upload en cours",
+              description:
+                "L'upload d'un fichier volumineux peut prendre plusieurs minutes. Veuillez patienter.",
+              variant: "default",
+            });
+          }
 
           const { data, error } = await supabase.storage
             .from("community-uploads")
@@ -860,8 +854,8 @@ export default function CreatePostPage() {
                       Choisir un fichier
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Formats acceptés : Images (max 50MB), Vidéos (max 10 min,
-                      20MB), PDF, Documents (max 20MB)
+                      Formats acceptés : Images (max 200MB), Vidéos (max 10 min,
+                      50MB), PDF, Documents (max 50MB)
                     </p>
                   </div>
 
@@ -954,12 +948,10 @@ export default function CreatePostPage() {
                         📎 Médias acceptés
                       </h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Images (JPG, PNG, GIF) - max 50MB</li>
-                        <li>• Vidéos (MP4, WebM) - max 10 minutes, 20MB</li>
-                        <li>• Documents (PDF, DOC, TXT) - max 20MB</li>
-                        <li>
-                          • Compression automatique pour les images moyennes
-                        </li>
+                        <li>• Images (JPG, PNG, GIF) - max 200MB</li>
+                        <li>• Vidéos (MP4, WebM) - max 10 minutes, 50MB</li>
+                        <li>• Documents (PDF, DOC, TXT) - max 50MB</li>
+                        <li>• Upload direct sans compression automatique</li>
                       </ul>
                     </div>
                   </div>
