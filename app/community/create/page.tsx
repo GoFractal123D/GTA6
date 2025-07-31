@@ -499,11 +499,11 @@ export default function CreatePostPage() {
                       className="hidden"
                       id="file-upload"
                     />
-                    <label htmlFor="file-upload">
-                      <Button variant="outline" className="cursor-pointer">
-                        Choisir un fichier
-                      </Button>
-                    </label>
+                                         <label htmlFor="file-upload">
+                       <Button type="button" variant="outline" className="cursor-pointer">
+                         Choisir un fichier
+                       </Button>
+                     </label>
                                          <p className="text-xs text-muted-foreground mt-2">
                        Formats acceptés : Images, Vidéos (max 10 min), PDF, Documents (max 10MB)
                      </p>
