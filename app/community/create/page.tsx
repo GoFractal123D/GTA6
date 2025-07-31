@@ -30,6 +30,7 @@ import { ErrorHandler } from "@/lib/errorHandler";
 import {
   testSupabaseConnection,
   testSupabaseStorage,
+  diagnoseStorageIssue,
 } from "@/lib/supabaseTest";
 import { DataValidator } from "@/lib/dataValidator";
 import { useAuth } from "@/components/AuthProvider";
@@ -245,6 +246,36 @@ export default function CreatePostPage() {
     }
   };
 
+  // Fonction pour diagnostiquer les problèmes de stockage
+  const runDiagnostic = async () => {
+    setLoading(true);
+    try {
+      const result = await diagnoseStorageIssue();
+      if (result.issue === "none") {
+        toast({
+          title: "Diagnostic réussi",
+          description: "Aucun problème détecté avec le stockage Supabase.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Problème détecté",
+          description: `Problème: ${result.issue}. Erreur: ${result.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      ErrorHandler.logError("Diagnostic", error);
+      toast({
+        title: "Erreur de diagnostic",
+        description: "Erreur lors du diagnostic.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fonction pour valider la connexion Supabase
   const validateSupabaseConnection = async (): Promise<boolean> => {
     try {
@@ -371,31 +402,12 @@ export default function CreatePostPage() {
         console.log("Taille du fichier:", files[0].size, "bytes");
         console.log("Type du fichier:", files[0].type);
 
-        // Utiliser une méthode plus simple pour l'upload
+        // Upload direct sans vérification préalable du bucket
         try {
           const fileName = `${user.id}/${Date.now()}_${files[0].name}`;
           console.log("Nom du fichier:", fileName);
 
-          // Vérifier que le bucket existe
-          console.log("Vérification du bucket community-uploads...");
-          const { data: bucketData, error: bucketError } =
-            await supabase.storage
-              .from("community-uploads")
-              .list("", { limit: 1 });
-
-          if (bucketError) {
-            console.error("Erreur bucket:", bucketError);
-            toast({
-              title: "Erreur de configuration",
-              description:
-                "Le bucket de stockage n'est pas accessible. Veuillez contacter l'administrateur.",
-              variant: "destructive",
-            });
-            setLoading(false);
-            return;
-          }
-
-          console.log("Bucket accessible, début de l'upload...");
+          console.log("Début de l'upload...");
           const { data, error } = await supabase.storage
             .from("community-uploads")
             .upload(fileName, files[0], {
@@ -416,6 +428,16 @@ export default function CreatePostPage() {
                 title: "Erreur de communication",
                 description:
                   "Erreur de communication avec le serveur de stockage. Veuillez réessayer.",
+                variant: "destructive",
+              });
+            } else if (
+              error.message?.includes("bucket") ||
+              error.message?.includes("storage")
+            ) {
+              toast({
+                title: "Erreur de configuration",
+                description:
+                  "Le bucket de stockage n'est pas accessible. Veuillez contacter l'administrateur.",
                 variant: "destructive",
               });
             } else {
@@ -587,6 +609,20 @@ export default function CreatePostPage() {
                   <Upload className="w-4 h-4 mr-2" />
                 )}
                 Test Stockage
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={runDiagnostic}
+                disabled={loading}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                )}
+                Diagnostic Stockage
               </Button>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-white">Créer un post</h1>
