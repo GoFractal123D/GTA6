@@ -115,6 +115,9 @@ export default function CommunityFeed() {
       });
 
       toast.success("Commentaire ajouté !");
+      
+      // Recharger les données pour mettre à jour le compteur
+      await fetchFeed();
     } catch (error) {
       console.error("Erreur lors du commentaire:", error);
       toast.error("Erreur lors du commentaire");
@@ -130,8 +133,6 @@ export default function CommunityFeed() {
       toast.error("Vous devez être connecté pour partager");
       return;
     }
-
-    setInteracting((prev) => ({ ...prev, [`share-${postId}`]: true }));
 
     try {
       // Vérifier si l'utilisateur a déjà partagé
@@ -155,11 +156,12 @@ export default function CommunityFeed() {
       });
 
       toast.success("Post partagé !");
+      
+      // Recharger les données pour mettre à jour le compteur
+      await fetchFeed();
     } catch (error) {
       console.error("Erreur lors du partage:", error);
       toast.error("Erreur lors du partage");
-    } finally {
-      setInteracting((prev) => ({ ...prev, [`share-${postId}`]: false }));
     }
   };
 
