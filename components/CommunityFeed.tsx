@@ -92,69 +92,67 @@ export default function CommunityFeed() {
 
   // Fonction pour gérer les commentaires
   const handleComment = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour commenter");
       return;
     }
 
-    setInteracting((prev) => ({ ...prev, [`comment-${postId}`]: true }));
+    setInteracting(prev => ({ ...prev, [`comment-${postId}`]: true }));
 
     try {
-      await supabase.from("post").insert({
-        user_id: user.id,
-        post_id: postId,
-        action_type: "comment",
-      });
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === postId
-            ? { ...item, comments: (item.comments || 0) + 1 }
-            : item
-        )
-      );
+      await supabase
+        .from("post")
+        .insert({
+          user_id: user.id,
+          post_id: postId,
+          action_type: "comment"
+        });
+      
+      setItems(prev => prev.map(item => 
+        item.id === postId 
+          ? { ...item, comments: (item.comments || 0) + 1 }
+          : item
+      ));
       toast.success("Commentaire ajouté !");
     } catch (error) {
       console.error("Erreur lors du commentaire:", error);
       toast.error("Erreur lors du commentaire");
     } finally {
-      setInteracting((prev) => ({ ...prev, [`comment-${postId}`]: false }));
+      setInteracting(prev => ({ ...prev, [`comment-${postId}`]: false }));
     }
   };
 
   // Fonction pour gérer les partages
   const handleShare = async (postId: number) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Vous devez être connecté pour partager");
       return;
     }
 
-    setInteracting((prev) => ({ ...prev, [`share-${postId}`]: true }));
+    setInteracting(prev => ({ ...prev, [`share-${postId}`]: true }));
 
     try {
-      await supabase.from("post").insert({
-        user_id: user.id,
-        post_id: postId,
-        action_type: "share",
-      });
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === postId ? { ...item, share: (item.share || 0) + 1 } : item
-        )
-      );
+      await supabase
+        .from("post")
+        .insert({
+          user_id: user.id,
+          post_id: postId,
+          action_type: "share"
+        });
+      
+      setItems(prev => prev.map(item => 
+        item.id === postId 
+          ? { ...item, share: (item.share || 0) + 1 }
+          : item
+      ));
       toast.success("Post partagé !");
     } catch (error) {
       console.error("Erreur lors du partage:", error);
       toast.error("Erreur lors du partage");
     } finally {
-      setInteracting((prev) => ({ ...prev, [`share-${postId}`]: false }));
+      setInteracting(prev => ({ ...prev, [`share-${postId}`]: false }));
     }
   };
 
@@ -478,8 +476,8 @@ export default function CommunityFeed() {
                         <span>{item.likes || 0}</span>
                       )}
                     </button>
-                    <button
-                      onClick={() => handleComment(item.id)}
+                    <button 
+                      onClick={() => handleComment(item.id)} 
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                       disabled={interacting[`comment-${item.id}`]}
                     >
@@ -502,8 +500,8 @@ export default function CommunityFeed() {
                         <span>{item.comments || 0}</span>
                       )}
                     </button>
-                    <button
-                      onClick={() => handleShare(item.id)}
+                    <button 
+                      onClick={() => handleShare(item.id)} 
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                       disabled={interacting[`share-${item.id}`]}
                     >
