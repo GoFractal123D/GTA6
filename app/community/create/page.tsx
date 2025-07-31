@@ -20,18 +20,12 @@ import {
   X,
   CheckCircle,
   AlertCircle,
-  Wifi,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { ErrorHandler } from "@/lib/errorHandler";
-import {
-  testSupabaseConnection,
-  testSupabaseStorage,
-  diagnoseStorageIssue,
-} from "@/lib/supabaseTest";
 import { DataValidator } from "@/lib/dataValidator";
 import { ImageCompressor } from "@/lib/imageCompressor";
 import { useAuth } from "@/components/AuthProvider";
@@ -193,98 +187,6 @@ export default function CreatePostPage() {
       description: `${fileName} a été supprimé.`,
       variant: "info",
     });
-  };
-
-  // Fonction pour tester la connexion Supabase
-  const testConnection = async () => {
-    setLoading(true);
-    try {
-      const isConnected = await testSupabaseConnection();
-      if (isConnected) {
-        toast({
-          title: "Test réussi",
-          description: "La connexion à Supabase fonctionne correctement.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Test échoué",
-          description: "Problème de connexion à Supabase.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      ErrorHandler.logError("Test de connexion", error);
-      toast({
-        title: "Erreur de test",
-        description: "Erreur lors du test de connexion.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction pour tester la connexion au stockage Supabase
-  const testStorageConnection = async () => {
-    setLoading(true);
-    try {
-      const result = await testSupabaseStorage();
-      if (result.success) {
-        toast({
-          title: "Test de stockage réussi",
-          description:
-            "La connexion au stockage Supabase fonctionne correctement.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Test de stockage échoué",
-          description:
-            result.error || "Problème de connexion au stockage Supabase.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      ErrorHandler.logError("Test de stockage", error);
-      toast({
-        title: "Erreur de test",
-        description: "Erreur lors du test de stockage.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction pour diagnostiquer les problèmes de stockage
-  const runDiagnostic = async () => {
-    setLoading(true);
-    try {
-      const result = await diagnoseStorageIssue();
-      if (result.issue === "none") {
-        toast({
-          title: "Diagnostic réussi",
-          description: "Aucun problème détecté avec le stockage Supabase.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Problème détecté",
-          description: `Problème: ${result.issue}. Erreur: ${result.error}`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      ErrorHandler.logError("Diagnostic", error);
-      toast({
-        title: "Erreur de diagnostic",
-        description: "Erreur lors du diagnostic.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Fonction pour valider la connexion Supabase
@@ -657,48 +559,6 @@ export default function CreatePostPage() {
                   Retour
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={testConnection}
-                disabled={loading}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                ) : (
-                  <Wifi className="w-4 h-4 mr-2" />
-                )}
-                Test Connexion
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={testStorageConnection}
-                disabled={loading}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                ) : (
-                  <Upload className="w-4 h-4 mr-2" />
-                )}
-                Test Stockage
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={runDiagnostic}
-                disabled={loading}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                )}
-                Diagnostic Stockage
-              </Button>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-white">Créer un post</h1>
                 <p className="text-muted-foreground">
