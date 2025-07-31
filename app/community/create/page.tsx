@@ -81,6 +81,7 @@ export default function CreatePostPage() {
   const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [dbReady, setDbReady] = useState(false);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
 
   // Vérifier la configuration de la base de données au chargement
   useEffect(() => {
@@ -134,7 +135,54 @@ export default function CreatePostPage() {
       return;
     }
 
-    // Remplacer le fichier existant par le nouveau
+    // Validation de la durée pour les vidéos (10 minutes max)
+    if (selectedFile.type.startsWith("video/")) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        const maxDuration = 10 * 60; // 10 minutes en secondes
+
+        if (duration > maxDuration) {
+          toast({
+            title: "Vidéo trop longue",
+            description: `${
+              selectedFile.name
+            } dépasse la limite de 10 minutes. Durée actuelle: ${Math.round(
+              duration / 60
+            )} minutes.`,
+            variant: "warning",
+          });
+          return;
+        }
+
+        // Si la durée est OK, ajouter le fichier
+        setFiles([selectedFile]);
+        setPreviewImages([]);
+        setVideoDuration(duration);
+
+        toast({
+          title: "Vidéo ajoutée",
+          description: `${selectedFile.name} a été ajoutée avec succès. Durée: ${formatDuration(duration)}`,
+          variant: "info",
+        });
+      };
+
+      video.onerror = () => {
+        toast({
+          title: "Erreur de lecture vidéo",
+          description:
+            "Impossible de lire la durée de la vidéo. Vérifiez que le fichier est valide.",
+          variant: "warning",
+        });
+      };
+
+      video.src = URL.createObjectURL(selectedFile);
+      return; // Sortir de la fonction, le fichier sera ajouté dans onloadedmetadata
+    }
+
+    // Pour les autres types de fichiers (images, documents)
     setFiles([selectedFile]);
     setPreviewImages([]);
 
@@ -158,6 +206,7 @@ export default function CreatePostPage() {
     const fileName = files[0]?.name;
     setFiles([]);
     setPreviewImages([]);
+    setVideoDuration(null);
 
     toast({
       title: "Fichier supprimé",
@@ -256,6 +305,12 @@ export default function CreatePostPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const getTypePlaceholder = () => {
@@ -449,10 +504,9 @@ export default function CreatePostPage() {
                         Choisir un fichier
                       </Button>
                     </label>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Formats acceptés : Images, Vidéos, PDF, Documents (max
-                      10MB)
-                    </p>
+                                         <p className="text-xs text-muted-foreground mt-2">
+                       Formats acceptés : Images, Vidéos (max 10 min), PDF, Documents (max 10MB)
+                     </p>
                   </div>
 
                   {/* Liste des fichiers */}
@@ -480,14 +534,19 @@ export default function CreatePostPage() {
                             )}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {files[0].name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {(files[0].size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
+                                                 <div className="flex-1 min-w-0">
+                           <p className="text-sm font-medium truncate">
+                             {files[0].name}
+                           </p>
+                           <p className="text-xs text-muted-foreground">
+                             {(files[0].size / 1024 / 1024).toFixed(2)} MB
+                             {videoDuration && (
+                               <span className="ml-2">
+                                 • {formatDuration(videoDuration)}
+                               </span>
+                             )}
+                           </p>
+                         </div>
                         <Button
                           type="button"
                           variant="ghost"
@@ -534,17 +593,17 @@ export default function CreatePostPage() {
                         </li>
                       </ul>
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-purple-500">
-                        📎 Médias acceptés
-                      </h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Images (JPG, PNG, GIF)</li>
-                        <li>• Vidéos (MP4, WebM)</li>
-                        <li>• Documents (PDF, DOC, TXT)</li>
-                        <li>• Taille max : 10MB (1 fichier par post)</li>
-                      </ul>
-                    </div>
+                                         <div className="space-y-2">
+                       <h4 className="font-semibold text-purple-500">
+                         📎 Médias acceptés
+                       </h4>
+                       <ul className="text-sm text-muted-foreground space-y-1">
+                         <li>• Images (JPG, PNG, GIF)</li>
+                         <li>• Vidéos (MP4, WebM) - max 10 minutes</li>
+                         <li>• Documents (PDF, DOC, TXT)</li>
+                         <li>• Taille max : 10MB (1 fichier par post)</li>
+                       </ul>
+                     </div>
                   </div>
                 </CardContent>
               </Card>
