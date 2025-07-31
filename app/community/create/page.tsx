@@ -362,6 +362,12 @@ export default function CreatePostPage() {
             cacheControl: "3600",
             upsert: false,
             contentType: fileToUpload.type, // Spécifier le type MIME
+            // Options pour les gros fichiers
+            duplex: "half",
+            // Retry automatique en cas d'échec
+            retryAttempts: 3,
+            // Timeout plus long pour les gros fichiers
+            timeout: 300000, // 5 minutes
           };
 
           console.log("Options d'upload:", uploadOptions);
@@ -409,12 +415,14 @@ export default function CreatePostPage() {
               });
             } else if (
               error.message?.includes("size") ||
-              error.message?.includes("large")
+              error.message?.includes("large") ||
+              error.message?.includes("50MB") ||
+              error.message?.includes("limit")
             ) {
               toast({
                 title: "Fichier trop volumineux",
                 description:
-                  "Le fichier est trop volumineux pour être uploadé. Veuillez le compresser ou choisir un fichier plus petit.",
+                  "Le fichier dépasse la limite de Supabase (50MB par défaut). Veuillez contacter l'administrateur pour augmenter cette limite ou choisir un fichier plus petit.",
                 variant: "destructive",
               });
             } else {
