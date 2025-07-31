@@ -77,85 +77,52 @@ export default function CreatePostPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
   const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
-    // Validation de la taille des fichiers (10MB max)
+    // Validation de la taille du fichier (10MB max)
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const validFiles = selectedFiles.filter((file) => {
-      if (file.size > maxSize) {
-        toast({
-          title: "Fichier trop volumineux",
-          description: `${file.name} dépasse la limite de 10MB.`,
-          variant: "warning",
-        });
-        return false;
-      }
-      return true;
-    });
+    if (selectedFile.size > maxSize) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: `${selectedFile.name} dépasse la limite de 10MB.`,
+        variant: "warning",
+      });
+      return;
+    }
 
-    if (validFiles.length === 0) return;
+    // Remplacer le fichier existant par le nouveau
+    setFiles([selectedFile]);
+    setPreviewImages([]);
 
-    setFiles((prev) => [...prev, ...validFiles]);
-
-    // Créer les previews pour les images
-    validFiles.forEach((file) => {
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setPreviewImages((prev) => [...prev, e.target?.result as string]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    // Créer la preview pour les images
+    if (selectedFile.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewImages([e.target?.result as string]);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
 
     toast({
-      title: "Fichiers ajoutés",
-      description: `${validFiles.length} fichier(s) ajouté(s) avec succès.`,
+      title: "Fichier ajouté",
+      description: `${selectedFile.name} a été ajouté avec succès.`,
       variant: "info",
     });
   };
 
-  const removeFile = (index: number) => {
-    const fileName = files[index].name;
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = () => {
+    const fileName = files[0]?.name;
+    setFiles([]);
+    setPreviewImages([]);
 
     toast({
       title: "Fichier supprimé",
       description: `${fileName} a été supprimé.`,
-      variant: "info",
-    });
-  };
-
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags((prev) => [...prev, newTag.trim()]);
-      setNewTag("");
-      toast({
-        title: "Tag ajouté",
-        description: `Le tag #${newTag.trim()} a été ajouté.`,
-        variant: "info",
-      });
-    } else if (tags.includes(newTag.trim())) {
-      toast({
-        title: "Tag déjà présent",
-        description: `Le tag #${newTag.trim()} existe déjà.`,
-        variant: "warning",
-      });
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags((prev) => prev.filter((tag) => tag !== tagToRemove));
-    toast({
-      title: "Tag supprimé",
-      description: `Le tag #${tagToRemove} a été supprimé.`,
       variant: "info",
     });
   };
@@ -167,26 +134,26 @@ export default function CreatePostPage() {
     setLoading(true);
 
     try {
-      // Upload des fichiers
-      const uploadedFiles = [];
-      for (const file of files) {
+      // Upload du premier fichier seulement (compatible avec la structure existante)
+      let fileUrl = "";
+      if (files.length > 0) {
+        const file = files[0]; // On ne prend que le premier fichier
         const fileName = `${user?.id}/${Date.now()}_${file.name}`;
         const { data, error } = await supabase.storage
           .from("community-uploads")
           .upload(fileName, file);
 
         if (error) throw error;
-        uploadedFiles.push(data.path);
+        fileUrl = data.path;
       }
 
-      // Créer le post
+      // Créer le post avec la structure existante
       const { error } = await supabase.from("community").insert({
         author_id: user?.id,
         type: selectedType,
         title: title.trim(),
         content: content.trim(),
-        file_urls: uploadedFiles,
-        tags: tags,
+        file_url: fileUrl, // Utilise file_url (singulier) comme dans la structure existante
       });
 
       if (error) throw error;
@@ -359,38 +326,6 @@ export default function CreatePostPage() {
                       <span>{content.length}/2000</span>
                     </div>
                   </div>
-
-                  {/* Tags */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Tags</Label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {tags.map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="px-3 py-1 text-sm cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                          onClick={() => removeTag(tag)}
-                        >
-                          #{tag}
-                          <X className="w-3 h-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Ajouter un tag..."
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && (e.preventDefault(), addTag())
-                        }
-                        className="flex-1"
-                      />
-                      <Button type="button" onClick={addTag} variant="outline">
-                        Ajouter
-                      </Button>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -411,14 +346,13 @@ export default function CreatePostPage() {
                   <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
                     <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                     <h3 className="text-lg font-semibold mb-2">
-                      Glissez vos fichiers ici
+                      Glissez votre fichier ici
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      ou cliquez pour sélectionner des fichiers
+                      ou cliquez pour sélectionner un fichier
                     </p>
                     <input
                       type="file"
-                      multiple
                       accept="image/*,video/*,.pdf,.doc,.docx,.txt"
                       onChange={handleFileChange}
                       className="hidden"
@@ -426,66 +360,57 @@ export default function CreatePostPage() {
                     />
                     <label htmlFor="file-upload">
                       <Button variant="outline" className="cursor-pointer">
-                        Choisir des fichiers
+                        Choisir un fichier
                       </Button>
                     </label>
                     <p className="text-xs text-muted-foreground mt-2">
                       Formats acceptés : Images, Vidéos, PDF, Documents (max
-                      10MB par fichier)
+                      10MB)
                     </p>
                   </div>
 
                   {/* Liste des fichiers */}
                   {files.length > 0 && (
                     <div className="mt-6 space-y-3">
-                      <h4 className="font-medium">
-                        Fichiers sélectionnés ({files.length})
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {files.map((file, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border"
-                          >
-                            {file.type.startsWith("image/") &&
-                            previewImages[index] ? (
-                              <Image
-                                src={previewImages[index]}
-                                alt="Preview"
-                                width={40}
-                                height={40}
-                                className="rounded object-cover"
-                              />
+                      <h4 className="font-medium">Fichier sélectionné</h4>
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                        {files[0].type.startsWith("image/") &&
+                        previewImages[0] ? (
+                          <Image
+                            src={previewImages[0]}
+                            alt="Preview"
+                            width={40}
+                            height={40}
+                            className="rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+                            {files[0].type.startsWith("image/") ? (
+                              <ImageIcon className="w-5 h-5 text-primary" />
+                            ) : files[0].type.startsWith("video/") ? (
+                              <Video className="w-5 h-5 text-primary" />
                             ) : (
-                              <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
-                                {file.type.startsWith("image/") ? (
-                                  <ImageIcon className="w-5 h-5 text-primary" />
-                                ) : file.type.startsWith("video/") ? (
-                                  <Video className="w-5 h-5 text-primary" />
-                                ) : (
-                                  <File className="w-5 h-5 text-primary" />
-                                )}
-                              </div>
+                              <File className="w-5 h-5 text-primary" />
                             )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFile(index)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
                           </div>
-                        ))}
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {files[0].name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(files[0].size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeFile}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -531,17 +456,9 @@ export default function CreatePostPage() {
                         <li>• Images (JPG, PNG, GIF)</li>
                         <li>• Vidéos (MP4, WebM)</li>
                         <li>• Documents (PDF, DOC, TXT)</li>
-                        <li>• Taille max : 10MB par fichier</li>
+                        <li>• Taille max : 10MB (1 fichier par post)</li>
                       </ul>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-green-500">🏷️ Tags</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Ajoutez des tags pour améliorer la visibilité de votre
-                      post. Utilisez des mots-clés pertinents comme #modding,
-                      #racing, #théorie, etc.
-                    </p>
                   </div>
                 </CardContent>
               </Card>
