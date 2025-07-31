@@ -8,26 +8,29 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    // Ne rediriger que si l'authentification est chargée et qu'il n'y a pas d'utilisateur
+    if (!loading && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, router, loading]);
 
   // Afficher un loader pendant la vérification
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Vérification de l'authentification...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Vérification de l'authentification...
+          </p>
         </div>
       </div>
     );
   }
 
   return <>{children}</>;
-} 
+}
