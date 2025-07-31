@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,6 +176,54 @@ export default function CreatePostPage() {
     });
   };
 
+  const uploadFile = async (
+    file: File,
+    userId: string
+  ): Promise<string | null> => {
+    try {
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      console.log("Tentative d'upload:", fileName);
+
+      const { data, error } = await supabase.storage
+        .from("community-uploads")
+        .upload(fileName, file);
+
+      if (error) {
+        console.error("Erreur upload Supabase:", error);
+        return null;
+      }
+
+      if (data) {
+        console.log("Upload réussi:", data.path);
+        return data.path;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Exception upload:", error);
+      return null;
+    }
+  };
+
+  const createPost = async (postData: any): Promise<boolean> => {
+    try {
+      console.log("Tentative de création du post:", postData);
+
+      const { error } = await supabase.from("community").insert(postData);
+
+      if (error) {
+        console.error("Erreur création post:", error);
+        return false;
+      }
+
+      console.log("Post créé avec succès");
+      return true;
+    } catch (error) {
+      console.error("Exception création post:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedType || !title.trim() || !content.trim()) return;
@@ -196,23 +244,16 @@ export default function CreatePostPage() {
       // Upload du fichier si sélectionné
       let fileUrl = null;
       if (files.length > 0) {
-        const file = files[0];
-        const fileName = `${user.id}/${Date.now()}_${file.name}`;
-
-        console.log("Upload du fichier:", fileName);
-
-        const { data, error } = await supabase.storage
-          .from("community-uploads")
-          .upload(fileName, file);
-
-        if (error) {
-          console.error("Erreur upload:", error);
-          throw new Error(`Erreur upload: ${error.message}`);
-        }
-
-        if (data) {
-          fileUrl = data.path;
-          console.log("Fichier uploadé:", fileUrl);
+        fileUrl = await uploadFile(files[0], user.id);
+        if (fileUrl === null) {
+          toast({
+            title: "Erreur upload",
+            description:
+              "Impossible d'uploader le fichier. Veuillez réessayer.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
         }
       }
 
@@ -225,38 +266,30 @@ export default function CreatePostPage() {
         file_url: fileUrl,
       };
 
-      console.log("Création du post:", postData);
+      const success = await createPost(postData);
 
-      const { error: insertError } = await supabase
-        .from("community")
-        .insert(postData);
+      if (success) {
+        toast({
+          title: "Post créé avec succès !",
+          description: "Votre contenu a été publié dans la communauté.",
+          variant: "success",
+        });
 
-      if (insertError) {
-        console.error("Erreur création post:", insertError);
-        throw new Error(`Erreur création post: ${insertError.message}`);
+        setTimeout(() => {
+          router.push("/community");
+        }, 1500);
+      } else {
+        toast({
+          title: "Erreur lors de la création",
+          description: "Impossible de créer le post. Veuillez réessayer.",
+          variant: "destructive",
+        });
       }
-
-      // Succès
-      toast({
-        title: "Post créé avec succès !",
-        description: "Votre contenu a été publié dans la communauté.",
-        variant: "success",
-      });
-
-      setTimeout(() => {
-        router.push("/community");
-      }, 1500);
     } catch (error) {
-      console.error("Erreur:", error);
-
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Une erreur est survenue lors de la publication.";
-
+      console.error("Erreur générale:", error);
       toast({
-        title: "Erreur lors de la création",
-        description: errorMessage,
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite.",
         variant: "destructive",
       });
     } finally {
