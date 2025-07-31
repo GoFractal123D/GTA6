@@ -164,7 +164,9 @@ export default function CreatePostPage() {
 
         toast({
           title: "Vidéo ajoutée",
-          description: `${selectedFile.name} a été ajoutée avec succès. Durée: ${formatDuration(duration)}`,
+          description: `${
+            selectedFile.name
+          } a été ajoutée avec succès. Durée: ${formatDuration(duration)}`,
           variant: "info",
         });
       };
@@ -310,7 +312,7 @@ export default function CreatePostPage() {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const getTypePlaceholder = () => {
@@ -499,14 +501,20 @@ export default function CreatePostPage() {
                       className="hidden"
                       id="file-upload"
                     />
-                                         <label htmlFor="file-upload">
-                       <Button type="button" variant="outline" className="cursor-pointer">
-                         Choisir un fichier
-                       </Button>
-                     </label>
-                                         <p className="text-xs text-muted-foreground mt-2">
-                       Formats acceptés : Images, Vidéos (max 10 min), PDF, Documents (max 10MB)
-                     </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="cursor-pointer"
+                      onClick={() =>
+                        document.getElementById("file-upload")?.click()
+                      }
+                    >
+                      Choisir un fichier
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Formats acceptés : Images, Vidéos (max 10 min), PDF,
+                      Documents (max 10MB)
+                    </p>
                   </div>
 
                   {/* Liste des fichiers */}
@@ -534,19 +542,19 @@ export default function CreatePostPage() {
                             )}
                           </div>
                         )}
-                                                 <div className="flex-1 min-w-0">
-                           <p className="text-sm font-medium truncate">
-                             {files[0].name}
-                           </p>
-                           <p className="text-xs text-muted-foreground">
-                             {(files[0].size / 1024 / 1024).toFixed(2)} MB
-                             {videoDuration && (
-                               <span className="ml-2">
-                                 • {formatDuration(videoDuration)}
-                               </span>
-                             )}
-                           </p>
-                         </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {files[0].name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(files[0].size / 1024 / 1024).toFixed(2)} MB
+                            {videoDuration && (
+                              <span className="ml-2">
+                                • {formatDuration(videoDuration)}
+                              </span>
+                            )}
+                          </p>
+                        </div>
                         <Button
                           type="button"
                           variant="ghost"
@@ -593,17 +601,17 @@ export default function CreatePostPage() {
                         </li>
                       </ul>
                     </div>
-                                         <div className="space-y-2">
-                       <h4 className="font-semibold text-purple-500">
-                         📎 Médias acceptés
-                       </h4>
-                       <ul className="text-sm text-muted-foreground space-y-1">
-                         <li>• Images (JPG, PNG, GIF)</li>
-                         <li>• Vidéos (MP4, WebM) - max 10 minutes</li>
-                         <li>• Documents (PDF, DOC, TXT)</li>
-                         <li>• Taille max : 10MB (1 fichier par post)</li>
-                       </ul>
-                     </div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-purple-500">
+                        📎 Médias acceptés
+                      </h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Images (JPG, PNG, GIF)</li>
+                        <li>• Vidéos (MP4, WebM) - max 10 minutes</li>
+                        <li>• Documents (PDF, DOC, TXT)</li>
+                        <li>• Taille max : 10MB (1 fichier par post)</li>
+                      </ul>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
