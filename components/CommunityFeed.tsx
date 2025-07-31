@@ -26,32 +26,17 @@ export default function CommunityFeed() {
     try {
       console.log("Récupération des posts de la communauté...");
 
-      // D'abord, récupérer les posts sans jointure pour tester
-      const { data: postsData, error: postsError } = await supabase
+      // Récupérer les posts sans jointure (la table profiles n'existe pas ou n'est pas liée)
+      const { data, error } = await supabase
         .from("community")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (postsError) {
-        console.error("Erreur lors de la récupération des posts:", postsError);
-        setItems([]);
-        return;
-      }
-
-      console.log("Posts récupérés (sans jointure):", postsData);
-
-      // Ensuite, essayer avec la jointure profiles
-      const { data, error } = await supabase
-        .from("community")
-        .select("*, author:profiles(username)")
-        .order("created_at", { ascending: false });
-
       if (error) {
-        console.error("Erreur lors de la récupération avec jointure:", error);
-        // Utiliser les données sans jointure si la jointure échoue
-        setItems(postsData || []);
+        console.error("Erreur lors de la récupération des posts:", error);
+        setItems([]);
       } else {
-        console.log("Posts récupérés (avec jointure):", data);
+        console.log("Posts récupérés:", data);
         setItems(data || []);
       }
     } catch (error) {
@@ -90,27 +75,10 @@ export default function CommunityFeed() {
       {/* En-tête avec bouton de rafraîchissement */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Publications récentes</h2>
-        <div className="flex gap-2">
-          <Button
-            onClick={async () => {
-              console.log("Test direct de la base de données...");
-              const { data, error } = await supabase
-                .from("community")
-                .select("*")
-                .order("created_at", { ascending: false })
-                .limit(5);
-              console.log("Test direct - data:", data, "error:", error);
-            }}
-            variant="outline"
-            size="sm"
-          >
-            Test DB
-          </Button>
-          <Button onClick={fetchFeed} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Actualiser
-          </Button>
-        </div>
+        <Button onClick={fetchFeed} variant="outline" size="sm">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
+        </Button>
       </div>
 
       {/* Liste des publications */}
@@ -125,7 +93,7 @@ export default function CommunityFeed() {
                 {TYPE_LABELS[item.type]}
               </span>
               <span className="text-sm text-muted-foreground">
-                par {item.author?.username || "Inconnu"}
+                par {item.author_id}
               </span>
             </div>
             <h3 className="text-lg font-bold mb-2">{item.title}</h3>
