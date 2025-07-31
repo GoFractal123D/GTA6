@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "./AuthProvider";
+import { useRouter } from "next/navigation";
 
 const TYPE_LABELS = {
   guide: "Guide",
@@ -17,10 +18,22 @@ export default function CommunityFeed() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     fetchFeed();
   }, [user]); // Recharger quand l'utilisateur change
+
+  // Fonction pour naviguer vers la page de détail
+  const handleCardClick = (postId: number) => {
+    router.push(`/community/${postId}`);
+  };
+
+  // Fonction pour empêcher la propagation lors du clic sur les boutons
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
 
   // Fonction pour gérer les likes
   const handleLike = async (postId: number) => {
@@ -309,13 +322,14 @@ export default function CommunityFeed() {
           return (
             <article
               key={item.id}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-fade-in"
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-fade-in cursor-pointer"
               style={{
                 position: "relative",
                 zIndex: 1001,
                 animationDelay: `${index * 100}ms`,
                 animationFillMode: "both",
               }}
+              onClick={() => handleCardClick(item.id)}
             >
               {/* En-tête de la carte */}
               <div className="p-6 pb-4">
@@ -403,7 +417,7 @@ export default function CommunityFeed() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={() => handleLike(item.id)}
+                      onClick={(e) => handleButtonClick(e, () => handleLike(item.id))}
                       className={`flex items-center gap-2 text-sm transition-colors duration-200 ${
                         item.userHasLiked
                           ? "text-red-500 hover:text-red-600"
@@ -428,7 +442,7 @@ export default function CommunityFeed() {
                       {item.likes || 0}
                     </button>
                     <button
-                      onClick={() => handleComment(item.id)}
+                      onClick={(e) => handleButtonClick(e, () => handleComment(item.id))}
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       <svg
@@ -447,7 +461,7 @@ export default function CommunityFeed() {
                       {item.comments || 0}
                     </button>
                     <button
-                      onClick={() => handleShare(item.id)}
+                      onClick={(e) => handleButtonClick(e, () => handleShare(item.id))}
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       <svg
@@ -467,7 +481,7 @@ export default function CommunityFeed() {
                     </button>
                   </div>
                   <button
-                    onClick={() => handleFavorite(item.id)}
+                    onClick={(e) => handleButtonClick(e, () => handleFavorite(item.id))}
                     className={`flex items-center gap-2 text-sm transition-colors duration-200 ${
                       item.favorite
                         ? "text-red-500 hover:text-red-600"
