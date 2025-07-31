@@ -5,10 +5,18 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const userId = formData.get('userId') as string;
     
     if (!file) {
       return NextResponse.json(
         { error: 'Aucun fichier fourni' },
+        { status: 400 }
+      );
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'ID utilisateur manquant' },
         { status: 400 }
       );
     }
@@ -22,9 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Générer un nom de fichier unique
+    // Générer un nom de fichier unique avec l'ID utilisateur
     const timestamp = Date.now();
-    const fileName = `uploads/${timestamp}_${file.name}`;
+    const fileName = `${userId}/${timestamp}_${file.name}`;
 
     // Convertir le fichier en buffer
     const bytes = await file.arrayBuffer();

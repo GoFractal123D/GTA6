@@ -258,23 +258,24 @@ export default function CreatePostPage() {
         console.log("Taille du fichier:", file.size);
 
         try {
-          // Utiliser fetch directement pour éviter les problèmes JSON
-          const formData = new FormData();
-          formData.append("file", file);
+          // Utiliser directement l'API Supabase côté client pour éviter les problèmes RLS
+          const fileName = `${user.id}/${Date.now()}_${file.name}`;
 
-          const response = await fetch(`/api/upload`, {
-            method: "POST",
-            body: formData,
-          });
+          const { data, error } = await supabase.storage
+            .from("community-uploads")
+            .upload(fileName, file);
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Erreur upload: ${errorText}`);
+          if (error) {
+            console.error("Erreur upload Supabase:", error);
+            throw new Error(`Erreur upload: ${error.message}`);
           }
 
-          const result = await response.json();
-          fileUrl = result.path;
-          console.log("Fichier uploadé avec succès:", fileUrl);
+          if (data) {
+            fileUrl = data.path;
+            console.log("Fichier uploadé avec succès:", fileUrl);
+          } else {
+            throw new Error("Aucune donnée retournée par l'upload");
+          }
         } catch (uploadError) {
           console.error("Exception lors de l'upload:", uploadError);
           throw uploadError;
@@ -293,18 +294,14 @@ export default function CreatePostPage() {
       console.log("Tentative d'insertion du post:", postData);
 
       try {
-        // Utiliser fetch directement pour éviter les problèmes JSON
-        const response = await fetch("/api/community/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(postData),
-        });
+        // Utiliser directement l'API Supabase côté client
+        const { error: insertError } = await supabase
+          .from("community")
+          .insert(postData);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Erreur insertion post: ${errorText}`);
+        if (insertError) {
+          console.error("Erreur insertion post:", insertError);
+          throw new Error(`Erreur insertion post: ${insertError.message}`);
         }
 
         console.log("Post créé avec succès");
@@ -795,27 +792,27 @@ export default function CreatePostPage() {
                       console.log("Type:", file.type);
                       console.log("Taille:", file.size);
 
-                      // Utiliser l'API route pour l'upload
-                      const formData = new FormData();
-                      formData.append("file", file);
+                      // Utiliser directement l'API Supabase côté client
+                      const fileName = `${user?.id}/${Date.now()}_${file.name}`;
 
-                      const response = await fetch("/api/upload", {
-                        method: "POST",
-                        body: formData,
-                      });
+                      const { data, error } = await supabase.storage
+                        .from("community-uploads")
+                        .upload(fileName, file);
 
-                      if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Erreur upload: ${errorText}`);
+                      if (error) {
+                        throw new Error(`Erreur upload: ${error.message}`);
                       }
 
-                      const result = await response.json();
-                      console.log("Upload test réussi:", result.path);
-                      toast({
-                        title: "Test upload réussi !",
-                        description: `Fichier uploadé: ${result.path}`,
-                        variant: "success",
-                      });
+                      if (data) {
+                        console.log("Upload test réussi:", data.path);
+                        toast({
+                          title: "Test upload réussi !",
+                          description: `Fichier uploadé: ${data.path}`,
+                          variant: "success",
+                        });
+                      } else {
+                        throw new Error("Aucune donnée retournée par l'upload");
+                      }
                     } catch (error) {
                       console.error("Erreur test upload:", error);
                       toast({
