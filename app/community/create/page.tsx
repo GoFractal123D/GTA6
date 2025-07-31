@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { setupDatabase } from "@/lib/database-setup";
 
 const POST_TYPES = [
   {
@@ -79,6 +80,44 @@ export default function CreatePostPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [dbReady, setDbReady] = useState(false);
+
+  // Vérifier la configuration de la base de données au chargement
+  useEffect(() => {
+    const checkDatabase = async () => {
+      try {
+        const result = await setupDatabase();
+        console.log(
+          "Résultat de la vérification de la base de données:",
+          result
+        );
+
+        if (!result.allReady) {
+          toast({
+            title: "Configuration requise",
+            description:
+              "La base de données n'est pas configurée. Vérifiez la console pour plus de détails.",
+            variant: "warning",
+          });
+        } else {
+          setDbReady(true);
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la vérification de la base de données:",
+          error
+        );
+        toast({
+          title: "Erreur de configuration",
+          description:
+            "Impossible de vérifier la configuration de la base de données.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    checkDatabase();
+  }, [toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -131,6 +170,16 @@ export default function CreatePostPage() {
     e.preventDefault();
     if (!selectedType || !title.trim() || !content.trim()) return;
 
+    // Vérifier que l'utilisateur est connecté
+    if (!user) {
+      toast({
+        title: "Erreur d'authentification",
+        description: "Vous devez être connecté pour créer un post.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -138,25 +187,46 @@ export default function CreatePostPage() {
       let fileUrl = "";
       if (files.length > 0) {
         const file = files[0]; // On ne prend que le premier fichier
-        const fileName = `${user?.id}/${Date.now()}_${file.name}`;
+        const fileName = `${user.id}/${Date.now()}_${file.name}`;
+
+        console.log("Tentative d'upload du fichier:", fileName);
+
         const { data, error } = await supabase.storage
           .from("community-uploads")
           .upload(fileName, file);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erreur upload fichier:", error);
+          throw new Error(`Erreur upload fichier: ${error.message}`);
+        }
+
         fileUrl = data.path;
+        console.log("Fichier uploadé avec succès:", fileUrl);
       }
 
-      // Créer le post avec la structure existante
-      const { error } = await supabase.from("community").insert({
-        author_id: user?.id,
+      // Préparer les données du post
+      const postData = {
+        author_id: user.id,
         type: selectedType,
         title: title.trim(),
         content: content.trim(),
-        file_url: fileUrl, // Utilise file_url (singulier) comme dans la structure existante
-      });
+        file_url: fileUrl,
+      };
 
-      if (error) throw error;
+      console.log("Tentative d'insertion du post:", postData);
+
+      // Créer le post avec la structure existante
+      const { data: insertData, error: insertError } = await supabase
+        .from("community")
+        .insert(postData)
+        .select();
+
+      if (insertError) {
+        console.error("Erreur insertion post:", insertError);
+        throw new Error(`Erreur insertion post: ${insertError.message}`);
+      }
+
+      console.log("Post créé avec succès:", insertData);
 
       // Notification de succès
       toast({
@@ -170,11 +240,17 @@ export default function CreatePostPage() {
         router.push("/community");
       }, 1500);
     } catch (error) {
-      console.error("Erreur lors de la création du post:", error);
+      console.error("Erreur détaillée lors de la création du post:", error);
+
+      let errorMessage =
+        "Une erreur est survenue lors de la publication de votre post.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Erreur lors de la création",
-        description:
-          "Une erreur est survenue lors de la publication de votre post.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -214,12 +290,22 @@ export default function CreatePostPage() {
                   Retour
                 </Button>
               </Link>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-3xl font-bold text-white">Créer un post</h1>
                 <p className="text-muted-foreground">
                   Partagez votre contenu avec la communauté GTA 6
                 </p>
               </div>
+              <Link href="/community/create/diagnostic">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Diagnostic
+                </Button>
+              </Link>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -474,7 +560,11 @@ export default function CreatePostPage() {
                   type="submit"
                   size="lg"
                   disabled={
-                    loading || !selectedType || !title.trim() || !content.trim()
+                    loading ||
+                    !selectedType ||
+                    !title.trim() ||
+                    !content.trim() ||
+                    !dbReady
                   }
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 px-8"
                 >
