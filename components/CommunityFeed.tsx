@@ -94,30 +94,8 @@ export default function CommunityFeed() {
     }
 
     try {
-      // Vérifier si l'utilisateur a déjà commenté
-      const { data: existingComment } = await supabase
-        .from("post")
-        .select("*")
-        .eq("post_id", postId)
-        .eq("user_id", user.id)
-        .eq("action_type", "comment")
-        .single();
-
-      if (existingComment) {
-        toast.error("Vous avez déjà commenté ce post");
-        return;
-      }
-
-      await supabase.from("post").insert({
-        user_id: user.id,
-        post_id: postId,
-        action_type: "comment",
-      });
-
-      toast.success("Commentaire ajouté !");
-      
-      // Recharger les données pour mettre à jour le compteur
-      await fetchFeed();
+      // Pour le moment, juste afficher un message
+      toast.success("Fonctionnalité commentaire à venir !");
     } catch (error) {
       console.error("Erreur lors du commentaire:", error);
       toast.error("Erreur lors du commentaire");
@@ -135,30 +113,8 @@ export default function CommunityFeed() {
     }
 
     try {
-      // Vérifier si l'utilisateur a déjà partagé
-      const { data: existingShare } = await supabase
-        .from("post")
-        .select("*")
-        .eq("post_id", postId)
-        .eq("user_id", user.id)
-        .eq("action_type", "share")
-        .single();
-
-      if (existingShare) {
-        toast.error("Vous avez déjà partagé ce post");
-        return;
-      }
-
-      await supabase.from("post").insert({
-        user_id: user.id,
-        post_id: postId,
-        action_type: "share",
-      });
-
-      toast.success("Post partagé !");
-      
-      // Recharger les données pour mettre à jour le compteur
-      await fetchFeed();
+      // Pour le moment, juste afficher un message
+      toast.success("Fonctionnalité partage à venir !");
     } catch (error) {
       console.error("Erreur lors du partage:", error);
       toast.error("Erreur lors du partage");
