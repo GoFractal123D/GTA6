@@ -1,18 +1,48 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Eye, Heart, MessageCircle, Share2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  User,
+  Heart,
+  MessageCircle,
+  Share2,
+  Star,
+  BadgeCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const TYPE_LABELS = {
-  guide: "Guide",
-  theory: "Théorie",
-  rp: "RP",
-  event: "Événement",
+  guide: {
+    label: "Guide",
+    color: "bg-blue-500/20 text-blue-600 border-blue-500/30",
+    icon: <Star className="w-4 h-4 mr-1 text-blue-400" />,
+  },
+  theory: {
+    label: "Théorie",
+    color: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30",
+    icon: <Star className="w-4 h-4 mr-1 text-yellow-400" />,
+  },
+  rp: {
+    label: "RP",
+    color: "bg-green-500/20 text-green-600 border-green-500/30",
+    icon: <Star className="w-4 h-4 mr-1 text-green-400" />,
+  },
+  event: {
+    label: "Événement",
+    color: "bg-purple-500/20 text-purple-600 border-purple-500/30",
+    icon: <Star className="w-4 h-4 mr-1 text-purple-400" />,
+  },
 };
+
+function getInitials(name: string) {
+  if (!name) return "?";
+  return name.slice(0, 2).toUpperCase();
+}
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -20,42 +50,38 @@ export default function PostDetailPage() {
   const { user } = useAuth();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    likes: 0,
-    comments: 0,
-    shares: 0,
-  });
+  const [stats, setStats] = useState({ likes: 0, comments: 0, shares: 0 });
   const [userInteractions, setUserInteractions] = useState({
     hasLiked: false,
     hasFavorited: false,
   });
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const commentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (params.id) {
       fetchPostDetails();
+      fetchComments();
     }
+    // eslint-disable-next-line
   }, [params.id, user]);
 
   const fetchPostDetails = async () => {
     setLoading(true);
     try {
-      // Récupérer les détails de la publication
       const { data: postData, error: postError } = await supabase
         .from("community")
         .select("*")
         .eq("id", params.id)
         .single();
-
       if (postError) {
-        console.error("Erreur lors de la récupération du post:", postError);
         toast.error("Publication non trouvée");
         router.push("/community");
         return;
       }
-
       setPost(postData);
-
-      // Récupérer les statistiques d'interaction
       const [likesResult, commentsResult, sharesResult] = await Promise.all([
         supabase
           .from("post")
@@ -63,24 +89,20 @@ export default function PostDetailPage() {
           .eq("post_id", params.id)
           .eq("action_type", "like"),
         supabase
-          .from("post")
+          .from("comments")
           .select("*", { count: "exact", head: true })
-          .eq("post_id", params.id)
-          .eq("action_type", "comment"),
+          .eq("post_id", params.id),
         supabase
           .from("post")
           .select("*", { count: "exact", head: true })
           .eq("post_id", params.id)
           .eq("action_type", "share"),
       ]);
-
       setStats({
         likes: likesResult.count || 0,
         comments: commentsResult.count || 0,
         shares: sharesResult.count || 0,
       });
-
-      // Vérifier les interactions de l'utilisateur actuel
       if (user) {
         const [userLike, userFavorite] = await Promise.all([
           supabase
@@ -98,17 +120,28 @@ export default function PostDetailPage() {
             .eq("action_type", "favorite")
             .single(),
         ]);
-
         setUserInteractions({
           hasLiked: !!userLike.data,
           hasFavorited: !!userFavorite.data,
         });
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des détails:", error);
       toast.error("Erreur lors du chargement");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("post_id", params.id)
+        .order("created_at", { ascending: true });
+      if (!error) setComments(data || []);
+    } catch (error) {
+      toast.error("Erreur lors du chargement des commentaires");
     }
   };
 
@@ -117,22 +150,18 @@ export default function PostDetailPage() {
       toast.error("Vous devez être connecté pour liker");
       return;
     }
-
     try {
       if (userInteractions.hasLiked) {
-        // Supprimer le like
         await supabase
           .from("post")
           .delete()
           .eq("post_id", params.id)
           .eq("user_id", user.id)
           .eq("action_type", "like");
-
-        setStats(prev => ({ ...prev, likes: Math.max(0, prev.likes - 1) }));
-        setUserInteractions(prev => ({ ...prev, hasLiked: false }));
+        setStats((prev) => ({ ...prev, likes: Math.max(0, prev.likes - 1) }));
+        setUserInteractions((prev) => ({ ...prev, hasLiked: false }));
         toast.success("Like retiré");
       } else {
-        // Ajouter le like
         await supabase
           .from("post")
           .insert({
@@ -140,13 +169,11 @@ export default function PostDetailPage() {
             post_id: params.id,
             action_type: "like",
           });
-
-        setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
-        setUserInteractions(prev => ({ ...prev, hasLiked: true }));
+        setStats((prev) => ({ ...prev, likes: prev.likes + 1 }));
+        setUserInteractions((prev) => ({ ...prev, hasLiked: true }));
         toast.success("Post liké !");
       }
     } catch (error) {
-      console.error("Erreur lors du like:", error);
       toast.error("Erreur lors du like");
     }
   };
@@ -156,21 +183,17 @@ export default function PostDetailPage() {
       toast.error("Vous devez être connecté pour sauvegarder");
       return;
     }
-
     try {
       if (userInteractions.hasFavorited) {
-        // Supprimer le favori
         await supabase
           .from("post")
           .delete()
           .eq("post_id", params.id)
           .eq("user_id", user.id)
           .eq("action_type", "favorite");
-
-        setUserInteractions(prev => ({ ...prev, hasFavorited: false }));
+        setUserInteractions((prev) => ({ ...prev, hasFavorited: false }));
         toast.success("Retiré des favoris");
       } else {
-        // Ajouter le favori
         await supabase
           .from("post")
           .insert({
@@ -178,22 +201,56 @@ export default function PostDetailPage() {
             post_id: params.id,
             action_type: "favorite",
           });
-
-        setUserInteractions(prev => ({ ...prev, hasFavorited: true }));
+        setUserInteractions((prev) => ({ ...prev, hasFavorited: true }));
         toast.success("Ajouté aux favoris !");
       }
     } catch (error) {
-      console.error("Erreur lors du favori:", error);
       toast.error("Erreur lors de la sauvegarde");
+    }
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Vous devez être connecté pour commenter");
+      return;
+    }
+    if (!commentInput.trim()) {
+      toast.error("Le commentaire ne peut pas être vide");
+      return;
+    }
+    setCommentLoading(true);
+    try {
+      await supabase.from("comments").insert({
+        post_id: params.id,
+        user_id: user.id,
+        content: commentInput.trim(),
+      });
+      setCommentInput("");
+      toast.success("Commentaire ajouté !");
+      await fetchComments();
+      setStats((prev) => ({ ...prev, comments: prev.comments + 1 }));
+      setTimeout(() => {
+        commentRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }, 200);
+    } catch (error) {
+      toast.error("Erreur lors de l'ajout du commentaire");
+    } finally {
+      setCommentLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 pt-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Chargement de la publication...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Chargement de la publication...
+          </p>
         </div>
       </div>
     );
@@ -201,9 +258,11 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 pt-20">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-300">Publication non trouvée</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Publication non trouvée
+          </p>
           <Button onClick={() => router.push("/community")} className="mt-4">
             Retour à la communauté
           </Button>
@@ -212,129 +271,244 @@ export default function PostDetailPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Bouton retour */}
-        <Button
-          onClick={() => router.push("/community")}
-          variant="ghost"
-          className="mb-6 flex items-center gap-2 hover:bg-white/10"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour à la communauté
-        </Button>
+  const typeMeta = TYPE_LABELS[post.type] || {
+    label: post.type,
+    color: "bg-gray-200 text-gray-700",
+    icon: null,
+  };
 
-        {/* Contenu principal */}
-        <div className="max-w-4xl mx-auto">
-          {/* En-tête de la publication */}
-          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide ${
-                  post.type === 'guide' ? 'bg-blue-500/20 text-blue-600 border border-blue-500/30' :
-                  post.type === 'theory' ? 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30' :
-                  post.type === 'rp' ? 'bg-green-500/20 text-green-600 border border-green-500/30' :
-                  'bg-purple-500/20 text-purple-600 border border-purple-500/30'
-                }`}>
-                  {TYPE_LABELS[post.type] || post.type}
-                </span>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(post.created_at).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 pt-20">
+      <div className="container mx-auto px-4 py-8">
+        {/* Image de couverture */}
+        {post.file_url && post.file_url.match(/\.(jpg|jpeg|png|webp)$/) && (
+          <div className="relative mb-8 rounded-3xl overflow-hidden shadow-2xl border border-white/30">
+            <img
+              src={
+                supabase.storage
+                  .from("community-uploads")
+                  .getPublicUrl(post.file_url).data.publicUrl
+              }
+              alt="cover"
+              className="w-full h-72 object-cover object-center blur-[1px] scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+            <div className="absolute bottom-0 left-0 p-6 z-20">
+              <span
+                className={`inline-flex items-center px-4 py-2 rounded-full text-base font-semibold uppercase tracking-wide shadow-lg ${typeMeta.color}`}
+              >
+                {typeMeta.icon}
+                {typeMeta.label}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Carte principale */}
+        <div className="max-w-3xl mx-auto bg-white/90 dark:bg-slate-900/90 rounded-3xl shadow-2xl border border-white/30 p-10 mb-10 relative backdrop-blur-xl">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xl font-bold text-primary border-2 border-primary/20 shadow-lg">
+                {getInitials(post.author_id)}
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-300">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Auteur
+                  </span>
+                  {user && user.id === post.author_id && (
+                    <BadgeCheck
+                      className="w-4 h-4 text-green-500"
+                      title="Vous êtes l'auteur"
+                    />
+                  )}
+                </div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {post.author_id?.slice(0, 8)}...
                 </span>
               </div>
             </div>
-
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
-              {post.title}
-            </h1>
-
-            <div className="prose prose-lg max-w-none text-gray-700 dark:text-gray-300 leading-relaxed">
-              <p className="text-lg">{post.content}</p>
+            <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+              <Calendar className="w-5 h-5" />
+              <span className="text-base">
+                {new Date(post.created_at).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             </div>
           </div>
-
-          {/* Média */}
-          {post.file_url && (
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Média
-              </h3>
-              <div className="relative overflow-hidden rounded-xl">
-                {post.file_url.match(/\.(mp4|webm)$/) ? (
-                  <video
-                    src={supabase.storage.from("community-uploads").getPublicUrl(post.file_url).data.publicUrl}
-                    controls
-                    className="w-full max-h-96 object-cover"
-                  />
-                ) : (
-                  <img
-                    src={supabase.storage.from("community-uploads").getPublicUrl(post.file_url).data.publicUrl}
-                    alt="media"
-                    className="w-full max-h-96 object-cover rounded-xl"
-                  />
-                )}
-              </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight drop-shadow-lg">
+            {post.title}
+          </h1>
+          <div className="prose prose-lg max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
+            <p className="text-lg">{post.content}</p>
+          </div>
+          {/* Média vidéo */}
+          {post.file_url && post.file_url.match(/\.(mp4|webm)$/) && (
+            <div className="mb-8 rounded-2xl overflow-hidden shadow-xl border border-white/20">
+              <video
+                src={
+                  supabase.storage
+                    .from("community-uploads")
+                    .getPublicUrl(post.file_url).data.publicUrl
+                }
+                controls
+                className="w-full max-h-96 object-cover"
+              />
             </div>
           )}
+          {/* Actions principales */}
+          <div className="flex flex-wrap items-center gap-4 mt-4 mb-2">
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold shadow transition-all duration-200 border-2 border-transparent hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                userInteractions.hasLiked
+                  ? "bg-red-500 text-white hover:bg-red-600 border-red-500"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  userInteractions.hasLiked ? "fill-current" : ""
+                }`}
+              />
+              <span>{stats.likes}</span>
+            </button>
+            <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold shadow">
+              <MessageCircle className="w-5 h-5" />
+              <span>{stats.comments}</span>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold shadow">
+              <Share2 className="w-5 h-5" />
+              <span>{stats.shares}</span>
+            </div>
+            <button
+              onClick={handleFavorite}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold shadow transition-all duration-200 border-2 border-transparent hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                userInteractions.hasFavorited
+                  ? "bg-red-500 text-white hover:bg-red-600 border-red-500"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              <svg
+                className={`w-5 h-5 ${
+                  userInteractions.hasFavorited ? "fill-current" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              <span>
+                {userInteractions.hasFavorited ? "Favori" : "Sauvegarder"}
+              </span>
+            </button>
+            <Button
+              onClick={() => router.push("/community")}
+              variant="ghost"
+              className="ml-auto flex items-center gap-2 hover:bg-primary/10 text-primary font-bold"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Retour
+            </Button>
+          </div>
+        </div>
 
-          {/* Actions et statistiques */}
-          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    userInteractions.hasLiked
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 ${userInteractions.hasLiked ? 'fill-current' : ''}`} />
-                  <span>{stats.likes}</span>
-                </button>
-
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <MessageCircle className="w-5 h-5 text-gray-500" />
-                  <span className="text-gray-700 dark:text-gray-300">{stats.comments}</span>
+        {/* Section commentaires */}
+        <div className="max-w-3xl mx-auto bg-white/90 dark:bg-slate-900/90 rounded-3xl shadow-2xl border border-white/30 p-10 mb-10 relative backdrop-blur-xl">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <MessageCircle className="w-6 h-6 text-primary" />
+            Commentaires
+            <span className="ml-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-base font-semibold">
+              {stats.comments}
+            </span>
+          </h2>
+          {/* Formulaire d'ajout de commentaire */}
+          {user ? (
+            <form
+              onSubmit={handleCommentSubmit}
+              className="flex flex-col md:flex-row gap-4 mb-8"
+            >
+              <input
+                type="text"
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Écrire un commentaire..."
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                disabled={commentLoading}
+                maxLength={500}
+                required
+              />
+              <Button
+                type="submit"
+                disabled={commentLoading || !commentInput.trim()}
+                className="h-12 px-8 text-lg font-bold"
+              >
+                {commentLoading ? "Envoi..." : "Commenter"}
+              </Button>
+            </form>
+          ) : (
+            <div className="mb-8 text-gray-500 dark:text-gray-400">
+              Connectez-vous pour commenter.
+            </div>
+          )}
+          {/* Liste des commentaires */}
+          <div className="space-y-6" ref={commentRef}>
+            {comments.length === 0 && (
+              <div className="text-gray-400 text-center">
+                Aucun commentaire pour le moment.
+              </div>
+            )}
+            {comments.map((c, idx) => (
+              <div
+                key={c.id}
+                className={`group flex items-start gap-4 p-5 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/0 border border-primary/10 shadow hover:shadow-lg transition-all duration-200 ${
+                  user && c.user_id === user.id ? "ring-2 ring-primary/30" : ""
+                }`}
+                style={{ animation: `fadeIn 0.5s ${idx * 0.05}s both` }}
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-lg font-bold text-primary border-2 border-primary/20">
+                  {getInitials(c.user_id)}
                 </div>
-
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <Share2 className="w-5 h-5 text-gray-500" />
-                  <span className="text-gray-700 dark:text-gray-300">{stats.shares}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {c.user_id?.slice(0, 8)}...
+                    </span>
+                    {post.author_id === c.user_id && (
+                      <span className="ml-2 px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center gap-1">
+                        <BadgeCheck className="w-3 h-3" /> Auteur
+                      </span>
+                    )}
+                    <span className="ml-2 text-xs text-gray-400">
+                      {new Date(c.created_at).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-200 text-base leading-relaxed">
+                    {c.content}
+                  </div>
                 </div>
               </div>
-
-              <button
-                onClick={handleFavorite}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  userInteractions.hasFavorited
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                <svg className={`w-5 h-5 ${userInteractions.hasFavorited ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                <span>{userInteractions.hasFavorited ? "Favori" : "Sauvegarder"}</span>
-              </button>
-            </div>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}
