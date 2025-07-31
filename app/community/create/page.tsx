@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Upload,
@@ -29,7 +27,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
-import { setupDatabase } from "@/lib/database-setup";
 
 const POST_TYPES = [
   {
@@ -80,58 +77,7 @@ export default function CreatePostPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [dbReady, setDbReady] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
-
-  // Vérifier la configuration de la base de données au chargement
-  useEffect(() => {
-    const checkDatabase = async () => {
-      try {
-        // Test de connexion Supabase
-        console.log("Test de connexion Supabase...");
-        const { data: testData, error: testError } = await supabase
-          .from("community")
-          .select("count")
-          .limit(1);
-
-        if (testError) {
-          console.error("Erreur de connexion Supabase:", testError);
-        } else {
-          console.log("Connexion Supabase OK");
-        }
-
-        const result = await setupDatabase();
-        console.log(
-          "Résultat de la vérification de la base de données:",
-          result
-        );
-
-        if (!result.allReady) {
-          toast({
-            title: "Configuration requise",
-            description:
-              "La base de données n'est pas configurée. Vérifiez la console pour plus de détails.",
-            variant: "warning",
-          });
-        } else {
-          setDbReady(true);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors de la vérification de la base de données:",
-          error
-        );
-        toast({
-          title: "Erreur de configuration",
-          description:
-            "Impossible de vérifier la configuration de la base de données.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    checkDatabase();
-  }, [toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -194,7 +140,7 @@ export default function CreatePostPage() {
       };
 
       video.src = URL.createObjectURL(selectedFile);
-      return; // Sortir de la fonction, le fichier sera ajouté dans onloadedmetadata
+      return;
     }
 
     // Pour les autres types de fichiers (images, documents)
@@ -247,97 +193,66 @@ export default function CreatePostPage() {
     setLoading(true);
 
     try {
-      // Upload du premier fichier seulement (compatible avec la structure existante)
-      let fileUrl = "";
+      // Upload du fichier si sélectionné
+      let fileUrl = null;
       if (files.length > 0) {
-        const file = files[0]; // On ne prend que le premier fichier
+        const file = files[0];
         const fileName = `${user.id}/${Date.now()}_${file.name}`;
 
-        console.log("Tentative d'upload du fichier:", fileName);
-        console.log("Type de fichier:", file.type);
-        console.log("Taille du fichier:", file.size);
+        console.log("Upload du fichier:", fileName);
 
-        try {
-          // Utiliser directement l'API Supabase côté client pour éviter les problèmes RLS
-          const fileName = `${user.id}/${Date.now()}_${file.name}`;
+        const { data, error } = await supabase.storage
+          .from("community-uploads")
+          .upload(fileName, file);
 
-          const { data, error } = await supabase.storage
-            .from("community-uploads")
-            .upload(fileName, file);
+        if (error) {
+          console.error("Erreur upload:", error);
+          throw new Error(`Erreur upload: ${error.message}`);
+        }
 
-          if (error) {
-            console.error("Erreur upload Supabase:", error);
-            throw new Error(`Erreur upload: ${error.message}`);
-          }
-
-          if (data) {
-            fileUrl = data.path;
-            console.log("Fichier uploadé avec succès:", fileUrl);
-          } else {
-            throw new Error("Aucune donnée retournée par l'upload");
-          }
-        } catch (uploadError) {
-          console.error("Exception lors de l'upload:", uploadError);
-          throw uploadError;
+        if (data) {
+          fileUrl = data.path;
+          console.log("Fichier uploadé:", fileUrl);
         }
       }
 
-      // Préparer les données du post
+      // Créer le post
       const postData = {
         author_id: user.id,
         type: selectedType,
         title: title.trim(),
         content: content.trim(),
-        file_url: fileUrl || null, // Utiliser null si pas de fichier
+        file_url: fileUrl,
       };
 
-      console.log("Tentative d'insertion du post:", postData);
+      console.log("Création du post:", postData);
 
-      try {
-        // Utiliser directement l'API Supabase côté client
-        const { error: insertError } = await supabase
-          .from("community")
-          .insert(postData);
+      const { error: insertError } = await supabase
+        .from("community")
+        .insert(postData);
 
-        if (insertError) {
-          console.error("Erreur insertion post:", insertError);
-          throw new Error(`Erreur insertion post: ${insertError.message}`);
-        }
-
-        console.log("Post créé avec succès");
-      } catch (insertException) {
-        console.error("Exception lors de l'insertion:", insertException);
-        throw insertException;
+      if (insertError) {
+        console.error("Erreur création post:", insertError);
+        throw new Error(`Erreur création post: ${insertError.message}`);
       }
 
-      // Notification de succès
+      // Succès
       toast({
         title: "Post créé avec succès !",
         description: "Votre contenu a été publié dans la communauté.",
         variant: "success",
       });
 
-      // Redirection vers la communauté
       setTimeout(() => {
         router.push("/community");
       }, 1500);
     } catch (error) {
-      console.error("Erreur détaillée lors de la création du post:", error);
-      console.error("Type d'erreur:", typeof error);
-      console.error(
-        "Stack trace:",
-        error instanceof Error ? error.stack : "Pas de stack trace"
-      );
+      console.error("Erreur:", error);
 
-      let errorMessage =
-        "Une erreur est survenue lors de la publication de votre post.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      } else {
-        errorMessage = JSON.stringify(error);
-      }
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de la publication.";
 
       toast({
         title: "Erreur lors de la création",
@@ -393,16 +308,6 @@ export default function CreatePostPage() {
                   Partagez votre contenu avec la communauté GTA 6
                 </p>
               </div>
-              <Link href="/community/create/diagnostic">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Diagnostic
-                </Button>
-              </Link>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -667,11 +572,7 @@ export default function CreatePostPage() {
                   type="submit"
                   size="lg"
                   disabled={
-                    loading ||
-                    !selectedType ||
-                    !title.trim() ||
-                    !content.trim() ||
-                    !dbReady
+                    loading || !selectedType || !title.trim() || !content.trim()
                   }
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 px-8"
                 >
@@ -686,151 +587,6 @@ export default function CreatePostPage() {
                       Publier le post
                     </div>
                   )}
-                </Button>
-              </div>
-
-              {/* Boutons de test */}
-              <div className="flex justify-center gap-4 mt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    if (!selectedType || !title.trim() || !content.trim()) {
-                      toast({
-                        title: "Informations manquantes",
-                        description:
-                          "Veuillez remplir le type, le titre et le contenu.",
-                        variant: "warning",
-                      });
-                      return;
-                    }
-
-                    setLoading(true);
-                    try {
-                      const postData = {
-                        author_id: user?.id,
-                        type: selectedType,
-                        title: title.trim(),
-                        content: content.trim(),
-                        file_url: null,
-                      };
-
-                      console.log(
-                        "Test - Tentative d'insertion du post:",
-                        postData
-                      );
-
-                      const { error: insertError } = await supabase
-                        .from("community")
-                        .insert(postData);
-
-                      if (insertError) {
-                        throw new Error(
-                          `Erreur insertion post: ${insertError.message}`
-                        );
-                      }
-
-                      toast({
-                        title: "Test réussi !",
-                        description: "Post créé sans fichier.",
-                        variant: "success",
-                      });
-
-                      setTimeout(() => {
-                        router.push("/community");
-                      }, 1500);
-                    } catch (error) {
-                      console.error("Erreur test:", error);
-                      toast({
-                        title: "Erreur test",
-                        description:
-                          error instanceof Error
-                            ? error.message
-                            : "Erreur inconnue",
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading || !dbReady}
-                  className="text-xs"
-                >
-                  Test sans fichier
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    if (!selectedType || !title.trim() || !content.trim()) {
-                      toast({
-                        title: "Informations manquantes",
-                        description:
-                          "Veuillez remplir le type, le titre et le contenu.",
-                        variant: "warning",
-                      });
-                      return;
-                    }
-
-                    if (files.length === 0) {
-                      toast({
-                        title: "Aucun fichier sélectionné",
-                        description:
-                          "Veuillez sélectionner un fichier pour tester l'upload.",
-                        variant: "warning",
-                      });
-                      return;
-                    }
-
-                    setLoading(true);
-                    try {
-                      const file = files[0];
-                      console.log("Test upload - Fichier:", file.name);
-                      console.log("Type:", file.type);
-                      console.log("Taille:", file.size);
-
-                      // Utiliser directement l'API Supabase côté client
-                      const fileName = `${user?.id}/${Date.now()}_${file.name}`;
-
-                      const { data, error } = await supabase.storage
-                        .from("community-uploads")
-                        .upload(fileName, file);
-
-                      if (error) {
-                        throw new Error(`Erreur upload: ${error.message}`);
-                      }
-
-                      if (data) {
-                        console.log("Upload test réussi:", data.path);
-                        toast({
-                          title: "Test upload réussi !",
-                          description: `Fichier uploadé: ${data.path}`,
-                          variant: "success",
-                        });
-                      } else {
-                        throw new Error("Aucune donnée retournée par l'upload");
-                      }
-                    } catch (error) {
-                      console.error("Erreur test upload:", error);
-                      toast({
-                        title: "Erreur test upload",
-                        description:
-                          error instanceof Error
-                            ? error.message
-                            : "Erreur inconnue",
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading || !dbReady || files.length === 0}
-                  className="text-xs"
-                >
-                  Test upload fichier
                 </Button>
               </div>
             </form>
