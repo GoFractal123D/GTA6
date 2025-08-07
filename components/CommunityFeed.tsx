@@ -194,13 +194,10 @@ export default function CommunityFeed() {
     try {
       console.log("[CommunityFeed] Début de la récupération des posts");
 
-      // Récupérer les publications avec les profils en une seule requête
+      // Récupérer les publications de la table community
       const { data: posts, error: postsError } = await supabase
         .from("community")
-        .select(`
-          *,
-          profiles!inner(id, username)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (postsError) {
@@ -214,6 +211,25 @@ export default function CommunityFeed() {
       }
 
       console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
+
+      // Récupérer tous les IDs d'utilisateurs uniques
+      const userIds = [...new Set((posts || []).map(post => post.author_id))];
+      
+      // Récupérer les profils utilisateurs en une seule requête
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", userIds);
+      
+      if (profilesError) {
+        console.error("[CommunityFeed] Erreur lors de la récupération des profils:", profilesError);
+      }
+      
+      // Créer un map pour un accès rapide aux profils
+      const profilesMap = new Map();
+      (profiles || []).forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
 
       // Récupérer toutes les statistiques en une seule requête optimisée
       const postIds = (posts || []).map(post => post.id);
@@ -288,6 +304,7 @@ export default function CommunityFeed() {
       // Assembler les données finales
       const postsWithStats = (posts || []).map(post => ({
         ...post,
+        profiles: profilesMap.get(post.author_id),
         likes: likesMap.get(post.id) || 0,
         comments: commentsMap.get(post.id) || 0,
         share: sharesMap.get(post.id) || 0,

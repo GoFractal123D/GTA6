@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Bookmark,
@@ -20,6 +21,7 @@ type TabType = "posts" | "favorites" | "mods" | "stats";
 export default function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [profile, setProfile] = useState<any>(null);
   const [mods, setMods] = useState<any[]>([]);
@@ -34,6 +36,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Vérifier le paramètre tab dans l'URL
+    const tabParam = searchParams.get("tab") as TabType;
+    if (
+      tabParam &&
+      ["posts", "favorites", "mods", "stats"].includes(tabParam)
+    ) {
+      setActiveTab(tabParam);
+    }
+
     fetchProfile();
     fetchUserMods();
     fetchUserComments();
@@ -43,7 +55,7 @@ export default function ProfilePage() {
     fetchMyPosts();
     fetchFavoritePosts();
     fetchFavoriteMods();
-  }, [user]);
+  }, [user, searchParams]);
 
   async function fetchProfile() {
     const { data, error } = await supabase

@@ -74,15 +74,10 @@ export default function PostDetailPage() {
   const fetchPostDetails = async () => {
     setLoading(true);
     try {
-      // Requête optimisée : récupérer tout en une seule fois
+      // Récupérer la publication
       const { data: postData, error: postError } = await supabase
         .from("community")
-        .select(
-          `
-          *,
-          profiles!inner(id, username)
-        `
-        )
+        .select("*")
         .eq("id", params.id)
         .single();
 
@@ -92,7 +87,24 @@ export default function PostDetailPage() {
         return;
       }
 
-      setPost(postData);
+      // Récupérer le profil de l'auteur
+      const { data: authorProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", postData.author_id)
+        .single();
+
+      if (profileError) {
+        console.error(
+          "Erreur lors de la récupération du profil:",
+          profileError
+        );
+      }
+
+      setPost({
+        ...postData,
+        profiles: authorProfile,
+      });
 
       // Requête optimisée pour toutes les statistiques en une fois
       const [statsResult, userInteractionsResult] = await Promise.all([
@@ -155,15 +167,9 @@ export default function PostDetailPage() {
 
   const fetchComments = async () => {
     try {
-      // Requête optimisée : récupérer les commentaires avec les profils en une fois
       const { data: commentsData, error } = await supabase
         .from("community_comments")
-        .select(
-          `
-          *,
-          profiles!inner(id, username)
-        `
-        )
+        .select("*")
         .eq("post_id", params.id)
         .order("created_at", { ascending: true });
 
@@ -172,7 +178,40 @@ export default function PostDetailPage() {
         return;
       }
 
-      setComments(commentsData || []);
+      // Récupérer les profils des commentateurs
+      const userIds = [
+        ...new Set((commentsData || []).map((comment) => comment.user_id)),
+      ];
+
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("id", userIds);
+
+        if (profilesError) {
+          console.error(
+            "Erreur lors de la récupération des profils:",
+            profilesError
+          );
+        }
+
+        // Créer un map pour un accès rapide aux profils
+        const profilesMap = new Map();
+        (profiles || []).forEach((profile) => {
+          profilesMap.set(profile.id, profile);
+        });
+
+        // Ajouter les profils aux commentaires
+        const commentsWithProfiles = (commentsData || []).map((comment) => ({
+          ...comment,
+          profiles: profilesMap.get(comment.user_id),
+        }));
+
+        setComments(commentsWithProfiles);
+      } else {
+        setComments(commentsData || []);
+      }
     } catch (error) {
       toast.error("Erreur lors du chargement des commentaires");
     }
