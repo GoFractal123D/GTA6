@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   return (
-    <section className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden">
+    <section className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden z-50">
       {/* Fond immersif GTA 6 */}
       <Image
         src="/gta6-hero.jpg"

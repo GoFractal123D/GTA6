@@ -8,7 +8,7 @@ export default function RegisterPage() {
   // On force le mode inscription sur LoginForm
   const [isLogin, setIsLogin] = useState(false);
   return (
-    <section className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden">
+    <section className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden z-50">
       {/* Fond immersif GTA 6 */}
       <Image
         src="/gta6-black.jpg"

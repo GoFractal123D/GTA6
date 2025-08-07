@@ -1,10 +1,9 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import Navigation from "@/components/ModernNavigation";
-import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import I18nProvider from "@/components/I18nProvider";
+import ConditionalLayout from "@/components/ConditionalLayout";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -27,9 +26,9 @@ export default function RootLayout({
         <I18nProvider>
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <Navigation />
-              <main className="flex-1">{children}</main>
-              <Footer />
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
               <Toaster />
             </ThemeProvider>
           </AuthProvider>
