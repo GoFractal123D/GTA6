@@ -17,7 +17,6 @@ SELECT
     id,
     user_id,
     post_id,
-    mod_id,
     action_type,
     created_at
 FROM post 

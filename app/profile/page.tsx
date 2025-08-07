@@ -79,41 +79,26 @@ export default function ProfilePage() {
       user?.id
     );
 
-    // Chercher les favoris dans la table post avec mod_id
-    const { data: favorites, error: favoritesError } = await supabase
-      .from("post")
-      .select("mod_id, action_type")
-      .eq("user_id", user?.id)
-      .eq("action_type", "favorite")
-      .not("mod_id", "is", null);
-
-    console.log("[Profile] Favoris trouvés dans table post:", favorites);
-    console.log("[Profile] Erreur favoris:", favoritesError);
-
     let favoriteModIds = [];
 
-    if (favorites && favorites.length > 0) {
-      favoriteModIds = favorites.map((f) => f.mod_id).filter((id) => id);
-      console.log("[Profile] IDs de mods favoris depuis post:", favoriteModIds);
+    // Essayer la table mod_favorites si elle existe
+    const { data: modFavorites, error: modFavError } = await supabase
+      .from("mod_favorites")
+      .select("mod_id")
+      .eq("user_id", user?.id);
+
+    console.log("[Profile] Favoris dans table mod_favorites:", modFavorites);
+    console.log("[Profile] Erreur mod_favorites:", modFavError);
+
+    if (modFavorites && modFavorites.length > 0) {
+      favoriteModIds = modFavorites.map((f) => f.mod_id);
+      console.log(
+        "[Profile] IDs de mods favoris depuis mod_favorites:",
+        favoriteModIds
+      );
     }
 
-    // Si pas de favoris dans post, essayer la table mod_favorites
-    if (favoriteModIds.length === 0) {
-      const { data: modFavorites, error: modFavError } = await supabase
-        .from("mod_favorites")
-        .select("mod_id")
-        .eq("user_id", user?.id);
-
-      console.log("[Profile] Favoris dans table mod_favorites:", modFavorites);
-      console.log("[Profile] Erreur mod_favorites:", modFavError);
-
-      if (modFavorites && modFavorites.length > 0) {
-        favoriteModIds = modFavorites.map((f) => f.mod_id);
-        console.log("[Profile] IDs de mods favoris depuis mod_favorites:", favoriteModIds);
-      }
-    }
-
-    // Si toujours pas de favoris, considérer les mods avec des ratings élevés (4-5 étoiles)
+    // Si pas de favoris dans mod_favorites, considérer les mods avec des ratings élevés (4-5 étoiles)
     if (favoriteModIds.length === 0) {
       const { data: highRatings, error: ratingsError } = await supabase
         .from("mod_ratings")
@@ -126,7 +111,10 @@ export default function ProfilePage() {
 
       if (highRatings && highRatings.length > 0) {
         favoriteModIds = highRatings.map((r) => r.mod_id);
-        console.log("[Profile] IDs de mods avec ratings élevés:", favoriteModIds);
+        console.log(
+          "[Profile] IDs de mods avec ratings élevés:",
+          favoriteModIds
+        );
       }
     }
 
