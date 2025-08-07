@@ -6,15 +6,29 @@ import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import {
+  Bookmark,
+  Heart,
+  MessageCircle,
+  Star,
+  FileText,
+  Settings,
+} from "lucide-react";
+
+type TabType = "posts" | "favorites" | "mods" | "stats";
 
 export default function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [profile, setProfile] = useState<any>(null);
   const [mods, setMods] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
   const [votes, setVotes] = useState<any[]>([]);
   const [downloads, setDownloads] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [favoritePosts, setFavoritePosts] = useState<any[]>([]);
+  const [favoriteMods, setFavoriteMods] = useState<any[]>([]);
   const [totalDownloadsOnMyMods, setTotalDownloadsOnMyMods] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -26,6 +40,9 @@ export default function ProfilePage() {
     fetchUserVotes();
     fetchUserDownloads();
     fetchTotalDownloadsOnMyMods();
+    fetchMyPosts();
+    fetchFavoritePosts();
+    fetchFavoriteMods();
   }, [user]);
 
   async function fetchProfile() {
@@ -36,6 +53,7 @@ export default function ProfilePage() {
       .single();
     if (!error) setProfile(data);
   }
+
   async function fetchUserMods() {
     const { data } = await supabase
       .from("mods")
@@ -43,6 +61,7 @@ export default function ProfilePage() {
       .eq("user_id", user.id);
     setMods(data || []);
   }
+
   async function fetchUserComments() {
     const { data } = await supabase
       .from("comments")
@@ -50,6 +69,7 @@ export default function ProfilePage() {
       .eq("user_id", user.id);
     setComments(data || []);
   }
+
   async function fetchUserVotes() {
     const { data } = await supabase
       .from("mod_ratings")
@@ -57,6 +77,7 @@ export default function ProfilePage() {
       .eq("user_id", user.id);
     setVotes(data || []);
   }
+
   async function fetchUserDownloads() {
     const { data } = await supabase
       .from("downloads")
@@ -65,8 +86,60 @@ export default function ProfilePage() {
     setDownloads(data || []);
   }
 
+  async function fetchMyPosts() {
+    const { data } = await supabase
+      .from("community")
+      .select("*")
+      .eq("author_id", user.id)
+      .order("created_at", { ascending: false });
+    setMyPosts(data || []);
+  }
+
+  async function fetchFavoritePosts() {
+    const { data: favorites } = await supabase
+      .from("post")
+      .select("post_id, action_type")
+      .eq("user_id", user.id)
+      .eq("action_type", "favorite");
+
+    if (favorites && favorites.length > 0) {
+      const postIds = favorites.map((f) => f.post_id);
+      const { data: posts } = await supabase
+        .from("community")
+        .select("*")
+        .in("id", postIds)
+        .order("created_at", { ascending: false });
+      setFavoritePosts(posts || []);
+    } else {
+      setFavoritePosts([]);
+    }
+  }
+
+  async function fetchFavoriteMods() {
+    const { data: favorites } = await supabase
+      .from("post")
+      .select("mod_id, action_type")
+      .eq("user_id", user.id)
+      .eq("action_type", "favorite");
+
+    if (favorites && favorites.length > 0) {
+      const modIds = favorites.map((f) => f.mod_id).filter((id) => id);
+      if (modIds.length > 0) {
+        const { data: mods } = await supabase
+          .from("mods")
+          .select("*")
+          .in("id", modIds)
+          .order("created_at", { ascending: false });
+        setFavoriteMods(mods || []);
+      } else {
+        setFavoriteMods([]);
+      }
+    } else {
+      setFavoriteMods([]);
+    }
+  }
+
   async function fetchTotalDownloadsOnMyMods() {
-    // Récupère tous les mods de l'utilisateur
     const { data: myMods } = await supabase
       .from("mods")
       .select("id")
@@ -76,13 +149,10 @@ export default function ProfilePage() {
       return;
     }
     const modIds = myMods.map((m) => m.id);
-    console.log("[DEBUG] modIds pour downloads :", modIds);
-    // Si modIds est vide, on ne fait pas la requête
     if (!modIds.length) {
       setTotalDownloadsOnMyMods(0);
       return;
     }
-    // Récupère tous les téléchargements pour ces mods
     const { data: downloadsData } = await supabase
       .from("downloads")
       .select("id, mod_id")
@@ -90,244 +160,411 @@ export default function ProfilePage() {
     setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
   }
 
+  const tabs = [
+    {
+      id: "posts" as TabType,
+      label: "Mes Publications",
+      icon: <FileText className="w-4 h-4" />,
+      count: myPosts.length,
+    },
+    {
+      id: "favorites" as TabType,
+      label: "Posts Favoris",
+      icon: <Heart className="w-4 h-4" />,
+      count: favoritePosts.length,
+    },
+    {
+      id: "mods" as TabType,
+      label: "Mods Favoris",
+      icon: <Star className="w-4 h-4" />,
+      count: favoriteMods.length,
+    },
+    {
+      id: "stats" as TabType,
+      label: "Statistiques",
+      icon: <Settings className="w-4 h-4" />,
+      count: null,
+    },
+  ];
+
+  const renderPosts = () => (
+    <div className="space-y-4">
+      {myPosts.length === 0 ? (
+        <div className="text-center py-8">
+          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            Aucune publication pour le moment
+          </p>
+          <Link
+            href="/community/create"
+            className="text-primary hover:underline mt-2 inline-block"
+          >
+            Créer votre première publication
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {myPosts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
+                    post.type === "guide"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : post.type === "theory"
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : post.type === "rp"
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-purple-500/20 text-purple-400"
+                  }`}
+                >
+                  {post.type}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(post.created_at).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+              <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                {post.title}
+              </h3>
+              <p className="text-muted-foreground text-sm line-clamp-3 mb-3">
+                {post.content}
+              </p>
+              <Link
+                href={`/community/${post.id}`}
+                className="text-primary hover:underline text-sm"
+              >
+                Voir la publication →
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderFavoritePosts = () => (
+    <div className="space-y-4">
+      {favoritePosts.length === 0 ? (
+        <div className="text-center py-8">
+          <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            Aucun post favori pour le moment
+          </p>
+          <Link
+            href="/community"
+            className="text-primary hover:underline mt-2 inline-block"
+          >
+            Découvrir des publications
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {favoritePosts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
+                    post.type === "guide"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : post.type === "theory"
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : post.type === "rp"
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-purple-500/20 text-purple-400"
+                  }`}
+                >
+                  {post.type}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(post.created_at).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+              <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                {post.title}
+              </h3>
+              <p className="text-muted-foreground text-sm line-clamp-3 mb-3">
+                {post.content}
+              </p>
+              <Link
+                href={`/community/${post.id}`}
+                className="text-primary hover:underline text-sm"
+              >
+                Voir la publication →
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderFavoriteMods = () => (
+    <div className="space-y-4">
+      {favoriteMods.length === 0 ? (
+        <div className="text-center py-8">
+          <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            Aucun mod favori pour le moment
+          </p>
+          <Link
+            href="/mods"
+            className="text-primary hover:underline mt-2 inline-block"
+          >
+            Découvrir des mods
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {favoriteMods.map((mod) => (
+            <div
+              key={mod.id}
+              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400">
+                  {mod.category}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  v{mod.version}
+                </span>
+              </div>
+              <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                {mod.title}
+              </h3>
+              <p className="text-muted-foreground text-sm line-clamp-3 mb-3">
+                {mod.description}
+              </p>
+              <Link
+                href={`/mod/${mod.slug}`}
+                className="text-primary hover:underline text-sm"
+              >
+                Voir le mod →
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderStats = () => (
+    <div className="space-y-8">
+      {/* Statistiques personnelles */}
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-pink-400">
+          Statistiques personnelles
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <span className="text-2xl font-bold text-pink-400">
+              {mods.length}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">
+              Mods publiés
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <span className="text-2xl font-bold text-blue-400">
+              {totalDownloadsOnMyMods}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">
+              Téléchargements
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <span className="text-2xl font-bold text-yellow-400">
+              {votes.length > 0
+                ? (
+                    votes.reduce((acc, v) => acc + v.rating, 0) / votes.length
+                  ).toFixed(1)
+                : "0.0"}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">
+              Note moyenne
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <span className="text-2xl font-bold text-green-400">
+              {comments.length}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">
+              Commentaires
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mes mods */}
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-pink-400">
+          Mes mods publiés
+        </h3>
+        {mods.length === 0 ? (
+          <div className="text-muted-foreground">
+            Aucun mod publié pour le moment
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {mods.map((mod) => (
+              <div
+                key={mod.id}
+                className="bg-background/80 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between border border-pink-500/30"
+              >
+                <div>
+                  <span className="font-semibold text-lg">{mod.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    v{mod.version}
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {mod.category}
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-2 md:mt-0">
+                  <Link
+                    href={`/mod/${mod.slug}`}
+                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors"
+                  >
+                    Voir
+                  </Link>
+                  <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
+                    Modifier
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Historique des téléchargements */}
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-pink-400">
+          Historique des téléchargements
+        </h3>
+        {downloads.length === 0 ? (
+          <div className="text-muted-foreground">
+            Aucun téléchargement pour le moment
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {downloads.slice(0, 5).map((dl) => (
+              <div
+                key={dl.id}
+                className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
+              >
+                <div>
+                  <span className="font-semibold">
+                    {dl.file_name || dl.file_path || "?"}
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {new Date(dl.created_at).toLocaleDateString("fr-FR")}
+                  </span>
+                </div>
+                <Link
+                  href={`/mod/${dl.mod_id}`}
+                  className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
+                >
+                  Voir le mod
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <ProtectedRoute>
-            <div className="relative min-h-screen w-full">
-      {/* Arrière-plan */}
-      <div className="absolute inset-0 -z-10">
-        <img
-          src="/gta6-profile.jpg"
-          alt="GTA 6 Background"
-          className="w-full h-full object-cover object-center fixed top-0 left-0 blur-sm opacity-80"
-          style={{ minHeight: "100vh", minWidth: "100vw" }}
-        />
-        <div className="absolute inset-0 bg-black/80" />
-      </div>
-      {/* Contenu profil */}
-      <div className="pt-24 max-w-3xl mx-auto px-4">
-        {/* Header profil avec fond image limité */}
-        <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background">
-          <div className="relative z-10 flex items-center gap-6 px-8">
-            <div className="flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
-                <Image
-                  src={profile?.avatar_url || "/placeholder-user.jpg"}
-                  alt={profile?.username || user.email}
-                  width={128}
-                  height={128}
-                  className="object-cover w-full h-full"
-                />
+      <div className="relative min-h-screen w-full">
+        {/* Arrière-plan */}
+        <div className="absolute inset-0 -z-10">
+          <img
+            src="/gta6-profile.jpg"
+            alt="GTA 6 Background"
+            className="w-full h-full object-cover object-center fixed top-0 left-0 blur-sm opacity-80"
+            style={{ minHeight: "100vh", minWidth: "100vw" }}
+          />
+          <div className="absolute inset-0 bg-black/80" />
+        </div>
+
+        {/* Contenu profil */}
+        <div className="pt-24 max-w-6xl mx-auto px-4">
+          {/* Header profil */}
+          <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background">
+            <div className="relative z-10 flex items-center gap-6 px-8">
+              <div className="flex flex-col items-center">
+                <div className="w-32 h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
+                  <Image
+                    src={profile?.avatar_url || "/placeholder-user.jpg"}
+                    alt={profile?.username || user.email}
+                    width={128}
+                    height={128}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <span className="mt-2 px-3 py-1 rounded bg-pink-600/80 text-white text-xs font-semibold">
+                  Membre depuis{" "}
+                  {user.created_at
+                    ? new Date(user.created_at).toLocaleDateString("fr-FR")
+                    : "?"}
+                </span>
               </div>
-              <span className="mt-2 px-3 py-1 rounded bg-pink-600/80 text-white text-xs font-semibold">
-                {t("profile.memberSince")}{" "}
-                {user.created_at
-                  ? new Date(user.created_at).toLocaleDateString("fr-FR")
-                  : "?"}
-              </span>
-            </div>
-            <div className="flex-1 flex flex-col gap-2">
-              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
-                {profile?.username || user.email}
-              </h1>
-              <p className="text-muted-foreground text-base">
-                {profile?.description || t("profile.description")}
-              </p>
+              <div className="flex-1 flex flex-col gap-2">
+                <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
+                  {profile?.username || user.email}
+                </h1>
+                <p className="text-muted-foreground text-base">
+                  {profile?.description || "Aucune description"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        {/* Mes mods */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2 text-pink-400">
-            {t("profile.myPublishedMods")}
-          </h2>
-          {mods.length === 0 ? (
-            <div className="text-muted-foreground">
-              {t("profile.noModsPublishedYet")}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {mods.map((mod) => (
-                <div
-                  key={mod.id}
-                  className="bg-background/80 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between border border-pink-500/30"
+
+          {/* Onglets */}
+          <div className="mb-8">
+            <div className="flex flex-wrap gap-2 border-b border-pink-500/30">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-t-lg font-semibold transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? "bg-pink-500 text-white shadow-lg"
+                      : "bg-background/50 text-muted-foreground hover:bg-background/80 hover:text-foreground"
+                  }`}
                 >
-                  <div>
-                    <span className="font-semibold text-lg">{mod.title}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      v{mod.version}
-                    </span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {mod.category}
-                    </span>
-                  </div>
-                  <div className="flex gap-2 mt-2 md:mt-0">
-                    <Link
-                      href={`/mod/${mod.id}`}
-                      className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors"
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  {tab.count !== null && (
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        activeTab === tab.id ? "bg-white/20" : "bg-pink-500/20"
+                      }`}
                     >
-                      {t("profile.viewMod")}
-                    </Link>
-                    <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
-                      {t("profile.edit")}
-                    </button>
-                    <button className="px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors">
-                      {t("profile.delete")}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* Mes commentaires */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2 text-pink-400">
-            {t("profile.myComments")}
-          </h2>
-          {comments.length === 0 ? (
-            <div className="text-muted-foreground">
-              {t("profile.noCommentsYet")}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="bg-background/80 rounded-lg p-4 border border-pink-500/30"
-                >
-                  <div className="font-semibold">{comment.content}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {t("profile.postedOn")}{" "}
-                    {comment.created_at
-                      ? new Date(comment.created_at).toLocaleDateString("fr-FR")
-                      : "?"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* Mes votes */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2 text-pink-400">
-            {t("profile.myVotes")}
-          </h2>
-          {votes.length === 0 ? (
-            <div className="text-muted-foreground">
-              {t("profile.noVotesYet")}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {votes.map((vote) => (
-                <div
-                  key={vote.id}
-                  className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
-                >
-                  <div>
-                    <span className="font-semibold">
-                      {t("profile.rating")} {vote.rating}★
+                      {tab.count}
                     </span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {t("profile.givenOn")}{" "}
-                      {vote.created_at
-                        ? new Date(vote.created_at).toLocaleDateString("fr-FR")
-                        : "?"}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/mod/${vote.mod_id}`}
-                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
-                  >
-                    {t("profile.viewMod")}
-                  </Link>
-                </div>
+                  )}
+                </button>
               ))}
-            </div>
-          )}
-        </div>
-        {/* Mon historique de téléchargements */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2 text-pink-400">
-            {t("profile.myDownloadHistory")}
-          </h2>
-          {downloads.length === 0 ? (
-            <div className="text-muted-foreground">
-              {t("profile.noDownloadsYet")}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {downloads.map((dl) => (
-                <div
-                  key={dl.id}
-                  className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
-                >
-                  <div>
-                    <span className="font-semibold">
-                      {t("profile.file")} {dl.file_name || dl.file_path || "?"}
-                    </span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {t("profile.downloadedOn")}{" "}
-                      {dl.created_at
-                        ? new Date(dl.created_at).toLocaleDateString("fr-FR")
-                        : "?"}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/mod/${dl.mod_id}`}
-                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
-                  >
-                    {t("profile.viewMod")}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* Statistiques personnelles */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-pink-400">
-            {t("profile.personalStats")}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-              <span className="text-3xl font-bold text-pink-400">
-                {mods.length}
-              </span>
-              <span className="text-sm text-muted-foreground mt-1">
-                {t("profile.modsPublished")}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-              <span className="text-3xl font-bold text-blue-400">
-                {totalDownloadsOnMyMods}
-              </span>
-              <span className="text-sm text-muted-foreground mt-1">
-                {t("profile.totalDownloads")}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-              <span className="text-3xl font-bold text-yellow-400">
-                {votes.length > 0
-                  ? (
-                      votes.reduce((acc, v) => acc + v.rating, 0) / votes.length
-                    ).toFixed(1)
-                  : "0.0"}
-              </span>
-              <span className="text-sm text-muted-foreground mt-1">
-                {t("profile.averageRating")}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-              <span className="text-3xl font-bold text-green-400">
-                {comments.length}
-              </span>
-              <span className="text-sm text-muted-foreground mt-1">
-                {t("profile.commentsReceived")}
-              </span>
             </div>
           </div>
+
+          {/* Contenu des onglets */}
+          <div className="bg-background/50 rounded-lg p-6 border border-pink-500/30">
+            {activeTab === "posts" && renderPosts()}
+            {activeTab === "favorites" && renderFavoritePosts()}
+            {activeTab === "mods" && renderFavoriteMods()}
+            {activeTab === "stats" && renderStats()}
+          </div>
         </div>
-      </div>
       </div>
     </ProtectedRoute>
   );
