@@ -55,35 +55,242 @@ export default function ProfilePage() {
   }
 
   async function fetchUserMods() {
-    const { data } = await supabase
+    console.log(
+      "[Profile] Récupération des mods pour l'utilisateur:",
+      user?.id
+    );
+
+    // Utiliser author_id au lieu de user_id pour la table mods
+    const { data, error } = await supabase
       .from("mods")
       .select("*")
-      .eq("user_id", user.id);
+      .eq("author_id", user?.id);
+
+    console.log("[Profile] Mods récupérés:", data);
+    console.log("[Profile] Erreur mods:", error);
+    console.log("[Profile] Nombre de mods:", data?.length || 0);
+
     setMods(data || []);
   }
 
+  async function fetchFavoriteMods() {
+    console.log(
+      "[Profile] Recherche des mods favoris pour l'utilisateur:",
+      user?.id
+    );
+
+    // Chercher les favoris dans la table post avec mod_id
+    const { data: favorites, error: favoritesError } = await supabase
+      .from("post")
+      .select("mod_id, action_type")
+      .eq("user_id", user?.id)
+      .eq("action_type", "favorite")
+      .not("mod_id", "is", null);
+
+    console.log("[Profile] Favoris trouvés dans table post:", favorites);
+    console.log("[Profile] Erreur favoris:", favoritesError);
+
+    let favoriteModIds = [];
+
+    if (favorites && favorites.length > 0) {
+      favoriteModIds = favorites.map((f) => f.mod_id).filter((id) => id);
+      console.log("[Profile] IDs de mods favoris depuis post:", favoriteModIds);
+    }
+
+    // Si pas de favoris dans post, essayer la table mod_favorites
+    if (favoriteModIds.length === 0) {
+      const { data: modFavorites, error: modFavError } = await supabase
+        .from("mod_favorites")
+        .select("mod_id")
+        .eq("user_id", user?.id);
+
+      console.log("[Profile] Favoris dans table mod_favorites:", modFavorites);
+      console.log("[Profile] Erreur mod_favorites:", modFavError);
+
+      if (modFavorites && modFavorites.length > 0) {
+        favoriteModIds = modFavorites.map((f) => f.mod_id);
+        console.log("[Profile] IDs de mods favoris depuis mod_favorites:", favoriteModIds);
+      }
+    }
+
+    // Si toujours pas de favoris, considérer les mods avec des ratings élevés (4-5 étoiles)
+    if (favoriteModIds.length === 0) {
+      const { data: highRatings, error: ratingsError } = await supabase
+        .from("mod_ratings")
+        .select("mod_id, rating")
+        .eq("user_id", user?.id)
+        .gte("rating", 4);
+
+      console.log("[Profile] Ratings élevés trouvés:", highRatings);
+      console.log("[Profile] Erreur ratings:", ratingsError);
+
+      if (highRatings && highRatings.length > 0) {
+        favoriteModIds = highRatings.map((r) => r.mod_id);
+        console.log("[Profile] IDs de mods avec ratings élevés:", favoriteModIds);
+      }
+    }
+
+    // Récupérer les mods correspondants
+    if (favoriteModIds.length > 0) {
+      const { data: mods, error: modsError } = await supabase
+        .from("mods")
+        .select("*")
+        .in("id", favoriteModIds)
+        .order("created_at", { ascending: false });
+
+      console.log("[Profile] Mods favoris récupérés:", mods);
+      console.log("[Profile] Erreur mods:", modsError);
+      setFavoriteMods(mods || []);
+    } else {
+      console.log("[Profile] Aucun mod favori trouvé");
+      setFavoriteMods([]);
+    }
+  }
+
   async function fetchUserComments() {
-    const { data } = await supabase
+    console.log(
+      "[Profile] Récupération des commentaires pour l'utilisateur:",
+      user?.id
+    );
+
+    // Récupérer les commentaires sur les mods (table comments)
+    const { data: modComments, error: modCommentsError } = await supabase
       .from("comments")
       .select("*")
-      .eq("user_id", user.id);
-    setComments(data || []);
+      .eq("user_id", user?.id);
+
+    console.log("[Profile] Commentaires sur mods:", modComments);
+    console.log("[Profile] Erreur commentaires mods:", modCommentsError);
+
+    // Récupérer les commentaires sur les posts communautaires (table community_comments)
+    const { data: postComments, error: postCommentsError } = await supabase
+      .from("community_comments")
+      .select("*")
+      .eq("user_id", user?.id);
+
+    console.log("[Profile] Commentaires sur posts:", postComments);
+    console.log("[Profile] Erreur commentaires posts:", postCommentsError);
+
+    // Combiner les deux types de commentaires
+    const allComments = [...(modComments || []), ...(postComments || [])];
+    console.log("[Profile] Total commentaires:", allComments.length);
+    setComments(allComments);
   }
 
   async function fetchUserVotes() {
-    const { data } = await supabase
+    console.log(
+      "[Profile] Récupération des votes pour l'utilisateur:",
+      user?.id
+    );
+
+    // Récupérer les votes/ratings sur les mods (table mod_ratings)
+    const { data: modVotes, error: modVotesError } = await supabase
       .from("mod_ratings")
       .select("*")
-      .eq("user_id", user.id);
-    setVotes(data || []);
+      .eq("user_id", user?.id);
+
+    console.log("[Profile] Votes sur mods:", modVotes);
+    console.log("[Profile] Erreur votes mods:", modVotesError);
+
+    // Récupérer les likes sur les posts communautaires (table post)
+    const { data: postLikes, error: postLikesError } = await supabase
+      .from("post")
+      .select("*")
+      .eq("user_id", user?.id)
+      .eq("action_type", "like");
+
+    console.log("[Profile] Likes sur posts:", postLikes);
+    console.log("[Profile] Erreur likes posts:", postLikesError);
+
+    // Combiner les votes et likes
+    const allVotes = [...(modVotes || []), ...(postLikes || [])];
+    console.log("[Profile] Total votes/likes:", allVotes.length);
+    setVotes(allVotes);
   }
 
   async function fetchUserDownloads() {
-    const { data } = await supabase
-      .from("downloads")
-      .select("*")
-      .eq("user_id", user.id);
-    setDownloads(data || []);
+    console.log(
+      "[Profile] Récupération des téléchargements pour l'utilisateur:",
+      user?.id
+    );
+
+    try {
+      const { data, error } = await supabase
+        .from("downloads")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
+
+      if (error && error.code === "42P01") {
+        console.log("[Profile] Table downloads n'existe pas encore");
+        setDownloads([]);
+        return;
+      }
+
+      console.log("[Profile] Téléchargements:", data);
+      console.log("[Profile] Erreur téléchargements:", error);
+      setDownloads(data || []);
+    } catch (error) {
+      console.log(
+        "[Profile] Erreur lors de la récupération des téléchargements:",
+        error
+      );
+      setDownloads([]);
+    }
+  }
+
+  async function fetchTotalDownloadsOnMyMods() {
+    console.log(
+      "[Profile] Calcul des téléchargements totaux pour les mods de l'utilisateur:",
+      user?.id
+    );
+
+    // Récupérer les mods de l'utilisateur avec author_id
+    const { data: myMods, error: myModsError } = await supabase
+      .from("mods")
+      .select("id")
+      .eq("author_id", user?.id);
+
+    console.log("[Profile] Mods de l'utilisateur:", myMods);
+    console.log("[Profile] Erreur mods utilisateur:", myModsError);
+
+    if (!myMods || myMods.length === 0) {
+      console.log("[Profile] Aucun mod trouvé pour l'utilisateur");
+      setTotalDownloadsOnMyMods(0);
+      return;
+    }
+
+    const modIds = myMods.map((m) => m.id);
+    console.log("[Profile] IDs des mods:", modIds);
+
+    if (!modIds.length) {
+      setTotalDownloadsOnMyMods(0);
+      return;
+    }
+
+    try {
+      // Essayer de récupérer les téléchargements
+      const { data: downloadsData, error: downloadsError } = await supabase
+        .from("downloads")
+        .select("id, mod_id")
+        .in("mod_id", modIds);
+
+      if (downloadsError && downloadsError.code === "42P01") {
+        console.log("[Profile] Table downloads n'existe pas encore");
+        setTotalDownloadsOnMyMods(0);
+        return;
+      }
+
+      console.log("[Profile] Téléchargements des mods:", downloadsData);
+      console.log("[Profile] Erreur téléchargements mods:", downloadsError);
+      setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
+    } catch (error) {
+      console.log(
+        "[Profile] Erreur lors du calcul des téléchargements:",
+        error
+      );
+      setTotalDownloadsOnMyMods(0);
+    }
   }
 
   async function fetchMyPosts() {
@@ -113,51 +320,6 @@ export default function ProfilePage() {
     } else {
       setFavoritePosts([]);
     }
-  }
-
-  async function fetchFavoriteMods() {
-    const { data: favorites } = await supabase
-      .from("post")
-      .select("mod_id, action_type")
-      .eq("user_id", user.id)
-      .eq("action_type", "favorite");
-
-    if (favorites && favorites.length > 0) {
-      const modIds = favorites.map((f) => f.mod_id).filter((id) => id);
-      if (modIds.length > 0) {
-        const { data: mods } = await supabase
-          .from("mods")
-          .select("*")
-          .in("id", modIds)
-          .order("created_at", { ascending: false });
-        setFavoriteMods(mods || []);
-      } else {
-        setFavoriteMods([]);
-      }
-    } else {
-      setFavoriteMods([]);
-    }
-  }
-
-  async function fetchTotalDownloadsOnMyMods() {
-    const { data: myMods } = await supabase
-      .from("mods")
-      .select("id")
-      .eq("user_id", user.id);
-    if (!myMods || myMods.length === 0) {
-      setTotalDownloadsOnMyMods(0);
-      return;
-    }
-    const modIds = myMods.map((m) => m.id);
-    if (!modIds.length) {
-      setTotalDownloadsOnMyMods(0);
-      return;
-    }
-    const { data: downloadsData } = await supabase
-      .from("downloads")
-      .select("id, mod_id")
-      .in("mod_id", modIds);
-    setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
   }
 
   const tabs = [
@@ -354,132 +516,148 @@ export default function ProfilePage() {
     </div>
   );
 
-  const renderStats = () => (
-    <div className="space-y-8">
-      {/* Statistiques personnelles */}
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-pink-400">
-          Statistiques personnelles
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-            <span className="text-2xl font-bold text-pink-400">
-              {mods.length}
-            </span>
-            <span className="text-sm text-muted-foreground mt-1">
-              Mods publiés
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-            <span className="text-2xl font-bold text-blue-400">
-              {totalDownloadsOnMyMods}
-            </span>
-            <span className="text-sm text-muted-foreground mt-1">
-              Téléchargements
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-            <span className="text-2xl font-bold text-yellow-400">
-              {votes.length > 0
-                ? (
-                    votes.reduce((acc, v) => acc + v.rating, 0) / votes.length
-                  ).toFixed(1)
-                : "0.0"}
-            </span>
-            <span className="text-sm text-muted-foreground mt-1">
-              Note moyenne
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-            <span className="text-2xl font-bold text-green-400">
-              {comments.length}
-            </span>
-            <span className="text-sm text-muted-foreground mt-1">
-              Commentaires
-            </span>
+  const renderStats = () => {
+    // Calculer la note moyenne uniquement sur les ratings de mods (pas les likes)
+    const modRatings = votes.filter((vote) => vote.rating !== undefined);
+    const averageRating =
+      modRatings.length > 0
+        ? (
+            modRatings.reduce((acc, v) => acc + v.rating, 0) / modRatings.length
+          ).toFixed(1)
+        : "0.0";
+
+    console.log("[Profile] Rendu des statistiques:");
+    console.log("- Mods publiés:", mods.length);
+    console.log("- Téléchargements totaux:", totalDownloadsOnMyMods);
+    console.log("- Note moyenne:", averageRating);
+    console.log("- Commentaires:", comments.length);
+    console.log("- Votes totaux:", votes.length);
+    console.log("- Mods favoris:", favoriteMods.length);
+    console.log("- Mods ratings:", modRatings.length);
+
+    return (
+      <div className="space-y-8">
+        {/* Statistiques personnelles */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-pink-400">
+            Statistiques personnelles
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+              <span className="text-2xl font-bold text-pink-400">
+                {mods.length}
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Mods publiés
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+              <span className="text-2xl font-bold text-blue-400">
+                {totalDownloadsOnMyMods}
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Téléchargements
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+              <span className="text-2xl font-bold text-yellow-400">
+                {averageRating}
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Note moyenne
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+              <span className="text-2xl font-bold text-green-400">
+                {comments.length}
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Commentaires
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mes mods */}
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-pink-400">
-          Mes mods publiés
-        </h3>
-        {mods.length === 0 ? (
-          <div className="text-muted-foreground">
-            Aucun mod publié pour le moment
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {mods.map((mod) => (
-              <div
-                key={mod.id}
-                className="bg-background/80 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between border border-pink-500/30"
-              >
-                <div>
-                  <span className="font-semibold text-lg">{mod.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    v{mod.version}
-                  </span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {mod.category}
-                  </span>
-                </div>
-                <div className="flex gap-2 mt-2 md:mt-0">
-                  <Link
-                    href={`/mod/${mod.slug}`}
-                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors"
-                  >
-                    Voir
-                  </Link>
-                  <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
-                    Modifier
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Historique des téléchargements */}
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-pink-400">
-          Historique des téléchargements
-        </h3>
-        {downloads.length === 0 ? (
-          <div className="text-muted-foreground">
-            Aucun téléchargement pour le moment
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {downloads.slice(0, 5).map((dl) => (
-              <div
-                key={dl.id}
-                className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
-              >
-                <div>
-                  <span className="font-semibold">
-                    {dl.file_name || dl.file_path || "?"}
-                  </span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {new Date(dl.created_at).toLocaleDateString("fr-FR")}
-                  </span>
-                </div>
-                <Link
-                  href={`/mod/${dl.mod_id}`}
-                  className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
+        {/* Mes mods */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-pink-400">
+            Mes mods publiés
+          </h3>
+          {mods.length === 0 ? (
+            <div className="text-muted-foreground">
+              Aucun mod publié pour le moment
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {mods.map((mod) => (
+                <div
+                  key={mod.id}
+                  className="bg-background/80 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between border border-pink-500/30"
                 >
-                  Voir le mod
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
+                  <div>
+                    <span className="font-semibold text-lg">{mod.title}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      v{mod.version}
+                    </span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {mod.category}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-2 md:mt-0">
+                    <Link
+                      href={`/mod/${mod.slug}`}
+                      className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors"
+                    >
+                      Voir
+                    </Link>
+                    <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
+                      Modifier
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Historique des téléchargements */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-pink-400">
+            Historique des téléchargements
+          </h3>
+          {downloads.length === 0 ? (
+            <div className="text-muted-foreground">
+              Aucun téléchargement pour le moment
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {downloads.slice(0, 5).map((dl) => (
+                <div
+                  key={dl.id}
+                  className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
+                >
+                  <div>
+                    <span className="font-semibold">
+                      {dl.file_name || dl.file_path || "?"}
+                    </span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {new Date(dl.created_at).toLocaleDateString("fr-FR")}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/mod/${dl.mod_id}`}
+                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
+                  >
+                    Voir le mod
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <ProtectedRoute>
@@ -504,7 +682,7 @@ export default function ProfilePage() {
                 <div className="w-32 h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
                   <Image
                     src={profile?.avatar_url || "/placeholder-user.jpg"}
-                    alt={profile?.username || user.email}
+                    alt={profile?.username || user?.email || "Utilisateur"}
                     width={128}
                     height={128}
                     className="object-cover w-full h-full"
@@ -512,14 +690,14 @@ export default function ProfilePage() {
                 </div>
                 <span className="mt-2 px-3 py-1 rounded bg-pink-600/80 text-white text-xs font-semibold">
                   Membre depuis{" "}
-                  {user.created_at
+                  {user?.created_at
                     ? new Date(user.created_at).toLocaleDateString("fr-FR")
                     : "?"}
                 </span>
               </div>
               <div className="flex-1 flex flex-col gap-2">
                 <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
-                  {profile?.username || user.email}
+                  {profile?.username || user?.email || "Utilisateur"}
                 </h1>
                 <p className="text-muted-foreground text-base">
                   {profile?.description || "Aucune description"}
