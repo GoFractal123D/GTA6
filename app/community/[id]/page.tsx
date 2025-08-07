@@ -89,7 +89,7 @@ export default function PostDetailPage() {
           .eq("post_id", params.id)
           .eq("action_type", "like"),
         supabase
-          .from("comments")
+          .from("community_comments")
           .select("*", { count: "exact", head: true })
           .eq("post_id", params.id),
         supabase
@@ -135,7 +135,7 @@ export default function PostDetailPage() {
   const fetchComments = async () => {
     try {
       const { data, error } = await supabase
-        .from("comments")
+        .from("community_comments")
         .select("*")
         .eq("post_id", params.id)
         .order("created_at", { ascending: true });
@@ -217,7 +217,7 @@ export default function PostDetailPage() {
     }
     setCommentLoading(true);
     try {
-      await supabase.from("comments").insert({
+      await supabase.from("community_comments").insert({
         post_id: params.id,
         user_id: user.id,
         content: commentInput.trim(),

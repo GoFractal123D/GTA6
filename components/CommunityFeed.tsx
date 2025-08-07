@@ -146,32 +146,27 @@ export default function CommunityFeed() {
 
       if (existingFavorite) {
         // Supprimer le favori
-        await supabase
-          .from("post")
-          .delete()
-          .eq("id", existingFavorite.id);
-        
-        setItems(prev => prev.map(item => 
-          item.id === postId 
-            ? { ...item, favorite: false }
-            : item
-        ));
+        await supabase.from("post").delete().eq("id", existingFavorite.id);
+
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === postId ? { ...item, favorite: false } : item
+          )
+        );
         toast.success("Retiré des favoris");
       } else {
         // Ajouter le favori
-        await supabase
-          .from("post")
-          .insert({
-            user_id: user.id,
-            post_id: postId,
-            action_type: "favorite"
-          });
-        
-        setItems(prev => prev.map(item => 
-          item.id === postId 
-            ? { ...item, favorite: true }
-            : item
-        ));
+        await supabase.from("post").insert({
+          user_id: user.id,
+          post_id: postId,
+          action_type: "favorite",
+        });
+
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === postId ? { ...item, favorite: true } : item
+          )
+        );
         toast.success("Ajouté aux favoris !");
       }
     } catch (error) {
@@ -183,6 +178,8 @@ export default function CommunityFeed() {
   async function fetchFeed() {
     setLoading(true);
     try {
+      console.log("[CommunityFeed] Début de la récupération des posts");
+
       // Récupérer les publications de la table community
       const { data: posts, error: postsError } = await supabase
         .from("community")
@@ -190,80 +187,157 @@ export default function CommunityFeed() {
         .order("created_at", { ascending: false });
 
       if (postsError) {
-        console.error("Erreur lors de la récupération des posts:", postsError);
+        console.error(
+          "[CommunityFeed] Erreur lors de la récupération des posts:",
+          postsError
+        );
+        toast.error("Erreur lors du chargement des publications");
         setItems([]);
         return;
       }
 
+      console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
+
       // Pour chaque publication, récupérer les statistiques d'interaction
       const postsWithStats = await Promise.all(
         (posts || []).map(async (post) => {
-          // Récupérer les likes
-          const { count: likes } = await supabase
-            .from("post")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id)
-            .eq("action_type", "like");
+          try {
+            // Récupérer les likes
+            const { count: likes, error: likesError } = await supabase
+              .from("post")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id)
+              .eq("action_type", "like");
 
-          // Récupérer les commentaires
-          const { count: comments } = await supabase
-            .from("post")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id)
-            .eq("action_type", "comment");
-
-          // Récupérer les partages
-          const { count: shares } = await supabase
-            .from("post")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id)
-            .eq("action_type", "share");
-
-          // Vérifier les interactions de l'utilisateur actuel (seulement si connecté)
-          let userHasLiked = false;
-          let isFavorited = false;
-
-          if (user) {
-            try {
-              // Vérifier si l'utilisateur a liké
-              const { data: userLike } = await supabase
-                .from("post")
-                .select("*")
-                .eq("post_id", post.id)
-                .eq("user_id", user.id)
-                .eq("action_type", "like")
-                .single();
-              userHasLiked = !!userLike;
-
-              // Vérifier si l'utilisateur a mis en favori
-              const { data: userFavorite } = await supabase
-                .from("post")
-                .select("*")
-                .eq("post_id", post.id)
-                .eq("user_id", user.id)
-                .eq("action_type", "favorite")
-                .single();
-              isFavorited = !!userFavorite;
-            } catch (error) {
-              // Erreur normale si l'utilisateur n'a pas d'interactions
-              console.log("Aucune interaction trouvée pour cet utilisateur");
+            if (likesError) {
+              console.error(
+                "[CommunityFeed] Erreur likes pour post",
+                post.id,
+                ":",
+                likesError
+              );
             }
-          }
 
-          return {
-            ...post,
-            likes: likes || 0,
-            comments: comments || 0,
-            share: shares || 0,
-            favorite: isFavorited,
-            userHasLiked: userHasLiked
-          };
+            // Récupérer les commentaires
+            const { count: comments, error: commentsError } = await supabase
+              .from("community_comments")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id);
+
+            if (commentsError) {
+              console.error(
+                "[CommunityFeed] Erreur commentaires pour post",
+                post.id,
+                ":",
+                commentsError
+              );
+            }
+
+            // Récupérer les partages
+            const { count: shares, error: sharesError } = await supabase
+              .from("post")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id)
+              .eq("action_type", "share");
+
+            if (sharesError) {
+              console.error(
+                "[CommunityFeed] Erreur partages pour post",
+                post.id,
+                ":",
+                sharesError
+              );
+            }
+
+            // Vérifier les interactions de l'utilisateur actuel (seulement si connecté)
+            let userHasLiked = false;
+            let isFavorited = false;
+
+            if (user) {
+              try {
+                // Vérifier si l'utilisateur a liké
+                const { data: userLike, error: userLikeError } = await supabase
+                  .from("post")
+                  .select("*")
+                  .eq("post_id", post.id)
+                  .eq("user_id", user.id)
+                  .eq("action_type", "like")
+                  .single();
+
+                if (userLikeError && userLikeError.code !== "PGRST116") {
+                  console.error(
+                    "[CommunityFeed] Erreur vérification like utilisateur:",
+                    userLikeError
+                  );
+                }
+                userHasLiked = !!userLike;
+
+                // Vérifier si l'utilisateur a mis en favori
+                const { data: userFavorite, error: userFavoriteError } =
+                  await supabase
+                    .from("post")
+                    .select("*")
+                    .eq("post_id", post.id)
+                    .eq("user_id", user.id)
+                    .eq("action_type", "favorite")
+                    .single();
+
+                if (
+                  userFavoriteError &&
+                  userFavoriteError.code !== "PGRST116"
+                ) {
+                  console.error(
+                    "[CommunityFeed] Erreur vérification favori utilisateur:",
+                    userFavoriteError
+                  );
+                }
+                isFavorited = !!userFavorite;
+              } catch (error) {
+                // Erreur normale si l'utilisateur n'a pas d'interactions
+                console.log(
+                  "[CommunityFeed] Aucune interaction trouvée pour cet utilisateur"
+                );
+              }
+            }
+
+            return {
+              ...post,
+              likes: likes || 0,
+              comments: comments || 0,
+              share: shares || 0,
+              favorite: isFavorited,
+              userHasLiked: userHasLiked,
+            };
+          } catch (error) {
+            console.error(
+              "[CommunityFeed] Erreur lors du traitement du post",
+              post.id,
+              ":",
+              error
+            );
+            return {
+              ...post,
+              likes: 0,
+              comments: 0,
+              share: 0,
+              favorite: false,
+              userHasLiked: false,
+            };
+          }
         })
       );
 
+      console.log(
+        "[CommunityFeed] Posts avec statistiques:",
+        postsWithStats.length
+      );
       setItems(postsWithStats);
     } catch (error) {
-      console.error("Exception lors de la récupération des posts:", error);
+      console.error(
+        "[CommunityFeed] Exception lors de la récupération des posts:",
+        error
+      );
+      toast.error("Erreur lors du chargement des publications");
       setItems([]);
     } finally {
       setLoading(false);
@@ -417,7 +491,9 @@ export default function CommunityFeed() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={(e) => handleButtonClick(e, () => handleLike(item.id))}
+                      onClick={(e) =>
+                        handleButtonClick(e, () => handleLike(item.id))
+                      }
                       className={`flex items-center gap-2 text-sm transition-colors duration-200 ${
                         item.userHasLiked
                           ? "text-red-500 hover:text-red-600"
@@ -442,7 +518,9 @@ export default function CommunityFeed() {
                       {item.likes || 0}
                     </button>
                     <button
-                      onClick={(e) => handleButtonClick(e, () => handleComment(item.id))}
+                      onClick={(e) =>
+                        handleButtonClick(e, () => handleComment(item.id))
+                      }
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       <svg
@@ -461,7 +539,9 @@ export default function CommunityFeed() {
                       {item.comments || 0}
                     </button>
                     <button
-                      onClick={(e) => handleButtonClick(e, () => handleShare(item.id))}
+                      onClick={(e) =>
+                        handleButtonClick(e, () => handleShare(item.id))
+                      }
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       <svg
@@ -481,7 +561,9 @@ export default function CommunityFeed() {
                     </button>
                   </div>
                   <button
-                    onClick={(e) => handleButtonClick(e, () => handleFavorite(item.id))}
+                    onClick={(e) =>
+                      handleButtonClick(e, () => handleFavorite(item.id))
+                    }
                     className={`flex items-center gap-2 text-sm transition-colors duration-200 ${
                       item.favorite
                         ? "text-red-500 hover:text-red-600"
