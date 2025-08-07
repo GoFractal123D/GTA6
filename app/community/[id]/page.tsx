@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
+import AdminBadge from "@/components/AdminBadge";
 import {
   ArrowLeft,
   Calendar,
@@ -49,7 +50,7 @@ function getInitials(name: string) {
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ likes: 0, comments: 0, shares: 0 });
@@ -73,73 +74,76 @@ export default function PostDetailPage() {
   const fetchPostDetails = async () => {
     setLoading(true);
     try {
+      // Requête optimisée : récupérer tout en une seule fois
       const { data: postData, error: postError } = await supabase
         .from("community")
-        .select("*")
+        .select(
+          `
+          *,
+          profiles!inner(id, username)
+        `
+        )
         .eq("id", params.id)
         .single();
+
       if (postError) {
         toast.error("Publication non trouvée");
         router.push("/community");
         return;
       }
-      // Récupérer le profil de l'auteur
-      const { data: authorProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", postData.author_id)
-        .single();
-      
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError);
-      }
-      
-      setPost({
-        ...postData,
-        profiles: authorProfile
-      });
-      
-      const [likesResult, commentsResult, sharesResult] = await Promise.all([
+
+      setPost(postData);
+
+      // Requête optimisée pour toutes les statistiques en une fois
+      const [statsResult, userInteractionsResult] = await Promise.all([
+        // Statistiques globales
         supabase
           .from("post")
-          .select("*", { count: "exact", head: true })
+          .select("action_type")
           .eq("post_id", params.id)
-          .eq("action_type", "like"),
-        supabase
-          .from("community_comments")
-          .select("*", { count: "exact", head: true })
-          .eq("post_id", params.id),
-        supabase
-          .from("post")
-          .select("*", { count: "exact", head: true })
-          .eq("post_id", params.id)
-          .eq("action_type", "share"),
+          .in("action_type", ["like", "share"]),
+
+        // Interactions utilisateur
+        user
+          ? supabase
+              .from("post")
+              .select("action_type")
+              .eq("post_id", params.id)
+              .eq("user_id", user.id)
+              .in("action_type", ["like", "favorite"])
+          : Promise.resolve({ data: [] }),
       ]);
+
+      // Compter les statistiques
+      const likes = (statsResult.data || []).filter(
+        (item) => item.action_type === "like"
+      ).length;
+      const shares = (statsResult.data || []).filter(
+        (item) => item.action_type === "share"
+      ).length;
+
+      // Compter les commentaires séparément (table différente)
+      const { count: comments } = await supabase
+        .from("community_comments")
+        .select("*", { count: "exact", head: true })
+        .eq("post_id", params.id);
+
       setStats({
-        likes: likesResult.count || 0,
-        comments: commentsResult.count || 0,
-        shares: sharesResult.count || 0,
+        likes,
+        comments: comments || 0,
+        shares,
       });
+
+      // Traiter les interactions utilisateur
       if (user) {
-        const [userLike, userFavorite] = await Promise.all([
-          supabase
-            .from("post")
-            .select("*")
-            .eq("post_id", params.id)
-            .eq("user_id", user.id)
-            .eq("action_type", "like")
-            .single(),
-          supabase
-            .from("post")
-            .select("*")
-            .eq("post_id", params.id)
-            .eq("user_id", user.id)
-            .eq("action_type", "favorite")
-            .single(),
-        ]);
+        const userInteractions = userInteractionsResult.data || [];
         setUserInteractions({
-          hasLiked: !!userLike.data,
-          hasFavorited: !!userFavorite.data,
+          hasLiked: userInteractions.some(
+            (item) => item.action_type === "like"
+          ),
+          hasFavorited: userInteractions.some(
+            (item) => item.action_type === "favorite"
+          ),
         });
       }
     } catch (error) {
@@ -151,46 +155,24 @@ export default function PostDetailPage() {
 
   const fetchComments = async () => {
     try {
+      // Requête optimisée : récupérer les commentaires avec les profils en une fois
       const { data: commentsData, error } = await supabase
         .from("community_comments")
-        .select("*")
+        .select(
+          `
+          *,
+          profiles!inner(id, username)
+        `
+        )
         .eq("post_id", params.id)
         .order("created_at", { ascending: true });
-      
+
       if (error) {
         toast.error("Erreur lors du chargement des commentaires");
         return;
       }
-      
-      // Récupérer les profils des commentateurs
-      const userIds = [...new Set((commentsData || []).map(comment => comment.user_id))];
-      
-      if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, username")
-          .in("id", userIds);
-        
-        if (profilesError) {
-          console.error("Erreur lors de la récupération des profils:", profilesError);
-        }
-        
-        // Créer un map pour un accès rapide aux profils
-        const profilesMap = new Map();
-        (profiles || []).forEach(profile => {
-          profilesMap.set(profile.id, profile);
-        });
-        
-        // Ajouter les profils aux commentaires
-        const commentsWithProfiles = (commentsData || []).map(comment => ({
-          ...comment,
-          profiles: profilesMap.get(comment.user_id)
-        }));
-        
-        setComments(commentsWithProfiles);
-      } else {
-        setComments(commentsData || []);
-      }
+
+      setComments(commentsData || []);
     } catch (error) {
       toast.error("Erreur lors du chargement des commentaires");
     }
@@ -376,6 +358,9 @@ export default function PostDetailPage() {
                           className="w-4 h-4 text-green-500"
                           title="Vous êtes l'auteur"
                         />
+                      )}
+                      {userProfile?.role && userProfile.role !== "user" && (
+                        <AdminBadge role={userProfile.role} size="sm" />
                       )}
                     </div>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -584,6 +569,12 @@ export default function PostDetailPage() {
                               <BadgeCheck className="w-2.5 h-2.5" /> Auteur
                             </span>
                           )}
+                          {user &&
+                            c.user_id === user.id &&
+                            userProfile?.role &&
+                            userProfile.role !== "user" && (
+                              <AdminBadge role={userProfile.role} size="sm" />
+                            )}
                         </div>
                         {user && c.user_id === user.id && (
                           <button

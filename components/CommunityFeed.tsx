@@ -6,6 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "./AuthProvider";
 import { useRouter } from "next/navigation";
+import AdminBadge from "./AdminBadge";
 import {
   Users,
   Trophy,
@@ -30,7 +31,7 @@ const TYPE_LABELS = {
 export default function CommunityFeed() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -193,10 +194,13 @@ export default function CommunityFeed() {
     try {
       console.log("[CommunityFeed] Début de la récupération des posts");
 
-      // Récupérer les publications de la table community
+      // Récupérer les publications avec les profils en une seule requête
       const { data: posts, error: postsError } = await supabase
         .from("community")
-        .select("*")
+        .select(`
+          *,
+          profiles!inner(id, username)
+        `)
         .order("created_at", { ascending: false });
 
       if (postsError) {
@@ -211,154 +215,85 @@ export default function CommunityFeed() {
 
       console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
 
-      // Récupérer tous les IDs d'utilisateurs uniques
-      const userIds = [...new Set((posts || []).map(post => post.author_id))];
+      // Récupérer toutes les statistiques en une seule requête optimisée
+      const postIds = (posts || []).map(post => post.id);
       
-      // Récupérer les profils utilisateurs en une seule requête
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, username")
-        .in("id", userIds);
-      
-      if (profilesError) {
-        console.error("[CommunityFeed] Erreur lors de la récupération des profils:", profilesError);
+      if (postIds.length === 0) {
+        setItems([]);
+        return;
       }
-      
-      // Créer un map pour un accès rapide aux profils
-      const profilesMap = new Map();
-      (profiles || []).forEach(profile => {
-        profilesMap.set(profile.id, profile);
+
+      // Requête optimisée pour toutes les statistiques
+      const [likesResult, commentsResult, sharesResult, userInteractionsResult] = await Promise.all([
+        // Likes pour tous les posts
+        supabase
+          .from("post")
+          .select("post_id, action_type")
+          .in("post_id", postIds)
+          .eq("action_type", "like"),
+        
+        // Commentaires pour tous les posts
+        supabase
+          .from("community_comments")
+          .select("post_id")
+          .in("post_id", postIds),
+        
+        // Partages pour tous les posts
+        supabase
+          .from("post")
+          .select("post_id, action_type")
+          .in("post_id", postIds)
+          .eq("action_type", "share"),
+        
+        // Interactions de l'utilisateur actuel
+        user ? supabase
+          .from("post")
+          .select("post_id, action_type")
+          .in("post_id", postIds)
+          .eq("user_id", user.id)
+          .in("action_type", ["like", "favorite"]) : Promise.resolve({ data: [] })
+      ]);
+
+      // Créer des maps pour un accès rapide aux statistiques
+      const likesMap = new Map();
+      const commentsMap = new Map();
+      const sharesMap = new Map();
+      const userLikesMap = new Map();
+      const userFavoritesMap = new Map();
+
+      // Traiter les likes
+      (likesResult.data || []).forEach(like => {
+        likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
       });
 
-      // Pour chaque publication, récupérer les statistiques d'interaction
-      const postsWithStats = await Promise.all(
-        (posts || []).map(async (post) => {
-          try {
-            // Récupérer les likes
-            const { count: likes, error: likesError } = await supabase
-              .from("post")
-              .select("*", { count: "exact", head: true })
-              .eq("post_id", post.id)
-              .eq("action_type", "like");
+      // Traiter les commentaires
+      (commentsResult.data || []).forEach(comment => {
+        commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
+      });
 
-            if (likesError) {
-              console.error(
-                "[CommunityFeed] Erreur likes pour post",
-                post.id,
-                ":",
-                likesError
-              );
-            }
+      // Traiter les partages
+      (sharesResult.data || []).forEach(share => {
+        sharesMap.set(share.post_id, (sharesMap.get(share.post_id) || 0) + 1);
+      });
 
-            // Récupérer les commentaires
-            const { count: comments, error: commentsError } = await supabase
-              .from("community_comments")
-              .select("*", { count: "exact", head: true })
-              .eq("post_id", post.id);
+      // Traiter les interactions utilisateur
+      (userInteractionsResult.data || []).forEach(interaction => {
+        if (interaction.action_type === "like") {
+          userLikesMap.set(interaction.post_id, true);
+        } else if (interaction.action_type === "favorite") {
+          userFavoritesMap.set(interaction.post_id, true);
+        }
+      });
 
-            if (commentsError) {
-              console.error(
-                "[CommunityFeed] Erreur commentaires pour post",
-                post.id,
-                ":",
-                commentsError
-              );
-            }
-
-            // Récupérer les partages
-            const { count: shares, error: sharesError } = await supabase
-              .from("post")
-              .select("*", { count: "exact", head: true })
-              .eq("post_id", post.id)
-              .eq("action_type", "share");
-
-            if (sharesError) {
-              console.error(
-                "[CommunityFeed] Erreur partages pour post",
-                post.id,
-                ":",
-                sharesError
-              );
-            }
-
-            // Vérifier les interactions de l'utilisateur actuel (seulement si connecté)
-            let userHasLiked = false;
-            let isFavorited = false;
-
-            if (user) {
-              try {
-                // Vérifier si l'utilisateur a liké
-                const { data: userLike, error: userLikeError } = await supabase
-                  .from("post")
-                  .select("*")
-                  .eq("post_id", post.id)
-                  .eq("user_id", user.id)
-                  .eq("action_type", "like")
-                  .single();
-
-                if (userLikeError && userLikeError.code !== "PGRST116") {
-                  console.error(
-                    "[CommunityFeed] Erreur vérification like utilisateur:",
-                    userLikeError
-                  );
-                }
-                userHasLiked = !!userLike;
-
-                // Vérifier si l'utilisateur a mis en favori
-                const { data: userFavorite, error: userFavoriteError } =
-                  await supabase
-                    .from("post")
-                    .select("*")
-                    .eq("post_id", post.id)
-                    .eq("user_id", user.id)
-                    .eq("action_type", "favorite")
-                    .single();
-
-                if (
-                  userFavoriteError &&
-                  userFavoriteError.code !== "PGRST116"
-                ) {
-                  console.error(
-                    "[CommunityFeed] Erreur vérification favori utilisateur:",
-                    userFavoriteError
-                  );
-                }
-                isFavorited = !!userFavorite;
-              } catch (error) {
-                // Erreur normale si l'utilisateur n'a pas d'interactions
-                console.log(
-                  "[CommunityFeed] Aucune interaction trouvée pour cet utilisateur"
-                );
-              }
-            }
-
-            return {
-              ...post,
-              profiles: profilesMap.get(post.author_id),
-              likes: likes || 0,
-              comments: comments || 0,
-              share: shares || 0,
-              favorite: isFavorited,
-              userHasLiked: userHasLiked,
-            };
-          } catch (error) {
-            console.error(
-              "[CommunityFeed] Erreur lors du traitement du post",
-              post.id,
-              ":",
-              error
-            );
-            return {
-              ...post,
-              likes: 0,
-              comments: 0,
-              share: 0,
-              favorite: false,
-              userHasLiked: false,
-            };
-          }
-        })
-      );
+      // Assembler les données finales
+      const postsWithStats = (posts || []).map(post => ({
+        ...post,
+        likes: likesMap.get(post.id) || 0,
+        comments: commentsMap.get(post.id) || 0,
+        share: sharesMap.get(post.id) || 0,
+        userHasLiked: userLikesMap.get(post.id) || false,
+        favorite: userFavoritesMap.get(post.id) || false,
+      }));
 
       console.log(
         "[CommunityFeed] Posts avec statistiques:",
@@ -464,6 +399,9 @@ export default function CommunityFeed() {
                           "??"}
                       </span>
                     </div>
+                    {user && item.author_id === user.id && userProfile?.role && userProfile.role !== "user" && (
+                      <AdminBadge role={userProfile.role} size="sm" />
+                    )}
                   </div>
                 </div>
 

@@ -25,8 +25,12 @@ import {
   Lightbulb,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "./AuthProvider";
+import AdminBadge from "./AdminBadge";
 
 export function Navigation() {
+  const { user, userProfile } = useAuth();
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
@@ -113,18 +117,22 @@ export function Navigation() {
               </Badge>
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-user.jpg" alt="@user" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
+            <div className="flex items-center gap-2">
+              {userProfile?.role && userProfile.role !== "user" && (
+                <AdminBadge role={userProfile.role} size="sm" />
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/placeholder-user.jpg" alt="@user" />
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuItem asChild>
                   <Link href="/profile">
