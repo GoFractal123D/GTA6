@@ -1,5 +1,5 @@
 -- Politiques RLS pour la table community_comments
--- ==============================================
+-- ===============================================
 
 -- Activer RLS sur la table community_comments
 ALTER TABLE public.community_comments ENABLE ROW LEVEL SECURITY;

@@ -14,6 +14,7 @@ import {
   Star,
   BadgeCheck,
   Bookmark,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -82,7 +83,22 @@ export default function PostDetailPage() {
         router.push("/community");
         return;
       }
-      setPost(postData);
+      // Récupérer le profil de l'auteur
+      const { data: authorProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", postData.author_id)
+        .single();
+      
+      if (profileError) {
+        console.error("Erreur lors de la récupération du profil:", profileError);
+      }
+      
+      setPost({
+        ...postData,
+        profiles: authorProfile
+      });
+      
       const [likesResult, commentsResult, sharesResult] = await Promise.all([
         supabase
           .from("post")
@@ -135,12 +151,46 @@ export default function PostDetailPage() {
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: commentsData, error } = await supabase
         .from("community_comments")
         .select("*")
         .eq("post_id", params.id)
         .order("created_at", { ascending: true });
-      if (!error) setComments(data || []);
+      
+      if (error) {
+        toast.error("Erreur lors du chargement des commentaires");
+        return;
+      }
+      
+      // Récupérer les profils des commentateurs
+      const userIds = [...new Set((commentsData || []).map(comment => comment.user_id))];
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("id", userIds);
+        
+        if (profilesError) {
+          console.error("Erreur lors de la récupération des profils:", profilesError);
+        }
+        
+        // Créer un map pour un accès rapide aux profils
+        const profilesMap = new Map();
+        (profiles || []).forEach(profile => {
+          profilesMap.set(profile.id, profile);
+        });
+        
+        // Ajouter les profils aux commentaires
+        const commentsWithProfiles = (commentsData || []).map(comment => ({
+          ...comment,
+          profiles: profilesMap.get(comment.user_id)
+        }));
+        
+        setComments(commentsWithProfiles);
+      } else {
+        setComments(commentsData || []);
+      }
     } catch (error) {
       toast.error("Erreur lors du chargement des commentaires");
     }
@@ -240,6 +290,35 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    if (!user) {
+      toast.error("Vous devez être connecté pour supprimer un commentaire");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("community_comments")
+        .delete()
+        .eq("id", commentId)
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast.error("Erreur lors de la suppression du commentaire");
+        return;
+      }
+
+      toast.success("Commentaire supprimé !");
+      await fetchComments();
+      setStats((prev) => ({
+        ...prev,
+        comments: Math.max(0, prev.comments - 1),
+      }));
+    } catch (error) {
+      toast.error("Erreur lors de la suppression du commentaire");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 pt-20">
@@ -285,12 +364,12 @@ export default function PostDetailPage() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xl font-bold text-primary border-2 border-primary/20 shadow-lg">
-                    {getInitials(post.author_id)}
+                    {getInitials(post.profiles?.username || post.author_id)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Auteur
+                        {post.profiles?.username || "Auteur"}
                       </span>
                       {user && user.id === post.author_id && (
                         <BadgeCheck
@@ -300,7 +379,9 @@ export default function PostDetailPage() {
                       )}
                     </div>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {post.author_id?.slice(0, 8)}...
+                      {post.profiles?.username
+                        ? `@${post.profiles.username}`
+                        : post.author_id?.slice(0, 8) + "..."}
                     </span>
                   </div>
                 </div>
@@ -489,17 +570,29 @@ export default function PostDetailPage() {
                     style={{ animation: `fadeIn 0.5s ${idx * 0.05}s both` }}
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-sm font-bold text-primary border-2 border-primary/20 flex-shrink-0">
-                      {getInitials(c.user_id)}
+                      {getInitials(c.profiles?.username || c.user_id)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                          {c.user_id?.slice(0, 8)}...
-                        </span>
-                        {post.author_id === c.user_id && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center gap-1 flex-shrink-0">
-                            <BadgeCheck className="w-2.5 h-2.5" /> Auteur
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                            {c.profiles?.username ||
+                              c.user_id?.slice(0, 8) + "..."}
                           </span>
+                          {post.author_id === c.user_id && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center gap-1 flex-shrink-0">
+                              <BadgeCheck className="w-2.5 h-2.5" /> Auteur
+                            </span>
+                          )}
+                        </div>
+                        {user && c.user_id === user.id && (
+                          <button
+                            onClick={() => handleDeleteComment(c.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 hover:text-red-600"
+                            title="Supprimer le commentaire"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
                       <div className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">

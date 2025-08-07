@@ -211,6 +211,25 @@ export default function CommunityFeed() {
 
       console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
 
+      // Récupérer tous les IDs d'utilisateurs uniques
+      const userIds = [...new Set((posts || []).map(post => post.author_id))];
+      
+      // Récupérer les profils utilisateurs en une seule requête
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", userIds);
+      
+      if (profilesError) {
+        console.error("[CommunityFeed] Erreur lors de la récupération des profils:", profilesError);
+      }
+      
+      // Créer un map pour un accès rapide aux profils
+      const profilesMap = new Map();
+      (profiles || []).forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
       // Pour chaque publication, récupérer les statistiques d'interaction
       const postsWithStats = await Promise.all(
         (posts || []).map(async (post) => {
@@ -315,6 +334,7 @@ export default function CommunityFeed() {
 
             return {
               ...post,
+              profiles: profilesMap.get(post.author_id),
               likes: likes || 0,
               comments: comments || 0,
               share: shares || 0,
@@ -439,7 +459,9 @@ export default function CommunityFeed() {
                   <div className="flex items-center gap-1">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                       <span className="text-xs font-semibold text-primary">
-                        {item.author_id?.slice(0, 2).toUpperCase()}
+                        {item.profiles?.username?.slice(0, 2).toUpperCase() ||
+                          item.author_id?.slice(0, 2).toUpperCase() ||
+                          "??"}
                       </span>
                     </div>
                   </div>
