@@ -13,6 +13,7 @@ import {
   Share2,
   Star,
   BadgeCheck,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -335,7 +336,7 @@ export default function PostDetailPage() {
                       : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <Heart
+                  <Bookmark
                     className={`w-5 h-5 ${
                       userInteractions.hasLiked ? "fill-current" : ""
                     }`}
@@ -354,25 +355,15 @@ export default function PostDetailPage() {
                   onClick={handleFavorite}
                   className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold shadow transition-all duration-200 border-2 border-transparent hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
                     userInteractions.hasFavorited
-                      ? "bg-red-500 text-white hover:bg-red-600 border-red-500"
+                      ? "bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-500"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <svg
+                  <Bookmark
                     className={`w-5 h-5 ${
                       userInteractions.hasFavorited ? "fill-current" : ""
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
+                  />
                   <span>
                     {userInteractions.hasFavorited ? "Favori" : "Sauvegarder"}
                   </span>

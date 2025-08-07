@@ -6,6 +6,19 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "./AuthProvider";
 import { useRouter } from "next/navigation";
+import {
+  Users,
+  Trophy,
+  Calendar,
+  Star,
+  TrendingUp,
+  Heart,
+  MessageCircle,
+  Share2,
+  Search,
+  Filter,
+  Bookmark,
+} from "lucide-react";
 
 const TYPE_LABELS = {
   guide: "Guide",
@@ -566,25 +579,15 @@ export default function CommunityFeed() {
                     }
                     className={`flex items-center gap-2 text-sm transition-colors duration-200 ${
                       item.favorite
-                        ? "text-red-500 hover:text-red-600"
+                        ? "text-yellow-500 hover:text-yellow-600"
                         : "text-muted-foreground hover:text-primary"
                     }`}
                   >
-                    <svg
+                    <Bookmark
                       className={`w-4 h-4 transition-all duration-200 ${
                         item.favorite ? "fill-current" : ""
                       }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
-                    </svg>
+                    />
                     {item.favorite ? "Favori" : "Sauvegarder"}
                   </button>
                 </div>
