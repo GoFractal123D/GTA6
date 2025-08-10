@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { sendConfirmationEmail, initEmailJS } from "@/lib/emailjs";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -20,6 +21,11 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [countdown, setCountdown] = useState(0);
   const router = useRouter();
 
+  // Initialiser EmailJS au chargement du composant
+  useEffect(() => {
+    initEmailJS();
+  }, []);
+
   // Gestion du compte à rebours pour le renvoi du code
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -31,37 +37,6 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const generateConfirmationCode = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
-  };
-
-  const sendConfirmationEmail = async (code: string) => {
-    try {
-      // Appeler l'API pour envoyer l'email de confirmation
-      const response = await fetch("/api/auth/send-confirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          username,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de l'envoi du code");
-      }
-
-      // Stocker le code temporairement pour la vérification côté client
-      // (en production, ceci ne devrait pas être nécessaire)
-      localStorage.setItem(`confirmation_${email}`, code);
-
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de l'email:", error);
-      return false;
-    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -88,15 +63,20 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       // Générer un code de confirmation à 4 chiffres
       const code = generateConfirmationCode();
 
-      // Envoyer le code par email
-      const emailSent = await sendConfirmationEmail(code);
+      // Envoyer le code par email via EmailJS
+      const emailSent = await sendConfirmationEmail(email, username, code);
 
       if (emailSent) {
         setSuccess("Code de confirmation envoyé par email !");
         setStep("confirm");
         setCountdown(60); // 60 secondes avant de pouvoir renvoyer
+
+        // Stocker le code temporairement pour la vérification côté client
+        localStorage.setItem(`confirmation_${email}`, code);
       } else {
-        setError("Erreur lors de l'envoi du code de confirmation");
+        setError(
+          "Erreur lors de l'envoi du code de confirmation. Vérifiez votre configuration EmailJS."
+        );
       }
     } catch (error) {
       setError("Erreur lors de l'inscription");
@@ -112,24 +92,26 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      // Appeler l'API pour vérifier le code et créer le compte
-      const response = await fetch("/api/auth/verify-confirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Vérifier le code côté client (temporaire)
+      const storedCode = localStorage.getItem(`confirmation_${email}`);
+
+      if (confirmationCode !== storedCode) {
+        setError("Code de confirmation incorrect");
+        setLoading(false);
+        return;
+      }
+
+      // Créer le compte utilisateur via Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username: username },
         },
-        body: JSON.stringify({
-          email,
-          code: confirmationCode,
-          username,
-          password,
-        }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la vérification");
+      if (authError) {
+        throw new Error(authError.message);
       }
 
       // Compte créé avec succès
@@ -162,11 +144,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     try {
       const code = generateConfirmationCode();
-      const emailSent = await sendConfirmationEmail(code);
+      const emailSent = await sendConfirmationEmail(email, username, code);
 
       if (emailSent) {
         setSuccess("Nouveau code envoyé !");
         setCountdown(60);
+
+        // Mettre à jour le code stocké
+        localStorage.setItem(`confirmation_${email}`, code);
       } else {
         setError("Erreur lors de l'envoi du nouveau code");
       }
