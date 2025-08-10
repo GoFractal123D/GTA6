@@ -10,6 +10,7 @@ interface RegisterFormProps {
 export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
   const [step, setStep] = useState<"register" | "confirm">("register");
@@ -34,13 +35,28 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const sendConfirmationEmail = async (code: string) => {
     try {
-      // Ici, vous devriez intégrer votre service d'envoi d'email
-      // Pour l'exemple, on simule l'envoi
-      console.log(`Code de confirmation envoyé à ${email}: ${code}`);
-      
-      // Stocker temporairement le code (en production, utilisez un service d'email)
+      // Appeler l'API pour envoyer l'email de confirmation
+      const response = await fetch("/api/auth/send-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          username,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de l'envoi du code");
+      }
+
+      // Stocker le code temporairement pour la vérification côté client
+      // (en production, ceci ne devrait pas être nécessaire)
       localStorage.setItem(`confirmation_${email}`, code);
-      
+
       return true;
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'email:", error);
@@ -55,12 +71,26 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setLoading(true);
 
     try {
+      // Vérifier que les mots de passe correspondent
+      if (password !== confirmPassword) {
+        setError("Les mots de passe ne correspondent pas");
+        setLoading(false);
+        return;
+      }
+
+      // Vérifier la longueur minimale du mot de passe
+      if (password.length < 6) {
+        setError("Le mot de passe doit contenir au moins 6 caractères");
+        setLoading(false);
+        return;
+      }
+
       // Générer un code de confirmation à 4 chiffres
       const code = generateConfirmationCode();
-      
+
       // Envoyer le code par email
       const emailSent = await sendConfirmationEmail(code);
-      
+
       if (emailSent) {
         setSuccess("Code de confirmation envoyé par email !");
         setStep("confirm");
@@ -82,38 +112,42 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      // Vérifier le code de confirmation
-      const storedCode = localStorage.getItem(`confirmation_${email}`);
-      
-      if (confirmationCode === storedCode) {
-        // Code correct, créer le compte
-        const { error } = await supabase.auth.signUp({
+      // Appeler l'API pour vérifier le code et créer le compte
+      const response = await fetch("/api/auth/verify-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email,
+          code: confirmationCode,
+          username,
           password,
-          options: {
-            data: {
-              username: username
-            }
-          }
-        });
+        }),
+      });
 
-        if (error) {
-          setError(error.message);
-        } else {
-          setSuccess("Compte créé avec succès ! Redirection...");
-          // Nettoyer le code temporaire
-          localStorage.removeItem(`confirmation_${email}`);
-          
-          // Redirection vers la page de connexion
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
-        }
-      } else {
-        setError("Code de confirmation incorrect");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de la vérification");
       }
+
+      // Compte créé avec succès
+      setSuccess("Compte créé avec succès ! Redirection...");
+
+      // Nettoyer le code temporaire
+      localStorage.removeItem(`confirmation_${email}`);
+
+      // Redirection vers la page de connexion
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (error) {
-      setError("Erreur lors de la confirmation");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la confirmation"
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -122,14 +156,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const resendCode = async () => {
     if (countdown > 0) return;
-    
+
     setError("");
     setLoading(true);
-    
+
     try {
       const code = generateConfirmationCode();
       const emailSent = await sendConfirmationEmail(code);
-      
+
       if (emailSent) {
         setSuccess("Nouveau code envoyé !");
         setCountdown(60);
@@ -149,7 +183,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         <h2 className="text-2xl font-bold mb-6 text-center">
           Confirmer votre inscription
         </h2>
-        
+
         <div className="mb-4 text-center text-sm text-muted-foreground">
           <p>Un code de confirmation a été envoyé à :</p>
           <p className="font-semibold text-foreground mt-1">{email}</p>
@@ -157,14 +191,21 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
         <form onSubmit={handleConfirmCode} className="space-y-5">
           <div>
-            <label htmlFor="confirmationCode" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="confirmationCode"
+              className="block text-sm font-medium mb-1"
+            >
               Code de confirmation (4 chiffres)
             </label>
             <input
               id="confirmationCode"
               type="text"
               value={confirmationCode}
-              onChange={(e) => setConfirmationCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              onChange={(e) =>
+                setConfirmationCode(
+                  e.target.value.replace(/\D/g, "").slice(0, 4)
+                )
+              }
               required
               maxLength={4}
               pattern="[0-9]{4}"
@@ -189,10 +230,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             disabled={countdown > 0}
             className="text-sm text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
           >
-            {countdown > 0 
-              ? `Renvoyer dans ${countdown}s` 
-              : "Renvoyer le code"
-            }
+            {countdown > 0 ? `Renvoyer dans ${countdown}s` : "Renvoyer le code"}
           </button>
         </div>
 
@@ -212,10 +250,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         </div>
 
         {error && (
-          <div className="mt-4 text-sm text-red-500 animate-fade-in text-center">{error}</div>
+          <div className="mt-4 text-sm text-red-500 animate-fade-in text-center">
+            {error}
+          </div>
         )}
         {success && (
-          <div className="mt-4 text-sm text-green-600 animate-fade-in text-center">{success}</div>
+          <div className="mt-4 text-sm text-green-600 animate-fade-in text-center">
+            {success}
+          </div>
         )}
       </div>
     );
@@ -223,10 +265,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   return (
     <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl p-8 mb-8 animate-fade-in">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Créer un compte
-      </h2>
-      
+      <h2 className="text-2xl font-bold mb-6 text-center">Créer un compte</h2>
+
       <form onSubmit={handleRegister} className="space-y-5">
         <div>
           <label htmlFor="username" className="block text-sm font-medium mb-1">
@@ -276,10 +316,41 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           />
         </div>
 
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium mb-1"
+          >
+            Confirmer votre mot de passe
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            className={`w-full rounded-lg border px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+              confirmPassword && password !== confirmPassword
+                ? "border-red-500 bg-red-50 dark:bg-red-950/20"
+                : "border-border bg-background"
+            }`}
+            placeholder="••••••••"
+          />
+          {confirmPassword && password !== confirmPassword && (
+            <p className="mt-1 text-sm text-red-500">
+              Les mots de passe ne correspondent pas
+            </p>
+          )}
+        </div>
+
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={
+            loading || (confirmPassword && password !== confirmPassword)
+          }
+          className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Envoi du code..." : "Envoyer le code de confirmation"}
         </button>
@@ -296,10 +367,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       </div>
 
       {error && (
-        <div className="mt-4 text-sm text-red-500 animate-fade-in text-center">{error}</div>
+        <div className="mt-4 text-sm text-red-500 animate-fade-in text-center">
+          {error}
+        </div>
       )}
       {success && (
-        <div className="mt-4 text-sm text-green-600 animate-fade-in text-center">{success}</div>
+        <div className="mt-4 text-sm text-green-600 animate-fade-in text-center">
+          {success}
+        </div>
       )}
     </div>
   );
