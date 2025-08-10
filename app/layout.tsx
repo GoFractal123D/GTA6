@@ -26,9 +26,7 @@ export default function RootLayout({
         <I18nProvider>
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
+              <ConditionalLayout>{children}</ConditionalLayout>
               <Toaster />
             </ThemeProvider>
           </AuthProvider>

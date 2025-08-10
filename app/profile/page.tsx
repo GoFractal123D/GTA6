@@ -46,15 +46,32 @@ export default function ProfilePage() {
       setActiveTab(tabParam);
     }
 
-    fetchProfile();
-    fetchUserMods();
-    fetchUserComments();
-    fetchUserVotes();
-    fetchUserDownloads();
-    fetchTotalDownloadsOnMyMods();
-    fetchMyPosts();
-    fetchFavoritePosts();
-    fetchFavoriteMods();
+    // Charger toutes les données en parallèle pour améliorer les performances
+    const loadAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchProfile(),
+          fetchUserMods(),
+          fetchUserComments(),
+          fetchUserVotes(),
+          fetchUserDownloads(),
+          fetchTotalDownloadsOnMyMods(),
+          fetchMyPosts(),
+          fetchFavoritePosts(),
+          fetchFavoriteMods(),
+        ]);
+      } catch (error) {
+        console.error(
+          "[Profile] Erreur lors du chargement des données:",
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllData();
   }, [user, searchParams]);
 
   async function fetchProfile() {
@@ -153,28 +170,30 @@ export default function ProfilePage() {
       user?.id
     );
 
-    // Récupérer les commentaires sur les mods (table comments)
-    const { data: modComments, error: modCommentsError } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("user_id", user?.id);
+    try {
+      // Récupérer les commentaires sur les mods et posts en parallèle
+      const [modCommentsResult, postCommentsResult] = await Promise.all([
+        supabase.from("comments").select("*").eq("user_id", user?.id),
+        supabase.from("community_comments").select("*").eq("user_id", user?.id),
+      ]);
 
-    console.log("[Profile] Commentaires sur mods:", modComments);
-    console.log("[Profile] Erreur commentaires mods:", modCommentsError);
+      const modComments = modCommentsResult.data || [];
+      const postComments = postCommentsResult.data || [];
 
-    // Récupérer les commentaires sur les posts communautaires (table community_comments)
-    const { data: postComments, error: postCommentsError } = await supabase
-      .from("community_comments")
-      .select("*")
-      .eq("user_id", user?.id);
+      console.log("[Profile] Commentaires sur mods:", modComments);
+      console.log("[Profile] Commentaires sur posts:", postComments);
 
-    console.log("[Profile] Commentaires sur posts:", postComments);
-    console.log("[Profile] Erreur commentaires posts:", postCommentsError);
-
-    // Combiner les deux types de commentaires
-    const allComments = [...(modComments || []), ...(postComments || [])];
-    console.log("[Profile] Total commentaires:", allComments.length);
-    setComments(allComments);
+      // Combiner les deux types de commentaires
+      const allComments = [...modComments, ...postComments];
+      console.log("[Profile] Total commentaires:", allComments.length);
+      setComments(allComments);
+    } catch (error) {
+      console.error(
+        "[Profile] Erreur lors de la récupération des commentaires:",
+        error
+      );
+      setComments([]);
+    }
   }
 
   async function fetchUserVotes() {
@@ -183,29 +202,34 @@ export default function ProfilePage() {
       user?.id
     );
 
-    // Récupérer les votes/ratings sur les mods (table mod_ratings)
-    const { data: modVotes, error: modVotesError } = await supabase
-      .from("mod_ratings")
-      .select("*")
-      .eq("user_id", user?.id);
+    try {
+      // Récupérer les votes/ratings sur les mods et likes sur posts en parallèle
+      const [modVotesResult, postLikesResult] = await Promise.all([
+        supabase.from("mod_ratings").select("*").eq("user_id", user?.id),
+        supabase
+          .from("post")
+          .select("*")
+          .eq("user_id", user?.id)
+          .eq("action_type", "like"),
+      ]);
 
-    console.log("[Profile] Votes sur mods:", modVotes);
-    console.log("[Profile] Erreur votes mods:", modVotesError);
+      const modVotes = modVotesResult.data || [];
+      const postLikes = postLikesResult.data || [];
 
-    // Récupérer les likes sur les posts communautaires (table post)
-    const { data: postLikes, error: postLikesError } = await supabase
-      .from("post")
-      .select("*")
-      .eq("user_id", user?.id)
-      .eq("action_type", "like");
+      console.log("[Profile] Votes sur mods:", modVotes);
+      console.log("[Profile] Likes sur posts:", postLikes);
 
-    console.log("[Profile] Likes sur posts:", postLikes);
-    console.log("[Profile] Erreur likes posts:", postLikesError);
-
-    // Combiner les votes et likes
-    const allVotes = [...(modVotes || []), ...(postLikes || [])];
-    console.log("[Profile] Total votes/likes:", allVotes.length);
-    setVotes(allVotes);
+      // Combiner les votes et likes
+      const allVotes = [...modVotes, ...postLikes];
+      console.log("[Profile] Total votes/likes:", allVotes.length);
+      setVotes(allVotes);
+    } catch (error) {
+      console.error(
+        "[Profile] Erreur lors de la récupération des votes:",
+        error
+      );
+      setVotes([]);
+    }
   }
 
   async function fetchUserDownloads() {
@@ -303,21 +327,39 @@ export default function ProfilePage() {
   }
 
   async function fetchFavoritePosts() {
-    const { data: favorites } = await supabase
-      .from("post")
-      .select("post_id, action_type")
-      .eq("user_id", user.id)
-      .eq("action_type", "favorite");
-
-    if (favorites && favorites.length > 0) {
-      const postIds = favorites.map((f) => f.post_id);
-      const { data: posts } = await supabase
-        .from("community")
-        .select("*")
-        .in("id", postIds)
+    try {
+      // Récupérer directement les posts favoris avec une seule requête
+      const { data: favorites, error } = await supabase
+        .from("post")
+        .select(
+          `
+          post_id,
+          action_type,
+          community!inner(*)
+        `
+        )
+        .eq("user_id", user.id)
+        .eq("action_type", "favorite")
         .order("created_at", { ascending: false });
-      setFavoritePosts(posts || []);
-    } else {
+
+      if (error) {
+        console.error(
+          "[Profile] Erreur lors de la récupération des posts favoris:",
+          error
+        );
+        setFavoritePosts([]);
+        return;
+      }
+
+      // Extraire les posts depuis la jointure
+      const posts =
+        favorites?.map((fav) => fav.community).filter(Boolean) || [];
+      setFavoritePosts(posts);
+    } catch (error) {
+      console.error(
+        "[Profile] Erreur lors de la récupération des posts favoris:",
+        error
+      );
       setFavoritePosts([]);
     }
   }
@@ -737,10 +779,21 @@ export default function ProfilePage() {
 
           {/* Contenu des onglets */}
           <div className="bg-background/50 rounded-lg p-6 border border-pink-500/30">
-            {activeTab === "posts" && renderPosts()}
-            {activeTab === "favorites" && renderFavoritePosts()}
-            {activeTab === "mods" && renderFavoriteMods()}
-            {activeTab === "stats" && renderStats()}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+                <span className="ml-3 text-lg text-muted-foreground">
+                  Chargement en cours...
+                </span>
+              </div>
+            ) : (
+              <>
+                {activeTab === "posts" && renderPosts()}
+                {activeTab === "favorites" && renderFavoritePosts()}
+                {activeTab === "mods" && renderFavoriteMods()}
+                {activeTab === "stats" && renderStats()}
+              </>
+            )}
           </div>
         </div>
       </div>
