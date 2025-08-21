@@ -40,11 +40,9 @@ export default function ProfilePage() {
   const [mods, setMods] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
   const [votes, setVotes] = useState<any[]>([]);
-  const [downloads, setDownloads] = useState<any[]>([]);
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [favoritePosts, setFavoritePosts] = useState<any[]>([]);
   const [favoriteMods, setFavoriteMods] = useState<any[]>([]);
-  const [totalDownloadsOnMyMods, setTotalDownloadsOnMyMods] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // États pour l'édition du profil
@@ -78,8 +76,6 @@ export default function ProfilePage() {
           fetchUserMods(),
           fetchUserComments(),
           fetchUserVotes(),
-          fetchUserDownloads(),
-          fetchTotalDownloadsOnMyMods(),
           fetchMyPosts(),
           fetchFavoritePosts(),
           fetchFavoriteMods(),
@@ -252,91 +248,6 @@ export default function ProfilePage() {
         error
       );
       setVotes([]);
-    }
-  }
-
-  async function fetchUserDownloads() {
-    console.log(
-      "[Profile] Récupération des téléchargements pour l'utilisateur:",
-      user?.id
-    );
-
-    try {
-      const { data, error } = await supabase
-        .from("downloads")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false });
-
-      if (error && error.code === "42P01") {
-        console.log("[Profile] Table downloads n'existe pas encore");
-        setDownloads([]);
-        return;
-      }
-
-      console.log("[Profile] Téléchargements:", data);
-      console.log("[Profile] Erreur téléchargements:", error);
-      setDownloads(data || []);
-    } catch (error) {
-      console.log(
-        "[Profile] Erreur lors de la récupération des téléchargements:",
-        error
-      );
-      setDownloads([]);
-    }
-  }
-
-  async function fetchTotalDownloadsOnMyMods() {
-    console.log(
-      "[Profile] Calcul des téléchargements totaux pour les mods de l'utilisateur:",
-      user?.id
-    );
-
-    // Récupérer les mods de l'utilisateur avec author_id
-    const { data: myMods, error: myModsError } = await supabase
-      .from("mods")
-      .select("id")
-      .eq("author_id", user?.id);
-
-    console.log("[Profile] Mods de l'utilisateur:", myMods);
-    console.log("[Profile] Erreur mods utilisateur:", myModsError);
-
-    if (!myMods || myMods.length === 0) {
-      console.log("[Profile] Aucun mod trouvé pour l'utilisateur");
-      setTotalDownloadsOnMyMods(0);
-      return;
-    }
-
-    const modIds = myMods.map((m) => m.id);
-    console.log("[Profile] IDs des mods:", modIds);
-
-    if (!modIds.length) {
-      setTotalDownloadsOnMyMods(0);
-      return;
-    }
-
-    try {
-      // Essayer de récupérer les téléchargements
-      const { data: downloadsData, error: downloadsError } = await supabase
-        .from("downloads")
-        .select("id, mod_id")
-        .in("mod_id", modIds);
-
-      if (downloadsError && downloadsError.code === "42P01") {
-        console.log("[Profile] Table downloads n'existe pas encore");
-        setTotalDownloadsOnMyMods(0);
-        return;
-      }
-
-      console.log("[Profile] Téléchargements des mods:", downloadsData);
-      console.log("[Profile] Erreur téléchargements mods:", downloadsError);
-      setTotalDownloadsOnMyMods(downloadsData ? downloadsData.length : 0);
-    } catch (error) {
-      console.log(
-        "[Profile] Erreur lors du calcul des téléchargements:",
-        error
-      );
-      setTotalDownloadsOnMyMods(0);
     }
   }
 
@@ -736,7 +647,6 @@ export default function ProfilePage() {
 
     console.log("[Profile] Rendu des statistiques:");
     console.log("- Mods publiés:", mods.length);
-    console.log("- Téléchargements totaux:", totalDownloadsOnMyMods);
     console.log("- Note moyenne:", averageRating);
     console.log("- Commentaires:", comments.length);
     console.log("- Votes totaux:", votes.length);
@@ -750,7 +660,7 @@ export default function ProfilePage() {
           <h3 className="text-xl font-bold mb-4 text-pink-400">
             Statistiques personnelles
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
               <span className="text-2xl font-bold text-pink-400">
                 {mods.length}
@@ -759,14 +669,7 @@ export default function ProfilePage() {
                 Mods publiés
               </span>
             </div>
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
-              <span className="text-2xl font-bold text-blue-400">
-                {totalDownloadsOnMyMods}
-              </span>
-              <span className="text-sm text-muted-foreground mt-1">
-                Téléchargements
-              </span>
-            </div>
+
             <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
               <span className="text-2xl font-bold text-yellow-400">
                 {averageRating}
@@ -822,42 +725,6 @@ export default function ProfilePage() {
                       Modifier
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Historique des téléchargements */}
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-pink-400">
-            Historique des téléchargements
-          </h3>
-          {downloads.length === 0 ? (
-            <div className="text-muted-foreground">
-              Aucun téléchargement pour le moment
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {downloads.slice(0, 5).map((dl) => (
-                <div
-                  key={dl.id}
-                  className="bg-background/80 rounded-lg p-4 border border-pink-500/30 flex flex-col md:flex-row md:items-center justify-between"
-                >
-                  <div>
-                    <span className="font-semibold">
-                      {dl.file_name || dl.file_path || "?"}
-                    </span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {new Date(dl.created_at).toLocaleDateString("fr-FR")}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/mod/${dl.mod_id}`}
-                    className="px-3 py-1 rounded bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition-colors mt-2 md:mt-0"
-                  >
-                    Voir le mod
-                  </Link>
                 </div>
               ))}
             </div>
