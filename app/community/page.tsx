@@ -146,17 +146,17 @@ export default function CommunityPage() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/60 to-slate-900/80" />
+              <div className="absolute inset-0 bg-black/30" />
             </div>
 
             {/* Contenu du carrousel */}
             <div className="relative z-10 max-w-6xl mx-auto px-4">
               {/* Titre et description */}
               <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
                   Communauté GTA 6
                 </h1>
-                <p className="text-xl text-purple-200 max-w-2xl mx-auto">
+                <p className="text-xl text-gray-200 max-w-2xl mx-auto drop-shadow-lg">
                   Découvrez, partagez et participez à la plus grande communauté
                   de moddeurs et joueurs GTA 6
                 </p>
