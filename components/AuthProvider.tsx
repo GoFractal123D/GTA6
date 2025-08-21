@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data: profile, error } = await supabase
               .from("profiles")
-              .select("id, username, email, role")
+              .select("id, username, email, role, avatar_url, description")
               .eq("id", user.id)
               .single();
             
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
               const { data: profile, error } = await supabase
                 .from("profiles")
-                .select("id, username, email, role")
+                .select("id, username, email, role, avatar_url, description")
                 .eq("id", session.user.id)
                 .single();
               
@@ -101,8 +101,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserProfile = (updates: any) => {
+    setUserProfile((prev: any) => ({
+      ...prev,
+      ...updates
+    }));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userProfile, setUser, signOut, loading }}>
+    <AuthContext.Provider value={{ user, userProfile, setUser, signOut, updateUserProfile, loading }}>
       {children}
     </AuthContext.Provider>
   );

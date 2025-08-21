@@ -19,7 +19,7 @@ import { Menu } from "lucide-react";
 export default function Navigation() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -109,9 +109,9 @@ export default function Navigation() {
             <div className="ml-4 hidden md:flex items-center gap-3">
               <Link href="/profile">
                 <Avatar>
-                  <AvatarImage src="/placeholder-user.jpg" alt="@user" />
+                  <AvatarImage src={userProfile?.avatar_url || "/placeholder-user.jpg"} alt="@user" />
                   <AvatarFallback>
-                    {user.email?.[0]?.toUpperCase() || "U"}
+                    {userProfile?.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Link>

@@ -33,7 +33,7 @@ import {
 type TabType = "posts" | "favorites" | "mods" | "stats";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [profile, setProfile] = useState<any>(null);
@@ -505,12 +505,19 @@ export default function ProfilePage() {
       console.log("✅ Profil mis à jour:", data);
 
       // Mettre à jour l'état local
+      const updatedProfile = {
+        username: editForm.username.trim() || profile?.username,
+        description: editForm.description.trim() || profile?.description,
+        avatar_url: editForm.avatar_url || profile?.avatar_url,
+      };
+
       setProfile((prev: any) => ({
         ...prev,
-        username: editForm.username.trim() || prev?.username,
-        description: editForm.description.trim() || prev?.description,
-        avatar_url: editForm.avatar_url || prev?.avatar_url,
+        ...updatedProfile,
       }));
+
+      // Mettre à jour le profil global dans AuthProvider
+      updateUserProfile(updatedProfile);
 
       setIsEditDialogOpen(false);
     } catch (error) {
