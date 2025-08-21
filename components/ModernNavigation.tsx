@@ -28,7 +28,7 @@ export default function Navigation() {
   return (
     <>
       {/* Navigation principale */}
-      <header className="fixed top-0 left-0 w-full z-30 bg-background/70 backdrop-blur border-b border-border">
+      <header className="fixed top-0 left-0 w-full z-50 bg-background/70 backdrop-blur border-b border-border">
         <nav className="container mx-auto flex items-center justify-between h-20 px-8">
           <Link
             href="/"

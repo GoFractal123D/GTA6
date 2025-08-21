@@ -353,7 +353,7 @@ export default function CommunityFeed() {
     );
 
   return (
-    <div className="space-y-6" style={{ position: "relative", zIndex: 1000 }}>
+    <div className="space-y-6" style={{ position: "relative", zIndex: 10 }}>
       {/* En-tête avec bouton de rafraîchissement */}
       <div className="flex items-center justify-between mb-8">
         <div>
