@@ -417,35 +417,60 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    console.log("🖼️ Début upload avatar:", file.name, file.size, "bytes");
+
     try {
-      // Créer un nom de fichier unique
+      // Vérifications de base
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Le fichier est trop volumineux (max 5MB)");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("Veuillez sélectionner une image valide");
+        return;
+      }
+
+      // Créer un nom de fichier unique avec le dossier utilisateur
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      console.log("📁 Upload vers:", fileName);
 
       // Upload vers Supabase Storage
       const { data, error } = await supabase.storage
         .from("avatars")
         .upload(fileName, file, {
           cacheControl: "3600",
-          upsert: false,
+          upsert: true, // Permet d'écraser si existe déjà
         });
 
       if (error) {
-        console.error("Erreur upload avatar:", error);
+        console.error("❌ Erreur upload avatar:", error);
+        alert(`Erreur d'upload: ${error.message}`);
         return;
       }
+
+      console.log("✅ Upload réussi:", data);
 
       // Obtenir l'URL publique
       const { data: urlData } = supabase.storage
         .from("avatars")
         .getPublicUrl(data.path);
 
+      console.log("🔗 URL publique:", urlData.publicUrl);
+
       setEditForm((prev) => ({
         ...prev,
         avatar_url: urlData.publicUrl,
       }));
+
+      alert("Image uploadée avec succès !");
     } catch (error) {
-      console.error("Erreur lors du téléchargement:", error);
+      console.error("❌ Erreur lors du téléchargement:", error);
+      alert(
+        `Erreur: ${error instanceof Error ? error.message : "Erreur inconnue"}`
+      );
     }
   };
 
@@ -453,31 +478,49 @@ export default function ProfilePage() {
     if (!user) return;
 
     setIsUpdating(true);
+    console.log("💾 Début mise à jour profil:", {
+      username: editForm.username.trim(),
+      description: editForm.description.trim(),
+      avatar_url: editForm.avatar_url,
+    });
+
     try {
-      const { error } = await supabase.from("profiles").upsert({
+      const profileData = {
         id: user.id,
-        username: editForm.username.trim(),
-        description: editForm.description.trim(),
-        avatar_url: editForm.avatar_url,
+        username: editForm.username.trim() || null,
+        description: editForm.description.trim() || null,
+        avatar_url: editForm.avatar_url || null,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(profileData)
+        .select(); // Ajouter select() pour récupérer les données mises à jour
 
       if (error) {
-        console.error("Erreur mise à jour profil:", error);
+        console.error("❌ Erreur mise à jour profil:", error);
+        alert(`Erreur de mise à jour: ${error.message}`);
         return;
       }
+
+      console.log("✅ Profil mis à jour:", data);
 
       // Mettre à jour l'état local
       setProfile((prev: any) => ({
         ...prev,
-        username: editForm.username.trim(),
-        description: editForm.description.trim(),
-        avatar_url: editForm.avatar_url,
+        username: editForm.username.trim() || prev?.username,
+        description: editForm.description.trim() || prev?.description,
+        avatar_url: editForm.avatar_url || prev?.avatar_url,
       }));
 
       setIsEditDialogOpen(false);
+      alert("Profil mis à jour avec succès !");
     } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
+      console.error("❌ Erreur lors de la mise à jour:", error);
+      alert(
+        `Erreur: ${error instanceof Error ? error.message : "Erreur inconnue"}`
+      );
     } finally {
       setIsUpdating(false);
     }
