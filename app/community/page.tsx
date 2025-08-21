@@ -293,7 +293,45 @@ export default function CommunityPage() {
               <div className="flex gap-8">
                 {/* Colonne principale - Publications dynamiques */}
                 <div className="flex-1">
-                  <CommunityFeed />
+                  {/* Indicateur de filtres actifs */}
+                  {(searchQuery.trim() || selectedCategory !== "all") && (
+                    <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Filter className="w-4 h-4 text-primary" />
+                        <span className="text-primary font-medium">
+                          Filtres actifs :
+                        </span>
+                        {selectedCategory !== "all" && (
+                          <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
+                            {
+                              filterCategories.find(
+                                (cat) => cat.id === selectedCategory
+                              )?.label
+                            }
+                          </span>
+                        )}
+                        {searchQuery.trim() && (
+                          <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
+                            "{searchQuery}"
+                          </span>
+                        )}
+                        <button
+                          onClick={() => {
+                            setSearchQuery("");
+                            setSelectedCategory("all");
+                          }}
+                          className="ml-auto text-primary hover:text-primary/80 text-xs underline"
+                        >
+                          Effacer les filtres
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <CommunityFeed
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                  />
                 </div>
 
                 {/* Barre latérale */}

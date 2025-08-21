@@ -28,7 +28,15 @@ const TYPE_LABELS = {
   event: "Événement",
 };
 
-export default function CommunityFeed() {
+interface CommunityFeedProps {
+  searchQuery?: string;
+  selectedCategory?: string;
+}
+
+export default function CommunityFeed({
+  searchQuery = "",
+  selectedCategory = "all",
+}: CommunityFeedProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, userProfile } = useAuth();
@@ -36,7 +44,7 @@ export default function CommunityFeed() {
 
   useEffect(() => {
     fetchFeed();
-  }, [user]); // Recharger quand l'utilisateur change
+  }, [user, searchQuery, selectedCategory]); // Recharger quand l'utilisateur change ou les filtres
 
   // Fonction pour naviguer vers la page de détail
   const handleCardClick = (postId: number) => {
@@ -194,11 +202,25 @@ export default function CommunityFeed() {
     try {
       console.log("[CommunityFeed] Début de la récupération des posts");
 
-      // Récupérer les publications de la table community
-      const { data: posts, error: postsError } = await supabase
-        .from("community")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Récupérer les publications de la table community avec filtrage
+      let query = supabase.from("community").select("*");
+
+      // Filtrage par catégorie
+      if (selectedCategory !== "all") {
+        query = query.eq("type", selectedCategory);
+      }
+
+      // Filtrage par recherche textuelle
+      if (searchQuery.trim()) {
+        query = query.or(
+          `title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`
+        );
+      }
+
+      const { data: posts, error: postsError } = await query.order(
+        "created_at",
+        { ascending: false }
+      );
 
       if (postsError) {
         console.error(
@@ -213,61 +235,71 @@ export default function CommunityFeed() {
       console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
 
       // Récupérer tous les IDs d'utilisateurs uniques
-      const userIds = [...new Set((posts || []).map(post => post.author_id))];
-      
+      const userIds = [...new Set((posts || []).map((post) => post.author_id))];
+
       // Récupérer les profils utilisateurs en une seule requête
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, username")
         .in("id", userIds);
-      
+
       if (profilesError) {
-        console.error("[CommunityFeed] Erreur lors de la récupération des profils:", profilesError);
+        console.error(
+          "[CommunityFeed] Erreur lors de la récupération des profils:",
+          profilesError
+        );
       }
-      
+
       // Créer un map pour un accès rapide aux profils
       const profilesMap = new Map();
-      (profiles || []).forEach(profile => {
+      (profiles || []).forEach((profile) => {
         profilesMap.set(profile.id, profile);
       });
 
       // Récupérer toutes les statistiques en une seule requête optimisée
-      const postIds = (posts || []).map(post => post.id);
-      
+      const postIds = (posts || []).map((post) => post.id);
+
       if (postIds.length === 0) {
         setItems([]);
         return;
       }
 
       // Requête optimisée pour toutes les statistiques
-      const [likesResult, commentsResult, sharesResult, userInteractionsResult] = await Promise.all([
+      const [
+        likesResult,
+        commentsResult,
+        sharesResult,
+        userInteractionsResult,
+      ] = await Promise.all([
         // Likes pour tous les posts
         supabase
           .from("post")
           .select("post_id, action_type")
           .in("post_id", postIds)
           .eq("action_type", "like"),
-        
+
         // Commentaires pour tous les posts
         supabase
           .from("community_comments")
           .select("post_id")
           .in("post_id", postIds),
-        
+
         // Partages pour tous les posts
         supabase
           .from("post")
           .select("post_id, action_type")
           .in("post_id", postIds)
           .eq("action_type", "share"),
-        
+
         // Interactions de l'utilisateur actuel
-        user ? supabase
-          .from("post")
-          .select("post_id, action_type")
-          .in("post_id", postIds)
-          .eq("user_id", user.id)
-          .in("action_type", ["like", "favorite"]) : Promise.resolve({ data: [] })
+        user
+          ? supabase
+              .from("post")
+              .select("post_id, action_type")
+              .in("post_id", postIds)
+              .eq("user_id", user.id)
+              .in("action_type", ["like", "favorite"])
+          : Promise.resolve({ data: [] }),
       ]);
 
       // Créer des maps pour un accès rapide aux statistiques
@@ -278,22 +310,25 @@ export default function CommunityFeed() {
       const userFavoritesMap = new Map();
 
       // Traiter les likes
-      (likesResult.data || []).forEach(like => {
+      (likesResult.data || []).forEach((like) => {
         likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
       });
 
       // Traiter les commentaires
-      (commentsResult.data || []).forEach(comment => {
-        commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
+      (commentsResult.data || []).forEach((comment) => {
+        commentsMap.set(
+          comment.post_id,
+          (commentsMap.get(comment.post_id) || 0) + 1
+        );
       });
 
       // Traiter les partages
-      (sharesResult.data || []).forEach(share => {
+      (sharesResult.data || []).forEach((share) => {
         sharesMap.set(share.post_id, (sharesMap.get(share.post_id) || 0) + 1);
       });
 
       // Traiter les interactions utilisateur
-      (userInteractionsResult.data || []).forEach(interaction => {
+      (userInteractionsResult.data || []).forEach((interaction) => {
         if (interaction.action_type === "like") {
           userLikesMap.set(interaction.post_id, true);
         } else if (interaction.action_type === "favorite") {
@@ -302,7 +337,7 @@ export default function CommunityFeed() {
       });
 
       // Assembler les données finales
-      const postsWithStats = (posts || []).map(post => ({
+      const postsWithStats = (posts || []).map((post) => ({
         ...post,
         profiles: profilesMap.get(post.author_id),
         likes: likesMap.get(post.id) || 0,
@@ -343,7 +378,19 @@ export default function CommunityFeed() {
     return (
       <div className="text-center py-12">
         <div className="text-muted-foreground mb-4">
-          Aucun contenu pour le moment.
+          {searchQuery || selectedCategory !== "all" ? (
+            <>
+              Aucun résultat trouvé pour{" "}
+              {selectedCategory !== "all" &&
+                `la catégorie "${
+                  TYPE_LABELS[selectedCategory as keyof typeof TYPE_LABELS]
+                }"`}
+              {searchQuery && selectedCategory !== "all" && " et "}
+              {searchQuery && `la recherche "${searchQuery}"`}.
+            </>
+          ) : (
+            "Aucun contenu pour le moment."
+          )}
         </div>
         <Button onClick={fetchFeed} variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -361,7 +408,11 @@ export default function CommunityFeed() {
             Publications récentes
           </h2>
           <p className="text-muted-foreground mt-1 text-white">
-            Découvrez les derniers contenus de la communauté
+            {items.length} publication{items.length > 1 ? "s" : ""} trouvée
+            {items.length > 1 ? "s" : ""}
+            {searchQuery || selectedCategory !== "all"
+              ? " avec les filtres actifs"
+              : ""}
           </p>
         </div>
         <Button
@@ -405,7 +456,8 @@ export default function CommunityFeed() {
                           : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                       }`}
                     >
-                      {TYPE_LABELS[item.type] || item.type}
+                      {TYPE_LABELS[item.type as keyof typeof TYPE_LABELS] ||
+                        item.type}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -416,9 +468,12 @@ export default function CommunityFeed() {
                           "??"}
                       </span>
                     </div>
-                    {user && item.author_id === user.id && userProfile?.role && userProfile.role !== "user" && (
-                      <AdminBadge role={userProfile.role} size="sm" />
-                    )}
+                    {user &&
+                      item.author_id === user.id &&
+                      userProfile?.role &&
+                      userProfile.role !== "user" && (
+                        <AdminBadge role={userProfile.role} size="sm" />
+                      )}
                   </div>
                 </div>
 
