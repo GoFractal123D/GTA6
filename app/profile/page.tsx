@@ -14,7 +14,21 @@ import {
   Star,
   FileText,
   Settings,
+  Edit,
+  Save,
+  X,
+  Upload,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type TabType = "posts" | "favorites" | "mods" | "stats";
 
@@ -32,6 +46,16 @@ export default function ProfilePage() {
   const [favoriteMods, setFavoriteMods] = useState<any[]>([]);
   const [totalDownloadsOnMyMods, setTotalDownloadsOnMyMods] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // États pour l'édition du profil
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    username: "",
+    description: "",
+    avatar_url: "",
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -376,6 +400,88 @@ export default function ProfilePage() {
       setFavoritePosts([]);
     }
   }
+
+  // Fonctions pour l'édition du profil
+  const openEditDialog = () => {
+    setEditForm({
+      username: profile?.username || "",
+      description: profile?.description || "",
+      avatar_url: profile?.avatar_url || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      // Créer un nom de fichier unique
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+
+      // Upload vers Supabase Storage
+      const { data, error } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        console.error("Erreur upload avatar:", error);
+        return;
+      }
+
+      // Obtenir l'URL publique
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(data.path);
+
+      setEditForm((prev) => ({
+        ...prev,
+        avatar_url: urlData.publicUrl,
+      }));
+    } catch (error) {
+      console.error("Erreur lors du téléchargement:", error);
+    }
+  };
+
+  const updateProfile = async () => {
+    if (!user) return;
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id,
+        username: editForm.username.trim(),
+        description: editForm.description.trim(),
+        avatar_url: editForm.avatar_url,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        console.error("Erreur mise à jour profil:", error);
+        return;
+      }
+
+      // Mettre à jour l'état local
+      setProfile((prev: any) => ({
+        ...prev,
+        username: editForm.username.trim(),
+        description: editForm.description.trim(),
+        avatar_url: editForm.avatar_url,
+      }));
+
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const tabs = [
     {
@@ -751,9 +857,20 @@ export default function ProfilePage() {
                 </span>
               </div>
               <div className="flex-1 flex flex-col gap-2">
-                <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
-                  {profile?.username || user?.email || "Utilisateur"}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
+                    {profile?.username || user?.email || "Utilisateur"}
+                  </h1>
+                  <Button
+                    onClick={openEditDialog}
+                    variant="outline"
+                    size="sm"
+                    className="bg-background/80 border-pink-500/30 hover:bg-pink-500/10"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Modifier
+                  </Button>
+                </div>
                 <p className="text-muted-foreground text-base">
                   {profile?.description || "Aucune description"}
                 </p>
@@ -810,6 +927,114 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Dialog d'édition du profil */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Modifier mon profil
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Upload d'avatar */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-full border-2 border-pink-500/30 overflow-hidden bg-background">
+                <Image
+                  src={editForm.avatar_url || "/placeholder-user.jpg"}
+                  alt="Avatar"
+                  width={96}
+                  height={96}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-pink-500/30 hover:bg-pink-500/10"
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  Changer l'avatar
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Pseudo */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Pseudo</label>
+              <Input
+                value={editForm.username}
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
+                }
+                placeholder="Votre pseudo..."
+                className="border-pink-500/30 focus:border-pink-500"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="Décrivez-vous en quelques mots..."
+                rows={3}
+                className="border-pink-500/30 focus:border-pink-500"
+              />
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                onClick={() => setIsEditDialogOpen(false)}
+                variant="outline"
+                className="flex-1 border-pink-500/30 hover:bg-pink-500/10"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Annuler
+              </Button>
+              <Button
+                onClick={updateProfile}
+                disabled={isUpdating}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              >
+                {isUpdating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
+                    Mise à jour...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-1" />
+                    Sauvegarder
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   );
 }
