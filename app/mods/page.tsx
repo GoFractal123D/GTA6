@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import DownloadButton from "@/components/DownloadButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function ModsPage() {
-  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -210,7 +209,7 @@ export default function ModsPage() {
       <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <Input
-            placeholder={t("mods.searchPlaceholder")}
+            placeholder="Rechercher des mods..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -259,7 +258,7 @@ export default function ModsPage() {
           </select>
         </div>
         <Button asChild>
-          <Link href="/submit-mod">{t("mods.publish")}</Link>
+          <Link href="/submit-mod">Publier un mod</Link>
         </Button>
       </div>
 
@@ -276,7 +275,7 @@ export default function ModsPage() {
       )}
       {!loading && mods.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          {t("mods.noModsFound")}
+Aucun mod trouvé
         </div>
       )}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">

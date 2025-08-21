@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useTranslation } from "react-i18next";
+
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
@@ -19,7 +19,7 @@ import {
 type TabType = "posts" | "favorites" | "mods" | "stats";
 
 export default function ProfilePage() {
-  const { t } = useTranslation();
+
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
