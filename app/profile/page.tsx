@@ -488,7 +488,7 @@ export default function ProfilePage() {
           {myPosts.map((post) => (
             <div
               key={post.id}
-              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+              className="bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 hover:border-pink-500/50 transition-colors shadow-sm"
             >
               <div className="flex items-start justify-between mb-2">
                 <span
@@ -547,7 +547,7 @@ export default function ProfilePage() {
           {favoritePosts.map((post) => (
             <div
               key={post.id}
-              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+              className="bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 hover:border-pink-500/50 transition-colors shadow-sm"
             >
               <div className="flex items-start justify-between mb-2">
                 <span
@@ -606,7 +606,7 @@ export default function ProfilePage() {
           {favoriteMods.map((mod) => (
             <div
               key={mod.id}
-              className="bg-background/80 rounded-lg p-4 border border-pink-500/30 hover:border-pink-500/50 transition-colors"
+              className="bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 hover:border-pink-500/50 transition-colors shadow-sm"
             >
               <div className="flex items-start justify-between mb-2">
                 <span className="px-2 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400">
@@ -661,7 +661,7 @@ export default function ProfilePage() {
             Statistiques personnelles
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <div className="flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 shadow-sm">
               <span className="text-2xl font-bold text-pink-400">
                 {mods.length}
               </span>
@@ -670,7 +670,7 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <div className="flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 shadow-sm">
               <span className="text-2xl font-bold text-yellow-400">
                 {averageRating}
               </span>
@@ -678,7 +678,7 @@ export default function ProfilePage() {
                 Note moyenne
               </span>
             </div>
-            <div className="flex flex-col items-center justify-center bg-background/80 rounded-lg p-4 border border-pink-500/30">
+            <div className="flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/50 shadow-sm">
               <span className="text-2xl font-bold text-green-400">
                 {comments.length}
               </span>
@@ -742,16 +742,16 @@ export default function ProfilePage() {
           <img
             src="/gta6-profile.jpg"
             alt="GTA 6 Background"
-            className="w-full h-full object-cover object-center fixed top-0 left-0 blur-sm opacity-80"
+            className="w-full h-full object-cover object-center fixed top-0 left-0 blur-sm opacity-60 dark:opacity-80"
             style={{ minHeight: "100vh", minWidth: "100vw" }}
           />
-          <div className="absolute inset-0 bg-black/80" />
+          <div className="absolute inset-0 bg-white/85 dark:bg-black/80" />
         </div>
 
         {/* Contenu profil */}
         <div className="pt-24 max-w-6xl mx-auto px-4">
           {/* Header profil */}
-          <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background">
+          <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background/95 backdrop-blur-sm border border-border/50">
             <div className="relative z-10 flex items-center gap-6 px-8">
               <div className="flex flex-col items-center">
                 <div className="w-32 h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
@@ -779,7 +779,7 @@ export default function ProfilePage() {
                     onClick={openEditDialog}
                     variant="outline"
                     size="sm"
-                    className="bg-background/80 border-pink-500/30 hover:bg-pink-500/10"
+                    className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-pink-500/10 hover:border-pink-500/50"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Modifier
@@ -794,7 +794,7 @@ export default function ProfilePage() {
 
           {/* Onglets */}
           <div className="mb-8">
-            <div className="flex flex-wrap gap-2 border-b border-pink-500/30">
+            <div className="flex flex-wrap gap-2 border-b border-border/50">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -802,7 +802,7 @@ export default function ProfilePage() {
                   className={`flex items-center gap-2 px-4 py-3 rounded-t-lg font-semibold transition-all duration-200 ${
                     activeTab === tab.id
                       ? "bg-pink-500 text-white shadow-lg"
-                      : "bg-background/50 text-muted-foreground hover:bg-background/80 hover:text-foreground"
+                      : "bg-background/80 text-muted-foreground hover:bg-background/95 hover:text-foreground border border-border/30"
                   }`}
                 >
                   {tab.icon}
@@ -822,7 +822,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Contenu des onglets */}
-          <div className="bg-background/50 rounded-lg p-6 border border-pink-500/30">
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg p-6 border border-border/50">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
