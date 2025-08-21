@@ -64,7 +64,7 @@ export const sendConfirmationEmail = async (
       email: email, // Variable supplémentaire pour compatibilité
       to_name: username,
       confirmation_code: code,
-      from_name: 'GTA6 Mods Community',
+      from_name: 'VIverse',
     };
 
     console.log('📧 Paramètres du template:', templateParams);
