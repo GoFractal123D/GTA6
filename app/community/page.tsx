@@ -248,7 +248,7 @@ export default function CommunityPage() {
           </section>
 
           {/* Navigation et Filtres */}
-          <section className="w-full bg-background backdrop-blur-sm border-b border-border/50 rounded-lg">
+          <section className="w-full bg-background backdrop-blur-sm border-b border-border/50">
             <div className="max-w-6xl mx-auto px-4 py-6">
               <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
                 {/* Filtres par catégorie */}
