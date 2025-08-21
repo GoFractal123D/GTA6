@@ -317,9 +317,9 @@ export default function CommunityPage() {
                         </svg>
                         Outils rapides
                       </h3>
-                      <div className="space-y-3">
+                      <div className="space-y-10">
                         <Link href="/community/create">
-                          <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+                          <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 mb-3">
                             <svg
                               className="w-4 h-4 mr-2"
                               fill="none"
@@ -337,7 +337,7 @@ export default function CommunityPage() {
                           </Button>
                         </Link>
                         <Link href="/profile?tab=posts">
-                          <Button variant="outline" className="w-full">
+                          <Button variant="outline" className="w-full mb-3">
                             <svg
                               className="w-4 h-4 mr-2"
                               fill="none"
