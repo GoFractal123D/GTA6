@@ -13,28 +13,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Vérifier l'utilisateur actuel
     const checkUser = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // Vérifier d'abord si Supabase est accessible
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.warn("Erreur d'authentification Supabase, mode hors ligne:", userError);
+          setUser(null);
+          setUserProfile(null);
+          setLoading(false);
+          return;
+        }
+        
         setUser(user);
         
         // Récupérer le profil utilisateur avec le rôle
         if (user) {
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("id, username, email, role")
-            .eq("id", user.id)
-            .single();
-          
-          if (!error && profile) {
-            setUserProfile(profile);
+          try {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("id, username, email, role")
+              .eq("id", user.id)
+              .single();
+            
+            if (!error && profile) {
+              setUserProfile(profile);
+            }
+          } catch (profileError) {
+            console.warn("Erreur lors de la récupération du profil:", profileError);
           }
         }
       } catch (error) {
-        console.error(
-          "Erreur lors de la vérification de l'utilisateur:",
+        console.warn(
+          "Erreur lors de la vérification de l'utilisateur, mode hors ligne:",
           error
         );
+        setUser(null);
+        setUserProfile(null);
       } finally {
         setLoading(false);
       }
@@ -43,30 +57,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUser();
 
     // Écouter les changements d'authentification
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        
-        // Récupérer le profil utilisateur avec le rôle
-        if (session?.user) {
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("id, username, email, role")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (!error && profile) {
-            setUserProfile(profile);
+    try {
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          try {
+            setUser(session?.user ?? null);
+            
+            // Récupérer le profil utilisateur avec le rôle
+            if (session?.user) {
+              const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("id, username, email, role")
+                .eq("id", session.user.id)
+                .single();
+              
+              if (!error && profile) {
+                setUserProfile(profile);
+              }
+            } else {
+              setUserProfile(null);
+            }
+          } catch (profileError) {
+            console.warn("Erreur lors de la récupération du profil:", profileError);
+          } finally {
+            setLoading(false);
           }
-        } else {
-          setUserProfile(null);
         }
-        
-        setLoading(false);
-      }
-    );
+      );
 
-    return () => listener?.subscription.unsubscribe();
+      return () => listener?.subscription.unsubscribe();
+    } catch (listenerError) {
+      console.warn("Erreur lors de la configuration de l'écouteur d'authentification:", listenerError);
+      setLoading(false);
+    }
   }, []);
 
   const signOut = async () => {

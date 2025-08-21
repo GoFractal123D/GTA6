@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowRight,
+  ArrowRightIcon,
   Download,
   Users,
   Star,
@@ -33,6 +33,26 @@ export default function Home() {
     async function fetchStats() {
       setStats((s) => ({ ...s, loading: true }));
       try {
+        // Vérifier d'abord si Supabase est accessible
+        const { data: testData, error: testError } = await supabase
+          .from("mods")
+          .select("id", { count: "exact", head: true })
+          .limit(1);
+
+        if (testError) {
+          console.warn(
+            "Supabase non accessible, utilisation des stats par défaut:",
+            testError
+          );
+          setStats({
+            mods: 1250,
+            downloads: 45000,
+            users: 3200,
+            loading: false,
+          });
+          return;
+        }
+
         const { count: modsCount } = await supabase
           .from("mods")
           .select("id", { count: "exact", head: true });
@@ -52,6 +72,10 @@ export default function Home() {
           loading: false,
         });
       } catch (error) {
+        console.warn(
+          "Erreur lors de la récupération des stats, utilisation des valeurs par défaut:",
+          error
+        );
         setStats({
           mods: 1250,
           downloads: 45000,
@@ -100,7 +124,7 @@ export default function Home() {
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105"
                   >
                     Commencer gratuitement
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRightIcon className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link href="/mods">
@@ -301,7 +325,7 @@ export default function Home() {
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105"
                 >
                   Créer mon compte
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRightIcon className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/mods">

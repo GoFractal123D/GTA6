@@ -2,9 +2,9 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/AuthProvider";
-import I18nProvider from "@/components/I18nProvider";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { Toaster } from "@/components/ui/toaster";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,14 +23,14 @@ export default function RootLayout({
       <body
         className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col`}
       >
-        <I18nProvider>
+        <ErrorBoundary>
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <ConditionalLayout>{children}</ConditionalLayout>
               <Toaster />
             </ThemeProvider>
           </AuthProvider>
-        </I18nProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
