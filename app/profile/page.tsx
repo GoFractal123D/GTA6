@@ -19,7 +19,6 @@ import {
 type TabType = "posts" | "favorites" | "mods" | "stats";
 
 export default function ProfilePage() {
-
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -328,33 +327,47 @@ export default function ProfilePage() {
 
   async function fetchFavoritePosts() {
     try {
-      // Récupérer directement les posts favoris avec une seule requête
-      const { data: favorites, error } = await supabase
+      // Récupérer les IDs des posts favoris d'abord
+      const { data: favoriteIds, error: favoriteError } = await supabase
         .from("post")
-        .select(
-          `
-          post_id,
-          action_type,
-          community!inner(*)
-        `
-        )
+        .select("post_id")
         .eq("user_id", user.id)
-        .eq("action_type", "favorite")
-        .order("created_at", { ascending: false });
+        .eq("action_type", "favorite");
 
-      if (error) {
+      if (favoriteError) {
         console.error(
-          "[Profile] Erreur lors de la récupération des posts favoris:",
-          error
+          "[Profile] Erreur lors de la récupération des IDs favoris:",
+          favoriteError
         );
         setFavoritePosts([]);
         return;
       }
 
-      // Extraire les posts depuis la jointure
-      const posts =
-        favorites?.map((fav) => fav.community).filter(Boolean) || [];
-      setFavoritePosts(posts);
+      if (!favoriteIds || favoriteIds.length === 0) {
+        setFavoritePosts([]);
+        return;
+      }
+
+      // Extraire les IDs des posts
+      const postIds = favoriteIds.map((fav) => fav.post_id);
+
+      // Récupérer les posts complets depuis la table community
+      const { data: posts, error: postsError } = await supabase
+        .from("community")
+        .select("*")
+        .in("id", postIds)
+        .order("created_at", { ascending: false });
+
+      if (postsError) {
+        console.error(
+          "[Profile] Erreur lors de la récupération des posts favoris:",
+          postsError
+        );
+        setFavoritePosts([]);
+        return;
+      }
+
+      setFavoritePosts(posts || []);
     } catch (error) {
       console.error(
         "[Profile] Erreur lors de la récupération des posts favoris:",
