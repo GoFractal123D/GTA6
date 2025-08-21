@@ -357,10 +357,10 @@ export default function CommunityFeed() {
       {/* En-tête avec bouton de rafraîchissement */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent text-white">
             Publications récentes
           </h2>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-white">
             Découvrez les derniers contenus de la communauté
           </p>
         </div>
