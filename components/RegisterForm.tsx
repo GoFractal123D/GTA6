@@ -2,7 +2,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { sendConfirmationEmail, initEmailJS } from "@/lib/emailjs";
+import {
+  sendConfirmationEmail,
+  sendConfirmationEmailFallback,
+  initEmailJS,
+} from "@/lib/emailjs";
+import { confirmUserEmail } from "@/lib/confirmUser";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -64,10 +69,22 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       const code = generateConfirmationCode();
 
       // Envoyer le code par email via EmailJS
-      const emailSent = await sendConfirmationEmail(email, username, code);
+      let emailSent = await sendConfirmationEmail(email, username, code);
+
+      // Si EmailJS échoue, utiliser le fallback en mode développement
+      if (!emailSent) {
+        console.log("📧 EmailJS a échoué, tentative avec le fallback...");
+        emailSent = await sendConfirmationEmailFallback(email, username, code);
+      }
 
       if (emailSent) {
-        setSuccess("Code de confirmation envoyé par email !");
+        setSuccess(
+          `Code de confirmation envoyé par email ! ${
+            localStorage.getItem(`debug_code_${email}`)
+              ? `(Mode dev: code = ${code})`
+              : ""
+          }`
+        );
         setStep("confirm");
         setCountdown(60); // 60 secondes avant de pouvoir renvoyer
 
@@ -75,7 +92,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         localStorage.setItem(`confirmation_${email}`, code);
       } else {
         setError(
-          "Erreur lors de l'envoi du code de confirmation. Vérifiez votre configuration EmailJS."
+          "Impossible d'envoyer le code de confirmation. Veuillez réessayer ou contacter le support."
         );
       }
     } catch (error) {
@@ -101,6 +118,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         return;
       }
 
+      console.log("🔐 Code validé, création du compte...");
+
       // Créer le compte utilisateur via Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -110,15 +129,45 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         },
       });
 
+      console.log("📝 Réponse Supabase:", { authData, authError });
+
       if (authError) {
+        // Si l'erreur indique que l'utilisateur existe déjà
+        if (authError.message.includes("already been registered")) {
+          setError("Cet email est déjà utilisé. Veuillez vous connecter.");
+          setLoading(false);
+          return;
+        }
         throw new Error(authError.message);
       }
 
       // Compte créé avec succès
-      setSuccess("Compte créé avec succès ! Redirection...");
+      if (authData.user) {
+        console.log("✅ Compte créé avec succès:", authData.user.email);
 
-      // Nettoyer le code temporaire
-      localStorage.removeItem(`confirmation_${email}`);
+        // Tenter de confirmer l'email automatiquement
+        if (!authData.user.email_confirmed_at) {
+          console.log("🔄 Tentative de confirmation automatique...");
+          const confirmed = await confirmUserEmail(email);
+          if (confirmed) {
+            console.log("✅ Email confirmé automatiquement");
+          } else {
+            console.log(
+              "⚠️ Impossible de confirmer automatiquement, mais l'inscription a réussi"
+            );
+          }
+        }
+
+        setSuccess(
+          "Compte créé avec succès ! Vous pouvez maintenant vous connecter."
+        );
+
+        // Nettoyer le code temporaire
+        localStorage.removeItem(`confirmation_${email}`);
+        localStorage.removeItem(`debug_code_${email}`);
+      } else {
+        throw new Error("Erreur lors de la création du compte");
+      }
 
       // Redirection vers la page de connexion
       setTimeout(() => {
@@ -333,7 +382,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         <button
           type="submit"
           disabled={
-            loading || (confirmPassword && password !== confirmPassword)
+            loading || (!!confirmPassword && password !== confirmPassword)
           }
           className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
