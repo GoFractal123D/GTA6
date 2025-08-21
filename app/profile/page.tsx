@@ -464,8 +464,6 @@ export default function ProfilePage() {
         ...prev,
         avatar_url: urlData.publicUrl,
       }));
-
-      alert("Image uploadée avec succès !");
     } catch (error) {
       console.error("❌ Erreur lors du téléchargement:", error);
       alert(
@@ -515,7 +513,6 @@ export default function ProfilePage() {
       }));
 
       setIsEditDialogOpen(false);
-      alert("Profil mis à jour avec succès !");
     } catch (error) {
       console.error("❌ Erreur lors de la mise à jour:", error);
       alert(
