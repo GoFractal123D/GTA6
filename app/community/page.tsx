@@ -118,9 +118,16 @@ export default function CommunityPage() {
     members: 0,
     loading: true,
   });
+  const [popularTags, setPopularTags] = useState<
+    Array<{
+      name: string;
+      count: number;
+      color: string;
+    }>
+  >([]);
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchStatsAndTags() {
       setStats((s) => ({ ...s, loading: true }));
       try {
         // Vérifier d'abord si Supabase est accessible
@@ -139,35 +146,199 @@ export default function CommunityPage() {
             members: 1200,
             loading: false,
           });
+          setPopularTags([
+            {
+              name: "#modding",
+              count: 45,
+              color: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+            },
+            {
+              name: "#rp",
+              count: 38,
+              color: "bg-green-100 text-green-800 hover:bg-green-200",
+            },
+            {
+              name: "#guide",
+              count: 32,
+              color: "bg-pink-100 text-pink-800 hover:bg-pink-200",
+            },
+            {
+              name: "#théorie",
+              count: 28,
+              color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+            },
+            {
+              name: "#événement",
+              count: 25,
+              color: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+            },
+            {
+              name: "#racing",
+              count: 22,
+              color: "bg-red-100 text-red-800 hover:bg-red-200",
+            },
+            {
+              name: "#mafia",
+              count: 18,
+              color: "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+            },
+            {
+              name: "#tutoriel",
+              count: 15,
+              color: "bg-orange-100 text-orange-800 hover:bg-orange-200",
+            },
+          ]);
           return;
         }
 
-        // Compter les posts dans la table community
-        const { count: postsCount } = await supabase
-          .from("community")
-          .select("id", { count: "exact", head: true });
-
-        // Compter les membres dans la table profiles
-        const { count: membersCount } = await supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true });
+        // Récupérer les statistiques et les tags en parallèle
+        const [
+          { count: postsCount },
+          { count: membersCount },
+          { data: postsData },
+        ] = await Promise.all([
+          supabase
+            .from("community")
+            .select("id", { count: "exact", head: true }),
+          supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true }),
+          supabase.from("community").select("type, title, content"),
+        ]);
 
         setStats({
           posts: postsCount ?? 0,
           members: membersCount ?? 0,
           loading: false,
         });
+
+        // Traiter les données pour générer les tags populaires
+        if (postsData) {
+          const tagCounts = new Map<string, number>();
+          const tagColors = {
+            guide: "bg-pink-100 text-pink-800 hover:bg-pink-200",
+            theory: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+            rp: "bg-green-100 text-green-800 hover:bg-green-200",
+            event: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+            modding: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+            racing: "bg-red-100 text-red-800 hover:bg-red-200",
+            mafia: "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+            tutoriel: "bg-orange-100 text-orange-800 hover:bg-orange-200",
+          };
+
+          // Compter les types de posts
+          postsData.forEach((post) => {
+            const type = post.type;
+            if (type === "theory") {
+              tagCounts.set("#théorie", (tagCounts.get("#théorie") || 0) + 1);
+            } else if (type === "event") {
+              tagCounts.set(
+                "#événement",
+                (tagCounts.get("#événement") || 0) + 1
+              );
+            } else {
+              tagCounts.set(`#${type}`, (tagCounts.get(`#${type}`) || 0) + 1);
+            }
+
+            // Extraire des mots-clés du titre et contenu
+            const text = `${post.title} ${post.content}`.toLowerCase();
+
+            if (text.includes("mod") || text.includes("modding")) {
+              tagCounts.set("#modding", (tagCounts.get("#modding") || 0) + 1);
+            }
+            if (
+              text.includes("racing") ||
+              text.includes("course") ||
+              text.includes("race")
+            ) {
+              tagCounts.set("#racing", (tagCounts.get("#racing") || 0) + 1);
+            }
+            if (
+              text.includes("mafia") ||
+              text.includes("crime") ||
+              text.includes("gang")
+            ) {
+              tagCounts.set("#mafia", (tagCounts.get("#mafia") || 0) + 1);
+            }
+            if (
+              text.includes("tutoriel") ||
+              text.includes("tutorial") ||
+              text.includes("tuto")
+            ) {
+              tagCounts.set("#tutoriel", (tagCounts.get("#tutoriel") || 0) + 1);
+            }
+          });
+
+          // Convertir en tableau et trier par popularité
+          const sortedTags = Array.from(tagCounts.entries())
+            .map(([name, count]) => ({
+              name,
+              count,
+              color:
+                tagColors[name.substring(1) as keyof typeof tagColors] ||
+                "bg-gray-100 text-gray-800 hover:bg-gray-200",
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8); // Garder seulement les 8 plus populaires
+
+          setPopularTags(sortedTags);
+        }
       } catch (error) {
-        console.warn("Erreur lors de la récupération des statistiques:", error);
+        console.warn(
+          "Erreur lors de la récupération des statistiques et tags:",
+          error
+        );
         setStats({
           posts: 150,
           members: 1200,
           loading: false,
         });
+        setPopularTags([
+          {
+            name: "#modding",
+            count: 45,
+            color: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+          },
+          {
+            name: "#rp",
+            count: 38,
+            color: "bg-green-100 text-green-800 hover:bg-green-200",
+          },
+          {
+            name: "#guide",
+            count: 32,
+            color: "bg-pink-100 text-pink-800 hover:bg-pink-200",
+          },
+          {
+            name: "#théorie",
+            count: 28,
+            color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+          },
+          {
+            name: "#événement",
+            count: 25,
+            color: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+          },
+          {
+            name: "#racing",
+            count: 22,
+            color: "bg-red-100 text-red-800 hover:bg-red-200",
+          },
+          {
+            name: "#mafia",
+            count: 18,
+            color: "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+          },
+          {
+            name: "#tutoriel",
+            count: 15,
+            color: "bg-orange-100 text-orange-800 hover:bg-orange-200",
+          },
+        ]);
       }
     }
 
-    fetchStats();
+    fetchStatsAndTags();
   }, []);
 
   const getSearchPlaceholder = () => {
@@ -535,30 +706,25 @@ export default function CommunityPage() {
                         Tags populaires
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer transition-colors">
-                          #modding
-                        </Badge>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer transition-colors">
-                          #rp
-                        </Badge>
-                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 cursor-pointer transition-colors">
-                          #théorie
-                        </Badge>
-                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 cursor-pointer transition-colors">
-                          #événement
-                        </Badge>
-                        <Badge className="bg-red-100 text-red-800 hover:bg-red-200 cursor-pointer transition-colors">
-                          #racing
-                        </Badge>
-                        <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 cursor-pointer transition-colors">
-                          #mafia
-                        </Badge>
-                        <Badge className="bg-pink-100 text-pink-800 hover:bg-pink-200 cursor-pointer transition-colors">
-                          #guide
-                        </Badge>
-                        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200 cursor-pointer transition-colors">
-                          #tutoriel
-                        </Badge>
+                        {popularTags.map((tag, index) => (
+                          <Badge
+                            key={index}
+                            className={`${tag.color} cursor-pointer transition-colors flex items-center gap-1`}
+                            title={`${tag.count} post${
+                              tag.count > 1 ? "s" : ""
+                            }`}
+                          >
+                            {tag.name}
+                            <span className="text-xs opacity-70">
+                              ({tag.count})
+                            </span>
+                          </Badge>
+                        ))}
+                        {popularTags.length === 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            Chargement des tags populaires...
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
