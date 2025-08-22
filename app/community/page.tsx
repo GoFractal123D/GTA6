@@ -31,77 +31,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const carouselItems = [
-  {
-    id: 1,
-    title: "Tournoi Racing GTA 6",
-    subtitle: "Compétition communautaire",
-    description:
-      "Participez au plus grand tournoi de course de la communauté GTA 6. Récompenses exclusives à gagner !",
-    image: "/gta6-hero.jpg",
-    badge: "Événement",
-    badgeColor: "bg-purple-500",
-    stats: {
-      participants: 156,
-      prize: "500€",
-      date: "15 Jan 2025",
-    },
-    icon: Trophy,
-    color: "text-purple-500",
-  },
-  {
-    id: 2,
-    title: "Guide Modding Avancé",
-    subtitle: "Tutoriel complet",
-    description:
-      "Apprenez à créer des mods professionnels pour GTA 6 avec notre guide étape par étape.",
-    image: "/gta6-city.jpg",
-    badge: "Guide",
-    badgeColor: "bg-blue-500",
-    stats: {
-      views: 1247,
-      likes: 89,
-      comments: 23,
-    },
-    icon: Users,
-    color: "text-blue-500",
-  },
-  {
-    id: 3,
-    title: "Théorie : La Fin Secrète",
-    subtitle: "Spéculation communautaire",
-    description:
-      "Découvrez les théories les plus folles sur la fin cachée de GTA 6. Que se cache-t-il vraiment ?",
-    image: "/gta6-duo.jpg",
-    badge: "Théorie",
-    badgeColor: "bg-yellow-500",
-    stats: {
-      views: 892,
-      likes: 67,
-      comments: 45,
-    },
-    icon: Star,
-    color: "text-yellow-500",
-  },
-  {
-    id: 4,
-    title: "Scénario RP Mafia",
-    subtitle: "Roleplay immersif",
-    description:
-      "Plongez dans l'univers de la mafia avec notre scénario RP complet. Devenez le parrain !",
-    image: "/gta6-profile.jpg",
-    badge: "RP",
-    badgeColor: "bg-green-500",
-    stats: {
-      players: 34,
-      sessions: 12,
-      rating: 4.8,
-    },
-    icon: Heart,
-    color: "text-green-500",
-  },
-];
-
 const filterCategories = [
   { id: "all", label: "Tous", icon: TrendingUp, color: "text-gray-500" },
   { id: "guide", label: "Guide", icon: Users, color: "text-blue-500" },
@@ -123,6 +52,26 @@ export default function CommunityPage() {
       name: string;
       count: number;
       color: string;
+    }>
+  >([]);
+  const [carouselItems, setCarouselItems] = useState<
+    Array<{
+      id: number;
+      title: string;
+      subtitle: string;
+      description: string;
+      image: string;
+      badge: string;
+      badgeColor: string;
+      stats: {
+        likes: number;
+        comments: number;
+        shares: number;
+      };
+      icon: any;
+      color: string;
+      postId: number;
+      author: string;
     }>
   >([]);
 
@@ -191,11 +140,12 @@ export default function CommunityPage() {
           return;
         }
 
-        // Récupérer les statistiques et les tags en parallèle
+        // Récupérer les statistiques, les tags et les top posts en parallèle
         const [
           { count: postsCount },
           { count: membersCount },
           { data: postsData },
+          { data: topPosts },
         ] = await Promise.all([
           supabase
             .from("community")
@@ -204,6 +154,10 @@ export default function CommunityPage() {
             .from("profiles")
             .select("id", { count: "exact", head: true }),
           supabase.from("community").select("type, title, content"),
+          supabase
+            .from("community")
+            .select("id, type, title, content, author_id, created_at")
+            .order("created_at", { ascending: false }), // Récupérer TOUS les posts pour calculer les likes
         ]);
 
         setStats({
@@ -283,6 +237,247 @@ export default function CommunityPage() {
 
           setPopularTags(sortedTags);
         }
+
+        // Fonction utilitaire pour sélectionner l'image selon la catégorie
+        const getImageForCategory = (category: string) => {
+          switch (category) {
+            case "guide":
+              return "/Femme.jpg";
+            case "theory":
+              return "/Conspiration.jpg";
+            case "rp":
+              return "/Soldat.jpg";
+            case "event":
+              return "/Evenement.jpg";
+            default:
+              return "/";
+          }
+        };
+
+        // Traiter les top posts pour le carrousel
+        if (topPosts && topPosts.length > 0) {
+          console.log("[Carrousel] Posts récupérés:", topPosts.length);
+          console.log("[Carrousel] Posts détails:", topPosts);
+
+          // Récupérer les likes pour tous les posts
+          const postIds = topPosts.map((post) => post.id);
+          console.log("[Carrousel] PostIds pour likes:", postIds);
+
+          const { data: likesData } = await supabase
+            .from("post")
+            .select("post_id")
+            .in("post_id", postIds)
+            .eq("action_type", "like");
+
+          console.log("[Carrousel] Likes data:", likesData);
+
+          // Récupérer les commentaires
+          const { data: commentsData } = await supabase
+            .from("community_comments")
+            .select("post_id")
+            .in("post_id", postIds);
+
+          // Récupérer les partages
+          const { data: sharesData } = await supabase
+            .from("post")
+            .select("post_id")
+            .in("post_id", postIds)
+            .eq("action_type", "share");
+
+          // Récupérer les profils des auteurs
+          const authorIds = [
+            ...new Set(topPosts.map((post) => post.author_id)),
+          ];
+          const { data: authorsData } = await supabase
+            .from("profiles")
+            .select("id, username")
+            .in("id", authorIds);
+
+          // Créer des maps pour compter les interactions
+          const likesMap = new Map();
+          const commentsMap = new Map();
+          const sharesMap = new Map();
+          const authorsMap = new Map();
+
+          (likesData || []).forEach((like) => {
+            likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+          });
+
+          (commentsData || []).forEach((comment) => {
+            commentsMap.set(
+              comment.post_id,
+              (commentsMap.get(comment.post_id) || 0) + 1
+            );
+          });
+
+          (sharesData || []).forEach((share) => {
+            sharesMap.set(
+              share.post_id,
+              (sharesMap.get(share.post_id) || 0) + 1
+            );
+          });
+
+          (authorsData || []).forEach((author) => {
+            authorsMap.set(author.id, author.username);
+          });
+
+          // Grouper les posts par catégorie et trouver le plus liké pour chaque catégorie
+          const postsByCategory: Record<string, any[]> = {
+            guide: [],
+            theory: [],
+            rp: [],
+            event: [],
+          };
+
+          topPosts.forEach((post: any) => {
+            const likes = likesMap.get(post.id) || 0;
+            const comments = commentsMap.get(post.id) || 0;
+            const shares = sharesMap.get(post.id) || 0;
+            const author = authorsMap.get(post.author_id) || "Utilisateur";
+
+            const postWithStats = {
+              ...post,
+              likes,
+              comments,
+              shares,
+              author,
+            };
+
+            console.log(
+              `[Carrousel] Post ${post.id} (${post.type}): ${likes} likes, titre: "${post.title}"`
+            );
+
+            if (postsByCategory[post.type]) {
+              postsByCategory[post.type].push(postWithStats);
+            }
+          });
+
+          console.log("[Carrousel] Posts par catégorie:", postsByCategory);
+
+          // Sélectionner le post le plus liké de chaque catégorie
+          const topPostsByCategory: any[] = [];
+          Object.entries(postsByCategory).forEach(([category, posts]) => {
+            console.log(
+              `[Carrousel] Catégorie ${category}: ${posts.length} posts`
+            );
+            if (posts.length > 0) {
+              const topPost = posts.sort(
+                (a: any, b: any) => b.likes - a.likes
+              )[0];
+              console.log(`[Carrousel] Top post pour ${category}:`, topPost);
+              topPostsByCategory.push({
+                category,
+                post: topPost,
+              });
+            }
+          });
+
+          console.log(
+            "[Carrousel] Top posts par catégorie:",
+            topPostsByCategory
+          );
+
+          // Générer les items du carrousel
+          const categoryConfig: Record<string, any> = {
+            guide: {
+              badge: "Guide",
+              badgeColor: "bg-blue-500",
+              icon: Users,
+              color: "text-blue-500",
+              subtitle: "Tutoriel communautaire",
+            },
+            theory: {
+              badge: "Théorie",
+              badgeColor: "bg-yellow-500",
+              icon: Star,
+              color: "text-yellow-500",
+              subtitle: "Spéculation communautaire",
+            },
+            rp: {
+              badge: "RP",
+              badgeColor: "bg-green-500",
+              icon: Heart,
+              color: "text-green-500",
+              subtitle: "Roleplay immersif",
+            },
+            event: {
+              badge: "Événement",
+              badgeColor: "bg-purple-500",
+              icon: Trophy,
+              color: "text-purple-500",
+              subtitle: "Compétition communautaire",
+            },
+          };
+
+          const carouselData = topPostsByCategory.map(
+            (item: any, index: number) => {
+              const config = categoryConfig[item.category];
+              const post = item.post;
+
+              return {
+                id: index + 1,
+                title:
+                  post.title.length > 50
+                    ? post.title.substring(0, 50) + "..."
+                    : post.title,
+                subtitle: config.subtitle,
+                description:
+                  post.content.length > 120
+                    ? post.content.substring(0, 120) + "..."
+                    : post.content,
+                image: getImageForCategory(item.category),
+                badge: config.badge,
+                badgeColor: config.badgeColor,
+                stats: {
+                  likes: post.likes,
+                  comments: post.comments,
+                  shares: post.shares,
+                },
+                icon: config.icon,
+                color: config.color,
+                postId: post.id,
+                author: post.author,
+              };
+            }
+          );
+
+          // Ajouter des items par défaut si on n'a pas assez de posts
+
+          while (carouselData.length < 4) {
+            const index = carouselData.length;
+            const categories = ["guide", "theory", "rp", "event"];
+            const category = categories[index];
+            const config = categoryConfig[category];
+
+            carouselData.push({
+              id: index + 1,
+              title: `${config.badge} Populaire`,
+              subtitle: config.subtitle,
+              description:
+                "Aucun post disponible dans cette catégorie pour le moment. Soyez le premier à publier !",
+              image: getImageForCategory(category),
+              badge: config.badge,
+              badgeColor: config.badgeColor,
+              stats: {
+                likes: 0,
+                comments: 0,
+                shares: 0,
+              },
+              icon: config.icon,
+              color: config.color,
+              postId: 0,
+              author: "Communauté",
+            });
+          }
+
+          console.log(
+            "[Carrousel] Données finales du carrousel:",
+            carouselData
+          );
+          setCarouselItems(carouselData);
+        } else {
+          console.log("[Carrousel] Aucun post récupéré de la base de données");
+        }
       } catch (error) {
         console.warn(
           "Erreur lors de la récupération des statistiques et tags:",
@@ -333,6 +528,70 @@ export default function CommunityPage() {
             name: "#tutoriel",
             count: 15,
             color: "bg-orange-100 text-orange-800 hover:bg-orange-200",
+          },
+        ]);
+
+        // Données par défaut pour le carrousel en cas d'erreur
+        setCarouselItems([
+          {
+            id: 1,
+            title: "Tournoi Racing GTA 6",
+            subtitle: "Compétition communautaire",
+            description:
+              "Participez au plus grand tournoi de course de la communauté GTA 6. Récompenses exclusives à gagner !",
+            image: "/gta6-hero.jpg",
+            badge: "Événement",
+            badgeColor: "bg-purple-500",
+            stats: { likes: 156, comments: 23, shares: 12 },
+            icon: Trophy,
+            color: "text-purple-500",
+            postId: 0,
+            author: "Communauté",
+          },
+          {
+            id: 2,
+            title: "Guide Modding Avancé",
+            subtitle: "Tutoriel communautaire",
+            description:
+              "Apprenez à créer des mods professionnels pour GTA 6 avec notre guide étape par étape.",
+            image: "/Femme.jpg",
+            badge: "Guide",
+            badgeColor: "bg-blue-500",
+            stats: { likes: 89, comments: 34, shares: 8 },
+            icon: Users,
+            color: "text-blue-500",
+            postId: 0,
+            author: "ModMaster",
+          },
+          {
+            id: 3,
+            title: "Théorie : La Fin Secrète",
+            subtitle: "Spéculation communautaire",
+            description:
+              "Découvrez les théories les plus folles sur la fin cachée de GTA 6. Que se cache-t-il vraiment ?",
+            image: "/Conspiration.jpg",
+            badge: "Théorie",
+            badgeColor: "bg-yellow-500",
+            stats: { likes: 67, comments: 45, shares: 15 },
+            icon: Star,
+            color: "text-yellow-500",
+            postId: 0,
+            author: "TheoryMaster",
+          },
+          {
+            id: 4,
+            title: "Scénario RP Mafia",
+            subtitle: "Roleplay immersif",
+            description:
+              "Plongez dans l'univers de la mafia avec notre scénario RP complet. Devenez le parrain !",
+            image: "/Soldat.jpg",
+            badge: "RP",
+            badgeColor: "bg-green-500",
+            stats: { likes: 54, comments: 28, shares: 6 },
+            icon: Heart,
+            color: "text-green-500",
+            postId: 0,
+            author: "RPMaster",
           },
         ]);
       }
@@ -430,39 +689,40 @@ export default function CommunityPage() {
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
                                 <Icon className={`w-4 h-4 ${item.color}`} />
-                                {item.badge === "Événement" ? (
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.stats.participants} participants
-                                  </span>
-                                ) : item.badge === "Guide" ? (
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.stats.views} vues
-                                  </span>
-                                ) : item.badge === "Théorie" ? (
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.stats.likes} likes
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.stats.players} joueurs
-                                  </span>
-                                )}
+                                <span className="text-xs text-muted-foreground">
+                                  Par {item.author}
+                                </span>
                               </div>
-                              {item.badge === "Événement" && (
-                                <div className="text-right">
-                                  <div className="text-xs text-purple-500 font-semibold">
-                                    Récompense: {item.stats.prize}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {item.stats.date}
-                                  </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Heart className="w-3 h-3" />
+                                  {item.stats.likes}
                                 </div>
-                              )}
+                                <div className="flex items-center gap-1">
+                                  <MessageCircle className="w-3 h-3" />
+                                  {item.stats.comments}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Share2 className="w-3 h-3" />
+                                  {item.stats.shares}
+                                </div>
+                              </div>
                             </div>
 
-                            <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
-                              Voir plus
-                            </Button>
+                            {item.postId > 0 ? (
+                              <Link href={`/community/${item.postId}`}>
+                                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+                                  Voir plus
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Button
+                                className="w-full bg-gradient-to-r from-gray-400 to-gray-500 text-white border-0 cursor-not-allowed"
+                                disabled
+                              >
+                                Aucun post disponible
+                              </Button>
+                            )}
                           </CardContent>
                         </Card>
                       </CarouselItem>
