@@ -58,35 +58,80 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
 
+    console.log("[Profile] Début du chargement pour l'utilisateur:", user.id);
+
     // Vérifier le paramètre tab dans l'URL
     const tabParam = searchParams.get("tab") as TabType;
     if (
       tabParam &&
       ["posts", "favorites", "mods", "stats"].includes(tabParam)
     ) {
+      console.log("[Profile] Tab spécifique demandé:", tabParam);
       setActiveTab(tabParam);
     }
 
     // Charger toutes les données en parallèle pour améliorer les performances
     const loadAllData = async () => {
       setLoading(true);
+      console.log("[Profile] Début des requêtes de données...");
+      console.log("[Profile] ID utilisateur:", user.id);
+
+      // Vérification préliminaire que Supabase fonctionne
       try {
-        await Promise.all([
-          fetchProfile(),
-          fetchUserMods(),
-          fetchUserComments(),
-          fetchUserVotes(),
-          fetchMyPosts(),
-          fetchFavoritePosts(),
-          fetchFavoriteMods(),
-        ]);
+        const { data: testData, error: testError } = await supabase
+          .from("profiles")
+          .select("id")
+          .limit(1);
+        console.log("[Profile] Test de connexion Supabase:", {
+          testData,
+          testError,
+        });
+      } catch (error) {
+        console.error("[Profile] Erreur de connexion Supabase:", error);
+      }
+
+      // Timeout de sécurité pour éviter un loading infini
+      const timeoutId = setTimeout(() => {
+        console.warn("[Profile] Timeout: Chargement trop long, arrêt forcé");
+        setLoading(false);
+      }, 15000); // 15 secondes
+
+      try {
+        const promises = [
+          fetchProfile().then(() =>
+            console.log("[Profile] ✓ fetchProfile terminé")
+          ),
+          fetchUserMods().then(() =>
+            console.log("[Profile] ✓ fetchUserMods terminé")
+          ),
+          fetchUserComments().then(() =>
+            console.log("[Profile] ✓ fetchUserComments terminé")
+          ),
+          fetchUserVotes().then(() =>
+            console.log("[Profile] ✓ fetchUserVotes terminé")
+          ),
+          fetchMyPosts().then(() =>
+            console.log("[Profile] ✓ fetchMyPosts terminé")
+          ),
+          fetchFavoritePosts().then(() =>
+            console.log("[Profile] ✓ fetchFavoritePosts terminé")
+          ),
+          fetchFavoriteMods().then(() =>
+            console.log("[Profile] ✓ fetchFavoriteMods terminé")
+          ),
+        ];
+
+        await Promise.all(promises);
+        console.log("[Profile] Toutes les données chargées avec succès");
       } catch (error) {
         console.error(
           "[Profile] Erreur lors du chargement des données:",
           error
         );
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
+        console.log("[Profile] Fin du chargement");
       }
     };
 
@@ -94,11 +139,19 @@ export default function ProfilePage() {
   }, [user, searchParams]);
 
   async function fetchProfile() {
+    console.log("[Profile] Récupération du profil...");
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
+
+    if (error) {
+      console.error("[Profile] Erreur récupération profil:", error);
+    } else {
+      console.log("[Profile] Profil récupéré:", data);
+    }
+
     if (!error) setProfile(data);
   }
 
@@ -191,16 +244,23 @@ export default function ProfilePage() {
 
     try {
       // Récupérer les commentaires sur les mods et posts en parallèle
+      console.log("[Profile] Lancement des requêtes de commentaires...");
       const [modCommentsResult, postCommentsResult] = await Promise.all([
         supabase.from("comments").select("*").eq("user_id", user?.id),
         supabase.from("community_comments").select("*").eq("user_id", user?.id),
       ]);
 
+      console.log("[Profile] Résultats bruts - comments:", modCommentsResult);
+      console.log(
+        "[Profile] Résultats bruts - community_comments:",
+        postCommentsResult
+      );
+
       const modComments = modCommentsResult.data || [];
       const postComments = postCommentsResult.data || [];
 
-      console.log("[Profile] Commentaires sur mods:", modComments);
-      console.log("[Profile] Commentaires sur posts:", postComments);
+      console.log("[Profile] Commentaires sur mods:", modComments.length);
+      console.log("[Profile] Commentaires sur posts:", postComments.length);
 
       // Combiner les deux types de commentaires
       const allComments = [...modComments, ...postComments];
@@ -252,15 +312,24 @@ export default function ProfilePage() {
   }
 
   async function fetchMyPosts() {
-    const { data } = await supabase
+    console.log("[Profile] Récupération des publications...");
+    const { data, error } = await supabase
       .from("community")
       .select("*")
       .eq("author_id", user.id)
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[Profile] Erreur récupération publications:", error);
+    } else {
+      console.log("[Profile] Publications récupérées:", data?.length || 0);
+    }
+
     setMyPosts(data || []);
   }
 
   async function fetchFavoritePosts() {
+    console.log("[Profile] Récupération des posts favoris...");
     try {
       // Récupérer les IDs des posts favoris d'abord
       const { data: favoriteIds, error: favoriteError } = await supabase
@@ -268,6 +337,8 @@ export default function ProfilePage() {
         .select("post_id")
         .eq("user_id", user.id)
         .eq("action_type", "favorite");
+
+      console.log("[Profile] IDs favoris récupérés:", favoriteIds?.length || 0);
 
       if (favoriteError) {
         console.error(
@@ -279,12 +350,14 @@ export default function ProfilePage() {
       }
 
       if (!favoriteIds || favoriteIds.length === 0) {
+        console.log("[Profile] Aucun post favori trouvé");
         setFavoritePosts([]);
         return;
       }
 
       // Extraire les IDs des posts
       const postIds = favoriteIds.map((fav) => fav.post_id);
+      console.log("[Profile] Récupération des posts avec IDs:", postIds);
 
       // Récupérer les posts complets depuis la table community
       const { data: posts, error: postsError } = await supabase
@@ -302,6 +375,7 @@ export default function ProfilePage() {
         return;
       }
 
+      console.log("[Profile] Posts favoris récupérés:", posts?.length || 0);
       setFavoritePosts(posts || []);
     } catch (error) {
       console.error(
