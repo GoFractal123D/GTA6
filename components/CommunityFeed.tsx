@@ -28,6 +28,55 @@ const TYPE_LABELS = {
   event: "Événement",
 };
 
+function ProfileAvatar({
+  profile,
+  userId,
+  size = "w-6 h-6",
+  textSize = "text-xs",
+}: {
+  profile?: { username?: string; avatar_url?: string } | null;
+  userId?: string;
+  size?: string;
+  textSize?: string;
+}) {
+  const displayName = profile?.username || userId || "?";
+  const initials = displayName.slice(0, 2).toUpperCase();
+
+  if (profile?.avatar_url) {
+    return (
+      <img
+        src={profile.avatar_url}
+        alt={displayName}
+        className={`${size} rounded-full object-cover`}
+        onError={(e) => {
+          // Si l'image ne se charge pas, remplacer par les initiales
+          const target = e.target as HTMLImageElement;
+          const parent = target.parentElement;
+          if (parent) {
+            parent.innerHTML = `
+              <div class="${size} rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                <span class="${textSize} font-semibold text-primary">
+                  ${initials}
+                </span>
+              </div>
+            `;
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${size} rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center`}
+    >
+      <span className={`${textSize} font-semibold text-primary`}>
+        {initials}
+      </span>
+    </div>
+  );
+}
+
 interface CommunityFeedProps {
   searchQuery?: string;
   selectedCategory?: string;
@@ -38,7 +87,8 @@ export default function CommunityFeed({
   selectedCategory = "all",
 }: CommunityFeedProps) {
   const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Ne pas charger par défaut
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { user, userProfile } = useAuth();
   const router = useRouter();
 
@@ -198,6 +248,46 @@ export default function CommunityFeed({
   };
 
   async function fetchFeed() {
+    // Système de cache pour les publications
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    const CACHE_KEY = `community_feed_cache_${selectedCategory}_${searchQuery}`;
+    const CACHE_VERSION = "v1";
+
+    // Vérifier le cache d'abord
+    try {
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { data, timestamp, version } = JSON.parse(cachedData);
+        const isValid = Date.now() - timestamp < CACHE_DURATION;
+        const isCorrectVersion = version === CACHE_VERSION;
+
+        if (isValid && isCorrectVersion) {
+          console.log(
+            "[CommunityFeed] Utilisation du cache pour les publications"
+          );
+          setItems(data);
+          setIsInitialLoad(false);
+          return; // Sortir ici, pas de loading nécessaire
+        } else {
+          console.log(
+            "[CommunityFeed] Cache expiré, rechargement des publications"
+          );
+          localStorage.removeItem(CACHE_KEY);
+        }
+      } else {
+        console.log(
+          "[CommunityFeed] Aucun cache trouvé, chargement des publications"
+        );
+      }
+    } catch (error) {
+      console.warn(
+        "[CommunityFeed] Erreur lors de la lecture du cache:",
+        error
+      );
+      localStorage.removeItem(CACHE_KEY);
+    }
+
+    // Seulement ici, afficher le loading car on va faire des requêtes réseau
     setLoading(true);
     try {
       console.log("[CommunityFeed] Début de la récupération des posts");
@@ -237,10 +327,10 @@ export default function CommunityFeed({
       // Récupérer tous les IDs d'utilisateurs uniques
       const userIds = [...new Set((posts || []).map((post) => post.author_id))];
 
-      // Récupérer les profils utilisateurs en une seule requête
+      // Récupérer les profils utilisateurs en une seule requête avec avatars
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, username")
+        .select("id, username, avatar_url")
         .in("id", userIds);
 
       if (profilesError) {
@@ -352,6 +442,23 @@ export default function CommunityFeed({
         postsWithStats.length
       );
       setItems(postsWithStats);
+      setIsInitialLoad(false);
+
+      // Sauvegarder dans le cache
+      try {
+        const cacheData = {
+          data: postsWithStats,
+          timestamp: Date.now(),
+          version: CACHE_VERSION,
+        };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+        console.log("[CommunityFeed] Données sauvegardées dans le cache");
+      } catch (error) {
+        console.warn(
+          "[CommunityFeed] Erreur lors de la sauvegarde du cache:",
+          error
+        );
+      }
     } catch (error) {
       console.error(
         "[CommunityFeed] Exception lors de la récupération des posts:",
@@ -359,12 +466,13 @@ export default function CommunityFeed({
       );
       toast.error("Erreur lors du chargement des publications");
       setItems([]);
+      setIsInitialLoad(false);
     } finally {
       setLoading(false);
     }
   }
 
-  if (loading)
+  if (isInitialLoad)
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2">
@@ -392,7 +500,17 @@ export default function CommunityFeed({
             "Aucun contenu pour le moment."
           )}
         </div>
-        <Button onClick={fetchFeed} variant="outline" size="sm">
+        <Button
+          onClick={() => {
+            // Vider le cache et recharger
+            const CACHE_KEY = `community_feed_cache_${selectedCategory}_${searchQuery}`;
+            localStorage.removeItem(CACHE_KEY);
+            setIsInitialLoad(true);
+            fetchFeed();
+          }}
+          variant="outline"
+          size="sm"
+        >
           <RefreshCw className="w-4 h-4 mr-2" />
           Actualiser
         </Button>
@@ -416,7 +534,13 @@ export default function CommunityFeed({
           </p>
         </div>
         <Button
-          onClick={fetchFeed}
+          onClick={() => {
+            // Vider le cache et recharger
+            const CACHE_KEY = `community_feed_cache_${selectedCategory}_${searchQuery}`;
+            localStorage.removeItem(CACHE_KEY);
+            setIsInitialLoad(true);
+            fetchFeed();
+          }}
           variant="outline"
           size="sm"
           className="bg-background/80 backdrop-blur-sm border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
@@ -461,13 +585,12 @@ export default function CommunityFeed({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-semibold text-primary">
-                        {item.profiles?.username?.slice(0, 2).toUpperCase() ||
-                          item.author_id?.slice(0, 2).toUpperCase() ||
-                          "??"}
-                      </span>
-                    </div>
+                    <ProfileAvatar
+                      profile={item.profiles}
+                      userId={item.author_id}
+                      size="w-6 h-6"
+                      textSize="text-xs"
+                    />
                     {user &&
                       item.author_id === user.id &&
                       userProfile?.role &&

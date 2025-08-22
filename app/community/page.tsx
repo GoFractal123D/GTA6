@@ -45,8 +45,9 @@ export default function CommunityPage() {
   const [stats, setStats] = useState({
     posts: 0,
     members: 0,
-    loading: true,
+    loading: false,
   });
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [popularTags, setPopularTags] = useState<
     Array<{
       name: string;
@@ -68,7 +69,7 @@ export default function CommunityPage() {
         comments: number;
         shares: number;
       };
-      icon: any;
+      iconName: string;
       color: string;
       postId: number;
       author: string;
@@ -77,6 +78,42 @@ export default function CommunityPage() {
 
   useEffect(() => {
     async function fetchStatsAndTags() {
+      // Vérifier le cache d'abord
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
+      const CACHE_KEY = "community_data_cache";
+      const CACHE_VERSION = "v2"; // Version du cache pour invalidation automatique
+
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          const { data, timestamp, version } = JSON.parse(cachedData);
+          const isValid = Date.now() - timestamp < CACHE_DURATION;
+          const isCorrectVersion = version === CACHE_VERSION;
+
+          if (isValid && isCorrectVersion) {
+            console.log("[Cache] Utilisation des données en cache");
+            setStats(data.stats);
+            setPopularTags(data.popularTags);
+            setCarouselItems(data.carouselItems);
+            setIsInitialLoad(false);
+            return; // Sortir ici, pas de loading nécessaire
+          } else {
+            console.log(
+              "[Cache] Cache expiré, récupération de nouvelles données"
+            );
+            localStorage.removeItem(CACHE_KEY);
+          }
+        } else {
+          console.log(
+            "[Cache] Aucun cache trouvé, récupération de nouvelles données"
+          );
+        }
+      } catch (error) {
+        console.warn("[Cache] Erreur lors de la lecture du cache:", error);
+        localStorage.removeItem(CACHE_KEY);
+      }
+
+      // Seulement ici, on affiche le loading car on va faire des requêtes réseau
       setStats((s) => ({ ...s, loading: true }));
       try {
         // Vérifier d'abord si Supabase est accessible
@@ -165,6 +202,15 @@ export default function CommunityPage() {
           members: membersCount ?? 0,
           loading: false,
         });
+        setIsInitialLoad(false);
+
+        // Variables pour le cache
+        let processedTags: Array<{
+          name: string;
+          count: number;
+          color: string;
+        }> = [];
+        let processedCarouselData: any[] = [];
 
         // Traiter les données pour générer les tags populaires
         if (postsData) {
@@ -236,6 +282,7 @@ export default function CommunityPage() {
             .slice(0, 8); // Garder seulement les 8 plus populaires
 
           setPopularTags(sortedTags);
+          processedTags = sortedTags;
         }
 
         // Fonction utilitaire pour sélectionner l'image selon la catégorie
@@ -382,28 +429,28 @@ export default function CommunityPage() {
             guide: {
               badge: "Guide",
               badgeColor: "bg-blue-500",
-              icon: Users,
+              iconName: "Users",
               color: "text-blue-500",
               subtitle: "Tutoriel communautaire",
             },
             theory: {
               badge: "Théorie",
               badgeColor: "bg-yellow-500",
-              icon: Star,
+              iconName: "Star",
               color: "text-yellow-500",
               subtitle: "Spéculation communautaire",
             },
             rp: {
               badge: "RP",
               badgeColor: "bg-green-500",
-              icon: Heart,
+              iconName: "Heart",
               color: "text-green-500",
               subtitle: "Roleplay immersif",
             },
             event: {
               badge: "Événement",
               badgeColor: "bg-purple-500",
-              icon: Trophy,
+              iconName: "Trophy",
               color: "text-purple-500",
               subtitle: "Compétition communautaire",
             },
@@ -433,7 +480,7 @@ export default function CommunityPage() {
                   comments: post.comments,
                   shares: post.shares,
                 },
-                icon: config.icon,
+                iconName: config.iconName,
                 color: config.color,
                 postId: post.id,
                 author: post.author,
@@ -463,7 +510,7 @@ export default function CommunityPage() {
                 comments: 0,
                 shares: 0,
               },
-              icon: config.icon,
+              iconName: config.iconName,
               color: config.color,
               postId: 0,
               author: "Communauté",
@@ -475,6 +522,34 @@ export default function CommunityPage() {
             carouselData
           );
           setCarouselItems(carouselData);
+          processedCarouselData = carouselData;
+
+          // Sauvegarder les données en cache
+          try {
+            const dataToCache = {
+              stats: {
+                posts: postsCount ?? 0,
+                members: membersCount ?? 0,
+                loading: false,
+              },
+              popularTags: processedTags,
+              carouselItems: processedCarouselData,
+            };
+
+            const cacheObject = {
+              data: dataToCache,
+              timestamp: Date.now(),
+              version: CACHE_VERSION,
+            };
+
+            localStorage.setItem(
+              "community_data_cache",
+              JSON.stringify(cacheObject)
+            );
+            console.log("[Cache] Données sauvegardées en cache");
+          } catch (cacheError) {
+            console.warn("[Cache] Erreur lors de la sauvegarde:", cacheError);
+          }
         } else {
           console.log("[Carrousel] Aucun post récupéré de la base de données");
         }
@@ -488,6 +563,7 @@ export default function CommunityPage() {
           members: 1200,
           loading: false,
         });
+        setIsInitialLoad(false);
         setPopularTags([
           {
             name: "#modding",
@@ -539,11 +615,11 @@ export default function CommunityPage() {
             subtitle: "Compétition communautaire",
             description:
               "Participez au plus grand tournoi de course de la communauté GTA 6. Récompenses exclusives à gagner !",
-            image: "/gta6-hero.jpg",
+            image: "/Evenement.jpg",
             badge: "Événement",
             badgeColor: "bg-purple-500",
             stats: { likes: 156, comments: 23, shares: 12 },
-            icon: Trophy,
+            iconName: "Trophy",
             color: "text-purple-500",
             postId: 0,
             author: "Communauté",
@@ -558,7 +634,7 @@ export default function CommunityPage() {
             badge: "Guide",
             badgeColor: "bg-blue-500",
             stats: { likes: 89, comments: 34, shares: 8 },
-            icon: Users,
+            iconName: "Users",
             color: "text-blue-500",
             postId: 0,
             author: "ModMaster",
@@ -573,7 +649,7 @@ export default function CommunityPage() {
             badge: "Théorie",
             badgeColor: "bg-yellow-500",
             stats: { likes: 67, comments: 45, shares: 15 },
-            icon: Star,
+            iconName: "Star",
             color: "text-yellow-500",
             postId: 0,
             author: "TheoryMaster",
@@ -588,7 +664,7 @@ export default function CommunityPage() {
             badge: "RP",
             badgeColor: "bg-green-500",
             stats: { likes: 54, comments: 28, shares: 6 },
-            icon: Heart,
+            iconName: "Heart",
             color: "text-green-500",
             postId: 0,
             author: "RPMaster",
@@ -599,6 +675,42 @@ export default function CommunityPage() {
 
     fetchStatsAndTags();
   }, []);
+
+  // Event listener pour vider le cache avec Ctrl+Shift+R
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === "R") {
+        event.preventDefault();
+        clearCache();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
+  // Fonction pour vider le cache manuellement (utile pour le développement)
+  const clearCache = () => {
+    localStorage.removeItem("community_data_cache");
+    console.log("[Cache] Cache vidé manuellement");
+    window.location.reload();
+  };
+
+  // Fonction pour résoudre les icônes dynamiquement
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case "Users":
+        return Users;
+      case "Trophy":
+        return Trophy;
+      case "Star":
+        return Star;
+      case "Heart":
+        return Heart;
+      default:
+        return Star;
+    }
+  };
 
   const getSearchPlaceholder = () => {
     switch (selectedCategory) {
@@ -652,7 +764,7 @@ export default function CommunityPage() {
               <Carousel className="w-full max-w-4xl mx-auto">
                 <CarouselContent>
                   {carouselItems.map((item) => {
-                    const Icon = item.icon;
+                    const Icon = getIconComponent(item.iconName);
                     return (
                       <CarouselItem
                         key={item.id}
@@ -927,7 +1039,7 @@ export default function CommunityPage() {
                             Posts créés
                           </span>
                           <span className="text-lg font-bold text-primary">
-                            {stats.loading
+                            {isInitialLoad
                               ? "..."
                               : stats.posts.toLocaleString()}
                           </span>
@@ -937,7 +1049,7 @@ export default function CommunityPage() {
                             Membres actifs
                           </span>
                           <span className="text-lg font-bold text-green-500">
-                            {stats.loading
+                            {isInitialLoad
                               ? "..."
                               : stats.members.toLocaleString()}
                           </span>

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const TYPE_LABELS = {
+const TYPE_LABELS: Record<string, any> = {
   guide: {
     label: "Guide",
     color: "bg-blue-500/20 text-blue-600 border-blue-500/30",
@@ -47,6 +47,50 @@ function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
+function ProfileAvatar({
+  profile,
+  userId,
+  size = "w-12 h-12",
+  textSize = "text-xl",
+}: {
+  profile?: { username?: string; avatar_url?: string } | null;
+  userId?: string;
+  size?: string;
+  textSize?: string;
+}) {
+  const displayName = profile?.username || userId || "?";
+
+  if (profile?.avatar_url) {
+    return (
+      <img
+        src={profile.avatar_url}
+        alt={displayName}
+        className={`${size} rounded-full object-cover border-2 border-primary/20 shadow-lg`}
+        onError={(e) => {
+          // Si l'image ne se charge pas, remplacer par les initiales
+          const target = e.target as HTMLImageElement;
+          const parent = target.parentElement;
+          if (parent) {
+            parent.innerHTML = `
+              <div class="${size} rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ${textSize} font-bold text-primary border-2 border-primary/20 shadow-lg">
+                ${getInitials(displayName)}
+              </div>
+            `;
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${size} rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ${textSize} font-bold text-primary border-2 border-primary/20 shadow-lg`}
+    >
+      {getInitials(displayName)}
+    </div>
+  );
+}
+
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -62,37 +106,100 @@ export default function PostDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    console.log(
+      "[PostDetail] useEffect déclenché avec params.id:",
+      params.id,
+      "user:",
+      !!user
+    );
     if (params.id) {
-      fetchPostDetails();
-      fetchComments();
+      const postId = parseInt(params.id as string);
+      if (!isNaN(postId)) {
+        // Démarrer le timeout de sécurité
+        timeoutRef.current = setTimeout(() => {
+          console.warn(
+            "[PostDetail] Timeout: Chargement trop long, arrêt forcé"
+          );
+          setLoading(false);
+          toast.error("Le chargement prend trop de temps. Veuillez réessayer.");
+        }, 15000); // 15 secondes
+
+        fetchPostDetails();
+        fetchComments(postId);
+      } else {
+        console.error("[PostDetail] ID invalide dans useEffect");
+        setLoading(false);
+      }
+    } else {
+      console.error("[PostDetail] Aucun ID fourni dans les paramètres");
+      setLoading(false);
     }
+
+    // Cleanup au démontage du composant
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
     // eslint-disable-next-line
   }, [params.id, user]);
 
   const fetchPostDetails = async () => {
     setLoading(true);
+    console.log(
+      "[PostDetail] Début du chargement de la publication ID:",
+      params.id
+    );
+
+    // Vérifier que l'ID est valide
+    const postId = parseInt(params.id as string);
+    if (isNaN(postId)) {
+      console.error("[PostDetail] ID de publication invalide:", params.id);
+      toast.error("ID de publication invalide");
+      router.push("/community");
+      return;
+    }
+
     try {
       // Récupérer la publication
+      console.log("[PostDetail] Récupération de la publication...");
       const { data: postData, error: postError } = await supabase
         .from("community")
         .select("*")
-        .eq("id", params.id)
+        .eq("id", postId)
         .single();
 
+      console.log("[PostDetail] Résultat publication:", {
+        postData,
+        postError,
+      });
+
       if (postError) {
+        console.error(
+          "[PostDetail] Erreur récupération publication:",
+          postError
+        );
         toast.error("Publication non trouvée");
         router.push("/community");
         return;
       }
 
-      // Récupérer le profil de l'auteur
+      console.log("[PostDetail] Récupération du profil auteur...");
+      // Récupérer le profil de l'auteur avec l'avatar
       const { data: authorProfile, error: profileError } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, avatar_url")
         .eq("id", postData.author_id)
         .single();
+
+      console.log("[PostDetail] Résultat profil:", {
+        authorProfile,
+        profileError,
+      });
 
       if (profileError) {
         console.error(
@@ -101,18 +208,20 @@ export default function PostDetailPage() {
         );
       }
 
+      console.log("[PostDetail] Configuration du post...");
       setPost({
         ...postData,
         profiles: authorProfile,
       });
 
+      console.log("[PostDetail] Récupération des statistiques...");
       // Requête optimisée pour toutes les statistiques en une fois
       const [statsResult, userInteractionsResult] = await Promise.all([
         // Statistiques globales
         supabase
           .from("post")
           .select("action_type")
-          .eq("post_id", params.id)
+          .eq("post_id", postId)
           .in("action_type", ["like", "share"]),
 
         // Interactions utilisateur
@@ -120,11 +229,16 @@ export default function PostDetailPage() {
           ? supabase
               .from("post")
               .select("action_type")
-              .eq("post_id", params.id)
+              .eq("post_id", postId)
               .eq("user_id", user.id)
               .in("action_type", ["like", "favorite"])
           : Promise.resolve({ data: [] }),
       ]);
+
+      console.log("[PostDetail] Résultats statistiques:", {
+        statsResult,
+        userInteractionsResult,
+      });
 
       // Compter les statistiques
       const likes = (statsResult.data || []).filter(
@@ -134,12 +248,16 @@ export default function PostDetailPage() {
         (item) => item.action_type === "share"
       ).length;
 
+      console.log("[PostDetail] Récupération des commentaires...");
       // Compter les commentaires séparément (table différente)
       const { count: comments } = await supabase
         .from("community_comments")
         .select("*", { count: "exact", head: true })
-        .eq("post_id", params.id);
+        .eq("post_id", postId);
 
+      console.log("[PostDetail] Nombre de commentaires:", comments);
+
+      console.log("[PostDetail] Configuration des statistiques...");
       setStats({
         likes,
         comments: comments || 0,
@@ -148,6 +266,9 @@ export default function PostDetailPage() {
 
       // Traiter les interactions utilisateur
       if (user) {
+        console.log(
+          "[PostDetail] Configuration des interactions utilisateur..."
+        );
         const userInteractions = userInteractionsResult.data || [];
         setUserInteractions({
           hasLiked: userInteractions.some(
@@ -158,19 +279,30 @@ export default function PostDetailPage() {
           ),
         });
       }
+
+      console.log("[PostDetail] Chargement terminé avec succès");
     } catch (error) {
-      toast.error("Erreur lors du chargement");
+      console.error("[PostDetail] Erreur lors du chargement:", error);
+      toast.error("Erreur lors du chargement de la publication");
     } finally {
+      console.log("[PostDetail] Arrêt du loading");
+      // Nettoyer le timeout si le chargement se termine
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setLoading(false);
     }
   };
 
-  const fetchComments = async () => {
+  const fetchComments = async (postId?: number) => {
     try {
+      const id = postId || parseInt(params.id as string);
+      console.log("[PostDetail] Récupération des commentaires pour post:", id);
       const { data: commentsData, error } = await supabase
         .from("community_comments")
         .select("*")
-        .eq("post_id", params.id)
+        .eq("post_id", id)
         .order("created_at", { ascending: true });
 
       if (error) {
@@ -186,7 +318,7 @@ export default function PostDetailPage() {
       if (userIds.length > 0) {
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, username")
+          .select("id, username, avatar_url")
           .in("id", userIds);
 
         if (profilesError) {
@@ -384,19 +516,21 @@ export default function PostDetailPage() {
             <div className="bg-white/90 dark:bg-slate-900/90 rounded-3xl shadow-2xl border border-white/30 p-8 relative backdrop-blur-xl">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xl font-bold text-primary border-2 border-primary/20 shadow-lg">
-                    {getInitials(post.profiles?.username || post.author_id)}
-                  </div>
+                  <ProfileAvatar
+                    profile={post.profiles}
+                    userId={post.author_id}
+                    size="w-12 h-12"
+                    textSize="text-xl"
+                  />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-semibold text-gray-900 dark:text-white">
                         {post.profiles?.username || "Auteur"}
                       </span>
                       {user && user.id === post.author_id && (
-                        <BadgeCheck
-                          className="w-4 h-4 text-green-500"
-                          title="Vous êtes l'auteur"
-                        />
+                        <div title="Vous êtes l'auteur">
+                          <BadgeCheck className="w-4 h-4 text-green-500" />
+                        </div>
                       )}
                       {userProfile?.role && userProfile.role !== "user" && (
                         <AdminBadge role={userProfile.role} size="sm" />
@@ -593,8 +727,13 @@ export default function PostDetailPage() {
                     }`}
                     style={{ animation: `fadeIn 0.5s ${idx * 0.05}s both` }}
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-sm font-bold text-primary border-2 border-primary/20 flex-shrink-0">
-                      {getInitials(c.profiles?.username || c.user_id)}
+                    <div className="flex-shrink-0">
+                      <ProfileAvatar
+                        profile={c.profiles}
+                        userId={c.user_id}
+                        size="w-8 h-8"
+                        textSize="text-sm"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
