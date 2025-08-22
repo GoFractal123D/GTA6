@@ -249,7 +249,7 @@ export default function ModsPage() {
             <section id="featured" className="mb-16">
               {/* Header de section */}
               <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/30 backdrop-blur-sm mb-4">
+                <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/30 backdrop-blur-sm mb-4">
                   <Flame className="w-4 h-4 text-orange-400" />
                   <span className="text-sm font-medium text-orange-100">
                     Tendances actuelles
@@ -567,11 +567,11 @@ export default function ModsPage() {
             {/* Grille de mods */}
             {!loading && mods.length > 0 && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 ">
                   {mods.map((mod, index) => (
                     <div
                       key={mod.id}
-                      className="group relative bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20"
+                      className="mb-10 roup relative bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20"
                       style={{
                         animationDelay: `${index * 50}ms`,
                         animation: "fadeInUp 0.6s ease-out forwards",
