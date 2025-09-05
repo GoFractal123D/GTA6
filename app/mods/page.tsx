@@ -33,19 +33,40 @@ const modsCache = {
   data: null as any,
   timestamp: 0,
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
+  hasBeenInitialized: false,
+};
+
+// Fonction globale pour vérifier si le cache est valide
+const isCacheValid = () => {
+  return (
+    modsCache.data &&
+    Date.now() - modsCache.timestamp < modsCache.CACHE_DURATION
+  );
 };
 
 export default function ModsPage() {
   const [search, setSearch] = useState("");
-  const [mods, setMods] = useState<any[]>([]);
+  const [mods, setMods] = useState<any[]>(
+    modsCache.data?.mods && isCacheValid() ? modsCache.data.mods : []
+  );
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("date");
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [featured, setFeatured] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [hasMore, setHasMore] = useState(
+    modsCache.data?.hasMore && isCacheValid() ? modsCache.data.hasMore : true
+  );
+  const [featured, setFeatured] = useState<any[]>(
+    modsCache.data?.featured && isCacheValid() ? modsCache.data.featured : []
+  );
+  const [categories, setCategories] = useState<string[]>(
+    modsCache.data?.categories && isCacheValid()
+      ? modsCache.data.categories
+      : []
+  );
+  const [initialLoadDone, setInitialLoadDone] = useState(
+    modsCache.hasBeenInitialized
+  );
   const isMountedRef = useRef(true);
 
   // Fonctions pour charger les données
@@ -83,18 +104,16 @@ export default function ModsPage() {
     return featuredWithComments;
   }
 
-  // Fonction pour vérifier si le cache est valide
-  const isCacheValid = () => {
-    return (
-      modsCache.data &&
-      Date.now() - modsCache.timestamp < modsCache.CACHE_DURATION
-    );
-  };
-
   // Chargement initial avec cache
   useEffect(() => {
     async function loadInitialData() {
       if (!initialLoadDone) {
+        console.log(
+          "[DEBUG] Chargement initial, cache valide:",
+          isCacheValid()
+        );
+        console.log("[DEBUG] Données cache:", modsCache.data);
+
         if (
           isCacheValid() &&
           !search &&
@@ -103,18 +122,33 @@ export default function ModsPage() {
           page === 1
         ) {
           // Utiliser les données du cache
-          setMods(modsCache.data.mods || []);
-          setFeatured(modsCache.data.featured || []);
-          setCategories(modsCache.data.categories || []);
+          console.log("[DEBUG] Utilisation du cache");
+          const cachedMods = modsCache.data.mods || [];
+          const cachedFeatured = modsCache.data.featured || [];
+          const cachedCategories = modsCache.data.categories || [];
+
+          setMods(cachedMods);
+          setFeatured(cachedFeatured);
+          setCategories(cachedCategories);
           setHasMore(modsCache.data.hasMore || true);
           setInitialLoadDone(true);
+          modsCache.hasBeenInitialized = true;
+
+          console.log("[DEBUG] Cache appliqué - mods:", cachedMods.length);
+          console.log(
+            "[DEBUG] Cache appliqué - featured:",
+            cachedFeatured.length
+          );
         } else {
           // Charger toutes les données fraîches en parallèle
+          console.log("[DEBUG] Chargement données fraîches");
           try {
             const [categoriesData, featuredData] = await Promise.all([
               fetchCategories(),
               fetchFeatured(),
             ]);
+
+            console.log("[DEBUG] Featured data loaded:", featuredData?.length);
 
             // Charger les mods avec les données fraîches
             await fetchMods();
@@ -183,17 +217,23 @@ export default function ModsPage() {
         page === 1 &&
         !initialLoadDone
       ) {
+        // Utiliser les données actuelles des states
         modsCache.data = {
           mods: modsWithComments,
-          featured,
-          categories,
+          featured: featured, // Utiliser l'état featured actuel
+          categories: categories, // Utiliser l'état categories actuel
           hasMore: (data || []).length === pageSize,
         };
         modsCache.timestamp = Date.now();
+        console.log(
+          "[DEBUG] Données mises en cache - featured:",
+          featured.length
+        );
       }
     }
     setLoading(false);
     setInitialLoadDone(true);
+    modsCache.hasBeenInitialized = true;
   }
 
   // Skeleton loader
@@ -317,7 +357,10 @@ export default function ModsPage() {
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           {/* Section Mods du moment */}
-          {featured.length > 0 && (
+          {(() => {
+            console.log("[DEBUG] Featured mods length:", featured.length);
+            return featured.length > 0;
+          })() && (
             <section id="featured" className="mb-16">
               {/* Header de section */}
               <div className="text-center mb-12">
