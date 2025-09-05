@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Star,
   Download,
   MessageCircle,
   Flame,
@@ -85,13 +84,15 @@ export default function ModsPage() {
       .order("downloads", { ascending: false })
       .limit(5);
 
-    // Calculer le nombre de commentaires pour chaque mod en vedette
+    // Calculer le nombre de commentaires et la moyenne des ratings pour chaque mod en vedette
     const featuredWithComments = await Promise.all(
       (data || []).map(async (mod) => {
+        // Récupérer le nombre de commentaires
         const { count } = await supabase
           .from("comments")
           .select("*", { count: "exact", head: true })
           .eq("mod_id", mod.id);
+
         return {
           ...mod,
           comments_count: count || 0,
@@ -100,6 +101,17 @@ export default function ModsPage() {
     );
 
     setFeatured(featuredWithComments || []);
+
+    // Mettre à jour le cache avec les données featured
+    if (!modsCache.data) {
+      modsCache.data = {};
+    }
+    modsCache.data.featured = featuredWithComments || [];
+    console.log(
+      "[DEBUG] Cache featured mis à jour:",
+      featuredWithComments?.length
+    );
+
     return featuredWithComments;
   }
 
@@ -149,6 +161,13 @@ export default function ModsPage() {
 
             console.log("[DEBUG] Featured data loaded:", featuredData?.length);
 
+            // Initialiser le cache avec les données featured
+            if (!modsCache.data) {
+              modsCache.data = {};
+            }
+            modsCache.data.featured = featuredData || [];
+            modsCache.data.categories = categoriesData || [];
+
             // Charger les mods avec les données fraîches
             await fetchMods();
           } catch (error) {
@@ -190,13 +209,15 @@ export default function ModsPage() {
     query = query.range(from, to);
     const { data, error } = await query;
     if (!error) {
-      // Calculer le nombre de commentaires pour chaque mod
+      // Calculer le nombre de commentaires et la moyenne des ratings pour chaque mod
       const modsWithComments = await Promise.all(
         (data || []).map(async (mod) => {
+          // Récupérer le nombre de commentaires
           const { count } = await supabase
             .from("comments")
             .select("*", { count: "exact", head: true })
             .eq("mod_id", mod.id);
+
           return {
             ...mod,
             comments_count: count || 0,
@@ -216,17 +237,29 @@ export default function ModsPage() {
         page === 1 &&
         !initialLoadDone
       ) {
-        // Utiliser les données actuelles des states
-        modsCache.data = {
-          mods: modsWithComments,
-          featured: featured, // Utiliser l'état featured actuel
-          categories: categories, // Utiliser l'état categories actuel
-          hasMore: (data || []).length === pageSize,
-        };
+        // Créer ou mettre à jour le cache
+        if (!modsCache.data) {
+          modsCache.data = {};
+        }
+
+        // Mettre à jour les données du cache
+        modsCache.data.mods = modsWithComments;
+        modsCache.data.categories = categories;
+        modsCache.data.hasMore = (data || []).length === pageSize;
+
+        // Conserver les featured existants si déjà présents dans le cache
+        if (!modsCache.data.featured) {
+          modsCache.data.featured = featured;
+        }
+
         modsCache.timestamp = Date.now();
         console.log(
+          "[DEBUG] Données mises en cache - mods:",
+          modsWithComments?.length
+        );
+        console.log(
           "[DEBUG] Données mises en cache - featured:",
-          featured.length
+          modsCache.data.featured?.length
         );
       }
     }
@@ -434,12 +467,6 @@ export default function ModsPage() {
                           <Download className="w-4 h-4 text-green-400" />
                           <span className="text-gray-300 font-medium">
                             {mod.downloads || 0}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Star className="w-4 h-4 text-yellow-400" />
-                          <span className="text-gray-300 font-medium">
-                            {mod.rating ? mod.rating.toFixed(1) : "N/A"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
@@ -717,17 +744,11 @@ export default function ModsPage() {
                         </p>
 
                         {/* Stats en grille */}
-                        <div className="grid grid-cols-3 gap-3 mb-6 text-sm">
+                        <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
                           <div className="flex items-center gap-2">
                             <Download className="w-4 h-4 text-green-400" />
                             <span className="text-gray-300 font-medium">
                               {mod.downloads || 0}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Star className="w-4 h-4 text-yellow-400" />
-                            <span className="text-gray-300 font-medium">
-                              {mod.rating ? mod.rating.toFixed(1) : "N/A"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
