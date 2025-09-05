@@ -343,28 +343,28 @@ export default function FAQPage() {
                   <p>
                     <strong>Email général :</strong>{" "}
                     <Link
-                      href="mailto:moderation@gta6community.com"
+                      href="mailto:compteprodylan09@gmail.com"
                       className="text-blue-400 hover:text-blue-300 underline"
                     >
-                      moderation@gta6community.com
+                      compteprodylan09@gmail.com
                     </Link>
                   </p>
                   <p>
                     <strong>Questions légales :</strong>{" "}
                     <Link
-                      href="mailto:legal@gta6community.com"
+                      href="mailto:compteprodylan09@gmail.com"
                       className="text-blue-400 hover:text-blue-300 underline"
                     >
-                      legal@gta6community.com
+                      compteprodylan09@gmail.com
                     </Link>
                   </p>
                   <p>
                     <strong>Support technique :</strong>{" "}
                     <Link
-                      href="mailto:support@gta6community.com"
+                      href="mailto:compteprodylan09@gmail.com"
                       className="text-blue-400 hover:text-blue-300 underline"
                     >
-                      support@gta6community.com
+                      compteprodylan09@gmail.com
                     </Link>
                   </p>
                 </div>
@@ -390,10 +390,10 @@ export default function FAQPage() {
                   <li>
                     Envoyer une candidature à{" "}
                     <Link
-                      href="mailto:moderation@gta6community.com"
+                      href="mailto:compteprodylan09@gmail.com"
                       className="text-blue-400 hover:text-blue-300 underline"
                     >
-                      moderation@gta6community.com
+                      compteprodylan09@gmail.com
                     </Link>
                   </li>
                 </ul>
@@ -453,10 +453,10 @@ export default function FAQPage() {
                   <li>
                     Envoyez à{" "}
                     <Link
-                      href="mailto:bugs@gta6community.com"
+                      href="mailto:compteprodylan09@gmail.com"
                       className="text-blue-400 hover:text-blue-300 underline"
                     >
-                      bugs@gta6community.com
+                      compteprodylan09@gmail.com
                     </Link>
                   </li>
                 </ul>
@@ -515,10 +515,10 @@ export default function FAQPage() {
                   Questions techniques
                 </h4>
                 <Link
-                  href="mailto:tech@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  tech@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
             </div>

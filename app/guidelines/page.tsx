@@ -555,10 +555,10 @@ export default function GuidelinesPage() {
                   Questions générales
                 </h4>
                 <Link
-                  href="mailto:moderation@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  moderation@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
               <div>
@@ -566,10 +566,10 @@ export default function GuidelinesPage() {
                   Appels de décision
                 </h4>
                 <Link
-                  href="mailto:appeals@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  appeals@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
             </div>
@@ -591,10 +591,10 @@ export default function GuidelinesPage() {
             Ces directives évoluent avec notre communauté. Vos suggestions
             d'amélioration sont les bienvenues à{" "}
             <Link
-              href="mailto:feedback@gta6community.com"
+              href="mailto:compteprodylan09@gmail.com"
               className="text-blue-400 hover:text-blue-300 underline"
             >
-              feedback@gta6community.com
+              compteprodylan09@gmail.com
             </Link>
           </p>
         </div>

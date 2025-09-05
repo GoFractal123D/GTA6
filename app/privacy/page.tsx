@@ -324,10 +324,10 @@ export default function PrivacyPage() {
                 <p>
                   Contactez-nous à{" "}
                   <Link
-                    href="mailto:privacy@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    privacy@gta6community.com
+                    compteprodylan09@gmail.com
                   </Link>
                 </p>
                 <p className="mt-2">
@@ -435,10 +435,10 @@ export default function PrivacyPage() {
                   Délégué à la protection des données
                 </h4>
                 <Link
-                  href="mailto:dpo@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  dpo@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
               <div>

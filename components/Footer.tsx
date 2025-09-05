@@ -203,7 +203,7 @@ export default function Footer() {
                 className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white dark:text-white text-black"
                 asChild
               >
-                <Link href="mailto:contact@gta6community.com">
+                <Link href="mailto:compteprodylan09@gmail.com">
                   <Mail size={16} className="mr-2" />
                   Contact
                 </Link>
@@ -223,8 +223,8 @@ export default function Footer() {
             🔐 Clause de non-affiliation – GTA6 / Rockstar Games
           </h4>
           <p className="text-gray-300 text-sm mb-3">
-            Ce site est une plateforme indépendante créée par des fans et n'est
-            en aucun cas affiliée, sponsorisée ou approuvée par Rockstar Games,
+            Ce site est une plateforme indépendante créée par un fan et n'est en
+            aucun cas affiliée, sponsorisée ou approuvée par Rockstar Games,
             Take-Two Interactive, ou toute entité associée.
           </p>
           <p className="text-gray-300 text-sm mb-3">
@@ -246,17 +246,23 @@ export default function Footer() {
             revendiquons aucun droit de propriété sur les éléments visuels
             appartenant à Rockstar Games.
           </p>
-          <p className="text-gray-300 text-sm">
+          <p className="text-gray-300 text-sm mb-3">
             Si vous êtes représentant légal de Rockstar Games ou Take-Two
             Interactive et souhaitez signaler un contenu, merci de nous
             contacter à{" "}
             <a
-              href="mailto:legal@gta6community.com"
+              href="mailto:compteprodylan09@gmail.com"
               className="text-blue-400 hover:text-blue-300 underline"
             >
-              legal@gta6community.com
+              compteprodylan09@gmail.com
             </a>{" "}
             pour que nous puissions agir rapidement.
+          </p>
+          <p className="text-gray-300 text-sm font-medium bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">
+            <strong>Développement indépendant :</strong> Ce site web a été
+            entièrement conçu, développé et créé par une seule personne, sans
+            aucune aide extérieure, par passion pour la communauté GTA 6. Projet
+            personnel et indépendant.
           </p>
         </div>
       </div>
@@ -269,7 +275,7 @@ export default function Footer() {
           <div className="mb-4 md:mb-0">
             © {currentYear} VIverse. Tous droits réservés.
             <span className="ml-2">
-              Créé avec ❤️ par des fans pour des fans.
+              Créé avec ❤️ entièrement seul, par passion.
             </span>
           </div>
           <div className="flex items-center space-x-6">

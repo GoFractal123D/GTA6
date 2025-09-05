@@ -152,7 +152,7 @@ export default function DMCAPage() {
                   informations requises :
                 </p>
                 <Button className="w-full" variant="outline" asChild>
-                  <a href="mailto:dmca@gta6community.com?subject=Signalement DMCA">
+                  <a href="mailto:compteprodylan09@gmail.com?subject=Signalement DMCA">
                     <Mail className="h-4 w-4 mr-2" />
                     Envoyer un signalement DMCA
                   </a>
@@ -290,7 +290,7 @@ export default function DMCAPage() {
                   contenu :
                 </p>
                 <Button className="w-full" variant="outline" asChild>
-                  <a href="mailto:dmca@gta6community.com?subject=Contre-signalement DMCA">
+                  <a href="mailto:compteprodylan09@gmail.com?subject=Contre-signalement DMCA">
                     <Mail className="h-4 w-4 mr-2" />
                     Soumettre un contre-signalement
                   </a>
@@ -376,10 +376,10 @@ export default function DMCAPage() {
                     d'auteur :
                   </p>
                   <a
-                    href="mailto:dmca@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline text-sm"
                   >
-                    dmca@gta6community.com
+                    compteprodylan09@gmail.com
                   </a>
                 </div>
 
@@ -391,10 +391,10 @@ export default function DMCAPage() {
                     Pour les autres questions juridiques :
                   </p>
                   <a
-                    href="mailto:legal@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline text-sm"
                   >
-                    legal@gta6community.com
+                    compteprodylan09@gmail.com
                   </a>
                 </div>
               </div>

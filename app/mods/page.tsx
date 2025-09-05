@@ -290,7 +290,7 @@ export default function ModsPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         {/* Hero Section */}
-        <section className="relative pt-24 pb-12 px-4 overflow-hidden">
+        <section className="relative pt-24 pb-32 px-4 overflow-hidden min-h-[100vh]">
           {/* Image de fond avec overlay */}
           <div className="absolute inset-0 z-0">
             <div
@@ -303,58 +303,94 @@ export default function ModsPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
           </div>
 
-          {/* Particules animées */}
+          {/* Particules animées améliorées */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-purple-400 rounded-full animate-pulse opacity-60" />
-            <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-blue-400 rounded-full animate-ping opacity-40" />
-            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-pink-400 rounded-full animate-pulse opacity-50" />
-            <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-cyan-400 rounded-full animate-ping opacity-30" />
+            {/* Particules principales */}
+            <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-purple-400 rounded-full animate-pulse opacity-60" />
+            <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-40" />
+            <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-pink-400 rounded-full animate-pulse opacity-50" />
+            <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30" />
+
+            {/* Particules supplémentaires */}
+            <div className="absolute top-1/6 right-1/6 w-1 h-1 bg-yellow-400 rounded-full animate-pulse opacity-40" />
+            <div className="absolute bottom-1/3 right-2/3 w-1.5 h-1.5 bg-green-400 rounded-full animate-ping opacity-35" />
+            <div className="absolute top-2/3 left-1/6 w-1 h-1 bg-red-400 rounded-full animate-pulse opacity-45" />
+            <div className="absolute bottom-1/6 right-1/5 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-30" />
+            <div className="absolute top-3/4 left-2/3 w-1 h-1 bg-teal-400 rounded-full animate-pulse opacity-40" />
+
+            {/* Formes géométriques flottantes */}
+            <div
+              className="absolute top-1/5 left-3/4 w-8 h-8 border border-purple-300/20 rotate-45 animate-spin"
+              style={{ animationDuration: "20s" }}
+            />
+            <div className="absolute bottom-1/5 left-1/5 w-6 h-6 border border-blue-300/15 rounded-full animate-pulse" />
+            <div
+              className="absolute top-3/5 right-1/6 w-4 h-4 border border-pink-300/25 rotate-12 animate-bounce"
+              style={{ animationDuration: "3s" }}
+            />
           </div>
 
-          <div className="container mx-auto relative z-10 text-center">
-            {/* Badge de bienvenue */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 backdrop-blur-sm mb-6">
-              <Gamepad2 className="w-4 h-4 text-purple-400" />
-              <span className="text-sm font-medium text-purple-100">
-                Découvrez l'univers des mods GTA 6
-              </span>
-              <Sparkles className="w-4 h-4 text-blue-400" />
+          <div className="container mx-auto relative z-10 text-center flex flex-col justify-center min-h-[90vh] px-8">
+            {/* Section du haut avec statistiques */}
+            <div className="mb-12">
+              {/* Badge de bienvenue */}
+              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500/30 to-blue-500/30 border border-purple-400/50 backdrop-blur-md mb-8">
+                <Gamepad2 className="w-5 h-5 text-purple-300" />
+                <span className="text-base font-medium text-purple-100">
+                  Découvrez l'univers des mods GTA 6
+                </span>
+                <Sparkles className="w-5 h-5 text-blue-300" />
+              </div>
             </div>
 
-            {/* Titre principal */}
-            <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent leading-tight">
-              Mods Epic
-            </h1>
+            {/* Section centrale */}
+            <div className="mb-12">
+              {/* Titre principal avec effet plus imposant */}
+              <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-8 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent leading-tight drop-shadow-2xl">
+                Mods Epic
+              </h1>
 
-            {/* Sous-titre */}
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Transformez votre expérience GTA 6 avec les mods les plus
-              populaires et innovants de la communauté
-            </p>
+              {/* Sous-titre avec plus d'espacement */}
+              <p className="text-xl md:text-3xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed font-light">
+                Transformez votre expérience GTA 6 avec les mods les plus
+                <span className="text-purple-300 font-medium">
+                  {" "}
+                  populaires
+                </span>{" "}
+                et
+                <span className="text-blue-300 font-medium"> innovants</span> de
+                la communauté
+              </p>
+            </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                <Link href="#featured">
-                  <TrendingUp className="w-5 h-5 mr-2" />
-                  Explorer les mods
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-purple-400/50 text-white hover:bg-purple-500/20 font-semibold px-8 py-3 rounded-full backdrop-blur-sm hover:scale-105 transition-all duration-300"
-              >
-                <Link href="/submit-mod">
-                  <Zap className="w-5 h-5 mr-2" />
-                  Publier un mod
-                </Link>
-              </Button>
+            {/* Section du bas avec CTA et navigation rapide */}
+            <div className="space-y-8">
+              {/* CTA Buttons avec plus d'impact */}
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold px-12 py-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 text-lg"
+                >
+                  <Link href="#featured">
+                    <TrendingUp className="w-6 h-6 mr-3" />
+                    Explorer les mods
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-purple-400/60 text-white hover:bg-purple-500/30 font-bold px-12 py-4 rounded-full backdrop-blur-md hover:scale-110 transition-all duration-300 text-lg"
+                >
+                  <Link href="/submit-mod">
+                    <Zap className="w-6 h-6 mr-3" />
+                    Publier un mod
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Navigation rapide par catégories */}
             </div>
           </div>
         </section>
@@ -368,19 +404,12 @@ export default function ModsPage() {
             <section id="featured" className="mb-16">
               {/* Header de section */}
               <div className="text-center mb-12">
-                <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/30 backdrop-blur-sm mb-4">
+                <div className="mt-20 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/30 backdrop-blur-sm mb-4">
                   <Flame className="w-4 h-4 text-orange-400" />
                   <span className="text-sm font-medium text-orange-100">
                     Tendances actuelles
                   </span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-400 via-red-400 to-pink-400 bg-clip-text text-transparent mb-4">
-                  Mods du Moment
-                </h2>
-                <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                  Découvrez les mods les plus téléchargés et appréciés par la
-                  communauté
-                </p>
               </div>
 
               {/* Grille de mods featured */}

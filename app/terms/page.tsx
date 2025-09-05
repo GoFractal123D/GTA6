@@ -280,10 +280,10 @@ export default function TermsPage() {
                   Si vous pensez qu'une sanction a été appliquée par erreur,
                   vous pouvez contester en nous contactant à{" "}
                   <Link
-                    href="mailto:appeals@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    appeals@gta6community.com
+                    compteprodylan09@gmail.com
                   </Link>
                 </p>
               </div>
@@ -310,10 +310,10 @@ export default function TermsPage() {
                   Support général
                 </h4>
                 <Link
-                  href="mailto:support@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  support@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
               <div>
@@ -321,10 +321,10 @@ export default function TermsPage() {
                   Questions légales
                 </h4>
                 <Link
-                  href="mailto:legal@gta6community.com"
+                  href="mailto:compteprodylan09@gmail.com"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  legal@gta6community.com
+                  compteprodylan09@gmail.com
                 </Link>
               </div>
             </div>

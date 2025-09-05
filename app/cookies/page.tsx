@@ -348,19 +348,19 @@ export default function CookiesPage() {
                 <p>
                   <strong>Email :</strong>{" "}
                   <a
-                    href="mailto:privacy@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    privacy@gta6community.com
+                    compteprodylan09@gmail.com
                   </a>
                 </p>
                 <p>
                   <strong>DPO :</strong>{" "}
                   <a
-                    href="mailto:dpo@gta6community.com"
+                    href="mailto:compteprodylan09@gmail.com"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    dpo@gta6community.com
+                    compteprodylan09@gmail.com
                   </a>
                 </p>
               </div>

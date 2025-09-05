@@ -85,7 +85,7 @@ export default function SubmitModPage() {
   };
 
   // Upload helper
-  async function uploadFileToStorage(file, folder) {
+  async function uploadFileToStorage(file: File, folder: string) {
     const filePath = `${user.id}/${Date.now()}_${file.name}`;
     const { data, error } = await supabase.storage
       .from(folder)
@@ -94,7 +94,7 @@ export default function SubmitModPage() {
     return data.path;
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -169,7 +169,11 @@ export default function SubmitModPage() {
       router.push("/mods");
     } catch (err) {
       console.error("[DEBUG] Erreur lors de l'upload ou de l'insertion :", err);
-      setError(err.message || "Erreur lors de la publication du mod.");
+      if (err instanceof Error) {
+        setError(err.message || "Erreur lors de la publication du mod.");
+      } else {
+        setError("Erreur lors de la publication du mod.");
+      }
       setLoading(false);
       return;
     }
@@ -481,24 +485,15 @@ export default function SubmitModPage() {
                 {success && (
                   <div className="text-green-600 font-semibold">{success}</div>
                 )}
-                <div className="flex flex-col gap-2 w-full sm:flex-row sm:gap-4 pt-4">
+                <div className="flex justify-center pt-4">
                   <Button
                     type="submit"
                     size="lg"
                     disabled={loading}
-                    className="w-full"
+                    className="w-full max-w-md"
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     {loading ? "Publication..." : "Publier le mod"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    Sauvegarder en brouillon
                   </Button>
                 </div>
               </div>
