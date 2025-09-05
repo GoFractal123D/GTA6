@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./animations.css";
 
 import { supabase } from "@/lib/supabaseClient";
@@ -28,6 +28,13 @@ import {
 import DownloadButton from "@/components/DownloadButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+// Cache global pour les données
+const modsCache = {
+  data: null as any,
+  timestamp: 0,
+  CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
+};
+
 export default function ModsPage() {
   const [search, setSearch] = useState("");
   const [mods, setMods] = useState<any[]>([]);
@@ -38,52 +45,99 @@ export default function ModsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [featured, setFeatured] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const isMountedRef = useRef(true);
 
-  // Récupérer les catégories distinctes
+  // Fonctions pour charger les données
+  async function fetchCategories() {
+    const { data } = await supabase.from("mods").select("category");
+    const cats = Array.from(
+      new Set((data || []).map((m) => m.category).filter(Boolean))
+    );
+    setCategories(cats);
+    return cats;
+  }
+
+  async function fetchFeatured() {
+    const { data } = await supabase
+      .from("mods")
+      .select("*")
+      .order("downloads", { ascending: false })
+      .limit(5);
+
+    // Calculer le nombre de commentaires pour chaque mod en vedette
+    const featuredWithComments = await Promise.all(
+      (data || []).map(async (mod) => {
+        const { count } = await supabase
+          .from("comments")
+          .select("*", { count: "exact", head: true })
+          .eq("mod_id", mod.id);
+        return {
+          ...mod,
+          comments_count: count || 0,
+        };
+      })
+    );
+
+    setFeatured(featuredWithComments || []);
+    return featuredWithComments;
+  }
+
+  // Fonction pour vérifier si le cache est valide
+  const isCacheValid = () => {
+    return (
+      modsCache.data &&
+      Date.now() - modsCache.timestamp < modsCache.CACHE_DURATION
+    );
+  };
+
+  // Chargement initial avec cache
   useEffect(() => {
-    async function fetchCategories() {
-      const { data } = await supabase.from("mods").select("category");
-      const cats = Array.from(
-        new Set((data || []).map((m) => m.category).filter(Boolean))
-      );
-      setCategories(cats);
+    async function loadInitialData() {
+      if (!initialLoadDone) {
+        if (
+          isCacheValid() &&
+          !search &&
+          !category &&
+          sort === "date" &&
+          page === 1
+        ) {
+          // Utiliser les données du cache
+          setMods(modsCache.data.mods || []);
+          setFeatured(modsCache.data.featured || []);
+          setCategories(modsCache.data.categories || []);
+          setHasMore(modsCache.data.hasMore || true);
+          setInitialLoadDone(true);
+        } else {
+          // Charger toutes les données fraîches en parallèle
+          try {
+            const [categoriesData, featuredData] = await Promise.all([
+              fetchCategories(),
+              fetchFeatured(),
+            ]);
+
+            // Charger les mods avec les données fraîches
+            await fetchMods();
+          } catch (error) {
+            console.error("Erreur lors du chargement initial:", error);
+            setLoading(false);
+            setInitialLoadDone(true);
+          }
+        }
+      }
     }
-    fetchCategories();
-  }, []);
 
-  // Récupérer les mods en vedette (les plus téléchargés)
-  useEffect(() => {
-    async function fetchFeatured() {
-      const { data } = await supabase
-        .from("mods")
-        .select("*")
-        .order("downloads", { ascending: false })
-        .limit(5);
-
-      // Calculer le nombre de commentaires pour chaque mod en vedette
-      const featuredWithComments = await Promise.all(
-        (data || []).map(async (mod) => {
-          const { count } = await supabase
-            .from("comments")
-            .select("*", { count: "exact", head: true })
-            .eq("mod_id", mod.id);
-          return {
-            ...mod,
-            comments_count: count || 0,
-          };
-        })
-      );
-
-      setFeatured(featuredWithComments || []);
-    }
-    fetchFeatured();
-  }, []);
-
-  // Récupérer les mods filtrés/paginés
-  useEffect(() => {
-    fetchMods();
+    loadInitialData();
     // eslint-disable-next-line
-  }, [search, category, sort, page]);
+  }, []);
+
+  // Récupérer les mods filtrés/paginés (seulement si pas de cache ou filtres actifs)
+  useEffect(() => {
+    if (initialLoadDone) {
+      fetchMods();
+    }
+    // eslint-disable-next-line
+  }, [search, category, sort, page, initialLoadDone]);
 
   async function fetchMods() {
     setLoading(true);
@@ -120,8 +174,26 @@ export default function ModsPage() {
       if (page === 1) setMods(modsWithComments || []);
       else setMods((prev) => [...prev, ...(modsWithComments || [])]);
       setHasMore((data || []).length === pageSize);
+
+      // Mettre en cache si c'est le chargement initial par défaut
+      if (
+        !search &&
+        !category &&
+        sort === "date" &&
+        page === 1 &&
+        !initialLoadDone
+      ) {
+        modsCache.data = {
+          mods: modsWithComments,
+          featured,
+          categories,
+          hasMore: (data || []).length === pageSize,
+        };
+        modsCache.timestamp = Date.now();
+      }
     }
     setLoading(false);
+    setInitialLoadDone(true);
   }
 
   // Skeleton loader
@@ -150,7 +222,7 @@ export default function ModsPage() {
           {/* Image de fond avec overlay */}
           <div className="absolute inset-0 z-0">
             <div
-              className="absolute inset-0 bg-[url('/gta-6-leonida-keys-screenshots_h5zt.jpg')] bg-cover bg-center"
+              className="absolute inset-0 bg-[url('/HeroMod.jpg')] bg-cover bg-center"
               style={{
                 filter: "brightness(0.3) blur(1px)",
               }}
