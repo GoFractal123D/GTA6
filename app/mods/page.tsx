@@ -18,12 +18,11 @@ import {
   Filter,
   TrendingUp,
   Zap,
-  Calendar,
   Award,
-  Eye,
   Users,
   Gamepad2,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import DownloadButton from "@/components/DownloadButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -449,12 +448,6 @@ export default function ModsPage() {
                             {mod.comments_count || 0}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Eye className="w-4 h-4 text-purple-400" />
-                          <span className="text-gray-300 font-medium">
-                            {Math.floor(Math.random() * 1000) + 100}
-                          </span>
-                        </div>
                       </div>
 
                       {/* Actions */}
@@ -464,7 +457,7 @@ export default function ModsPage() {
                           className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                           <Link href={`/mod/${mod.id}`}>
-                            <Eye className="w-4 h-4 mr-2" />
+                            <ExternalLink className="w-4 h-4 mr-2" />
                             Voir
                           </Link>
                         </Button>
@@ -724,7 +717,7 @@ export default function ModsPage() {
                         </p>
 
                         {/* Stats en grille */}
-                        <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
+                        <div className="grid grid-cols-3 gap-3 mb-6 text-sm">
                           <div className="flex items-center gap-2">
                             <Download className="w-4 h-4 text-green-400" />
                             <span className="text-gray-300 font-medium">
@@ -743,20 +736,6 @@ export default function ModsPage() {
                               {mod.comments_count || 0}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-purple-400" />
-                            <span className="text-gray-300 font-medium text-xs">
-                              {mod.created_at
-                                ? new Date(mod.created_at).toLocaleDateString(
-                                    "fr-FR",
-                                    {
-                                      day: "numeric",
-                                      month: "short",
-                                    }
-                                  )
-                                : "N/A"}
-                            </span>
-                          </div>
                         </div>
 
                         {/* Actions */}
@@ -766,7 +745,7 @@ export default function ModsPage() {
                             className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                           >
                             <Link href={`/mod/${mod.id}`}>
-                              <Eye className="w-4 h-4 mr-2" />
+                              <ExternalLink className="w-4 h-4 mr-2" />
                               Voir
                             </Link>
                           </Button>
