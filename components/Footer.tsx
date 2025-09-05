@@ -111,14 +111,6 @@ export default function Footer() {
                   Publier un mod
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/sponsors"
-                  className="text-gray-400 hover:text-white transition-colors text-sm"
-                >
-                  Sponsors
-                </Link>
-              </li>
             </ul>
           </div>
 

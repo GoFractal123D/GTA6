@@ -78,15 +78,6 @@ export default function Navigation() {
                 </Link>
               </>
             )}
-            <Link
-              href="/sponsors"
-              className="relative group font-bold text-lg tracking-wide hover:text-primary transition-all duration-300 ease-in-out focus:outline-none focus:ring-0"
-            >
-              <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent group-hover:from-orange-500 group-hover:to-red-500 transition-all duration-300 drop-shadow-sm">
-                Sponsors
-              </span>
-              <span className="absolute -bottom-2 left-0 w-0 h-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 group-hover:w-full transition-all duration-300 ease-in-out rounded-full shadow-lg"></span>
-            </Link>
           </div>
           {/* Mobile hamburger menu */}
           <button
@@ -160,13 +151,6 @@ export default function Navigation() {
                 </Link>
               </>
             )}
-            <Link
-              href="/sponsors"
-              onClick={() => setDrawerOpen(false)}
-              className="text-xl font-bold tracking-wide bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent hover:from-orange-500 hover:to-red-500 transition-all duration-300 p-3 rounded-lg hover:bg-muted/50 drop-shadow-sm focus:outline-none focus:ring-0"
-            >
-              Sponsors
-            </Link>
             {user ? (
               <>
                 <Link
