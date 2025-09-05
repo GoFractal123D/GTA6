@@ -300,34 +300,6 @@ export default function ModsPage() {
               populaires et innovants de la communauté
             </p>
 
-            {/* Stats rapides */}
-            <div className="flex flex-wrap justify-center gap-8 mb-12">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">
-                  {mods.length}+
-                </div>
-                <div className="text-sm text-gray-400 uppercase tracking-wide">
-                  Mods disponibles
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400 mb-1">
-                  50K+
-                </div>
-                <div className="text-sm text-gray-400 uppercase tracking-wide">
-                  Téléchargements
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400 mb-1">
-                  1.2K+
-                </div>
-                <div className="text-sm text-gray-400 uppercase tracking-wide">
-                  Créateurs
-                </div>
-              </div>
-            </div>
-
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
