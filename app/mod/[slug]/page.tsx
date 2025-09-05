@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import DownloadButton from "@/components/DownloadButton";
 import StarRatingClient from "@/components/StarRatingClient";
@@ -49,9 +51,24 @@ export default async function ModDetailPage({
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 space-y-8 pt-24 pb-8">
-        {/* Header */}
-        <div className="space-y-4">
+      <div className="container mx-auto px-4 space-y-8 pt-32 pb-32">
+        {/* Bouton retour séparé */}
+        <div className="flex items-center gap-3 mb-12">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 hover:bg-muted/50 rounded-md px-2 py-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Link href="/mods">
+              <ArrowLeft className="w-3 h-3" />
+              Retour aux mods
+            </Link>
+          </Button>
+        </div>
+
+        {/* Header décalé vers la droite */}
+        <div className="space-y-4 ml-24">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -92,7 +109,7 @@ export default async function ModDetailPage({
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 ml-24">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Images */}
