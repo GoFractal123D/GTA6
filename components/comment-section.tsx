@@ -35,12 +35,14 @@ interface CommentSectionProps {
   itemId: number;
   itemType: "mod" | "post" | "guide";
   comments?: Comment[]; // Ajouté pour recevoir les vrais commentaires
+  onCommentUpdate?: () => void; // Callback pour notifier les changements
 }
 
 export function CommentSection({
   itemId,
   itemType,
   comments: propComments = [],
+  onCommentUpdate,
 }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>(propComments);
   const [newComment, setNewComment] = useState("");
@@ -160,10 +162,10 @@ export function CommentSection({
     } else {
       setNewComment("");
       await fetchComments();
-      // Forcer une mise à jour de la page pour rafraîchir les compteurs
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Notifier le parent du changement
+      if (onCommentUpdate) {
+        onCommentUpdate();
+      }
     }
     setIsLoading(false);
   }
@@ -193,10 +195,10 @@ export function CommentSection({
       setReplyContent("");
       setReplyingTo(null);
       await fetchComments();
-      // Forcer une mise à jour de la page pour rafraîchir les compteurs
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Notifier le parent du changement
+      if (onCommentUpdate) {
+        onCommentUpdate();
+      }
     }
     setIsReplyLoading(false);
   }
@@ -331,13 +333,6 @@ export function CommentSection({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <MessageCircle className="w-5 h-5" />
-        <h3 className="text-lg font-semibold">
-          Commentaires ({comments.length})
-        </h3>
-      </div>
-
       {/* New Comment Form */}
       <Card>
         <CardContent className="p-4 space-y-4">

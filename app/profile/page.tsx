@@ -823,7 +823,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Contenu profil */}
-        <div className="pt-24 max-w-6xl mx-auto px-4">
+        <div className="pt-28 pb-8 max-w-6xl mx-auto px-4">
           {/* Header profil */}
           <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background/95 backdrop-blur-sm border border-border/50">
             <div className="relative z-10 flex items-center gap-6 px-8">
