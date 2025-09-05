@@ -17,6 +17,10 @@ import {
   CheckCircle,
   TrendingUp,
   Award,
+  Flame,
+  MessageCircle,
+  Gamepad2,
+  ExternalLink,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -28,6 +32,48 @@ export default function Home() {
     users: 0,
     loading: true,
   });
+
+  const [featured, setFeatured] = useState<any[]>([]);
+
+  async function fetchFeatured() {
+    const { data } = await supabase
+      .from("mods")
+      .select("*")
+      .order("downloads", { ascending: false })
+      .limit(3);
+
+    // Calculer le nombre de commentaires pour chaque mod en vedette
+    const featuredWithComments = await Promise.all(
+      (data || []).map(async (mod) => {
+        const { count } = await supabase
+          .from("comments")
+          .select("*", { count: "exact", head: true })
+          .eq("mod_id", mod.id);
+
+        return {
+          ...mod,
+          comments_count: count || 0,
+        };
+      })
+    );
+
+    setFeatured(featuredWithComments || []);
+  }
+
+  function getBadges(mod: any) {
+    const badges = [];
+    if (
+      mod.created_at &&
+      new Date().getTime() - new Date(mod.created_at).getTime() <
+        7 * 24 * 60 * 60 * 1000
+    )
+      badges.push({ label: "Nouveau", color: "bg-blue-500" });
+    if (mod.downloads > 100)
+      badges.push({ label: "Populaire", color: "bg-pink-500" });
+    if (mod.updated_at && mod.updated_at !== mod.created_at)
+      badges.push({ label: "Mis à jour", color: "bg-purple-500" });
+    return badges;
+  }
 
   useEffect(() => {
     async function fetchStats() {
@@ -52,6 +98,9 @@ export default function Home() {
           });
           return;
         }
+
+        // Récupérer les mods featured
+        await fetchFeatured();
 
         const { count: modsCount } = await supabase
           .from("mods")
@@ -180,30 +229,36 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               </div>
-              <div className="absolute bottom-6 left-6 right-6">
-                <Card className="bg-white/10 backdrop-blur-md border-white/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-white font-semibold">
-                          Mod du jour
+              {featured.length > 0 && (
+                <div className="absolute bottom-6 left-6 right-6">
+                  <Card className="bg-white/10 backdrop-blur-md border-white/20">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-white font-semibold flex items-center gap-2">
+                            <Flame className="w-4 h-4 text-orange-400" />
+                            Mod du moment
+                          </div>
+                          <div className="text-gray-300 text-sm">
+                            {featured[0]?.title || "Chargement..."}
+                          </div>
                         </div>
-                        <div className="text-gray-300 text-sm">
-                          Super Car Pack v2.1
+                        <div className="flex items-center space-x-2">
+                          <Download className="h-4 w-4 text-green-400" />
+                          <span className="text-white text-sm">
+                            {featured[0]?.downloads || 0}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-white text-sm">4.9</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
+
 
       {/* Features Section */}
       <section className="py-20 bg-gray-100/50 dark:bg-black/20">

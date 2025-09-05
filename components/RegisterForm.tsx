@@ -17,7 +17,6 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
   const [step, setStep] = useState<"register" | "confirm">("register");
   const [error, setError] = useState("");
@@ -69,12 +68,20 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       const code = generateConfirmationCode();
 
       // Envoyer le code par email via EmailJS
-      let emailSent = await sendConfirmationEmail(email, username, code);
+      let emailSent = await sendConfirmationEmail(
+        email,
+        email.split("@")[0],
+        code
+      );
 
       // Si EmailJS échoue, utiliser le fallback en mode développement
       if (!emailSent) {
         console.log("📧 EmailJS a échoué, tentative avec le fallback...");
-        emailSent = await sendConfirmationEmailFallback(email, username, code);
+        emailSent = await sendConfirmationEmailFallback(
+          email,
+          email.split("@")[0],
+          code
+        );
       }
 
       if (emailSent) {
@@ -125,7 +132,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         email,
         password,
         options: {
-          data: { username: username },
+          data: { username: email.split("@")[0] },
         },
       });
 
@@ -193,7 +200,11 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     try {
       const code = generateConfirmationCode();
-      const emailSent = await sendConfirmationEmail(email, username, code);
+      const emailSent = await sendConfirmationEmail(
+        email,
+        email.split("@")[0],
+        code
+      );
 
       if (emailSent) {
         setSuccess("Nouveau code envoyé !");
@@ -302,21 +313,6 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       <h2 className="text-2xl font-bold mb-6 text-center">Créer un compte</h2>
 
       <form onSubmit={handleRegister} className="space-y-5">
-        <div>
-          <label htmlFor="username" className="block text-sm font-medium mb-1">
-            Nom d'utilisateur
-          </label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="w-full rounded-lg border border-border bg-background px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-            placeholder="Votre nom d'utilisateur"
-          />
-        </div>
-
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">
             Email
