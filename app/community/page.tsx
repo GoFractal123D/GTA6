@@ -38,6 +38,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigationMount } from "@/hooks/use-navigation-mount";
 
 const filterCategories = [
   { id: "all", label: "Tous", icon: TrendingUp, color: "text-gray-500" },
@@ -57,12 +58,8 @@ export default function CommunityPage() {
   });
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isMounted = useNavigationMount();
   const [popularTags, setPopularTags] = useState<
     Array<{
       name: string;

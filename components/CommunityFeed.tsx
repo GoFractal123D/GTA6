@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "./AuthProvider";
 import { useRouter } from "next/navigation";
 import AdminBadge from "./AdminBadge";
+import { useNavigationMount } from "@/hooks/use-navigation-mount";
 import {
   Users,
   Trophy,
@@ -99,8 +100,11 @@ export default function CommunityFeed({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { user, userProfile } = useAuth();
   const router = useRouter();
+  const isMounted = useNavigationMount();
 
   useEffect(() => {
+    if (!isMounted) return;
+
     // Nettoyer le cache quand la catégorie change pour forcer un rechargement
     const CACHE_KEY = `community_feed_cache_${selectedCategory}_${searchQuery}`;
     localStorage.removeItem(CACHE_KEY);
@@ -109,7 +113,7 @@ export default function CommunityFeed({
       selectedCategory
     );
     fetchFeed();
-  }, [user, searchQuery, selectedCategory]); // Recharger quand l'utilisateur change ou les filtres
+  }, [isMounted, user, searchQuery, selectedCategory]); // Recharger quand l'utilisateur change ou les filtres
 
   // Fonction pour naviguer vers la page de détail
   const handleCardClick = (postId: number) => {
