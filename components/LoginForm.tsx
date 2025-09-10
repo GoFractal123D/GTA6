@@ -39,11 +39,11 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl p-8 mb-8 animate-fade-in">
-      <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl px-6 py-8 sm:px-8 sm:py-10 mb-4 sm:mb-6 md:mb-8 animate-fade-in">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center">
         Connexion
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">
             Email
@@ -55,7 +55,7 @@ export default function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-border bg-background px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            className="w-full rounded-lg border border-border bg-background px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
             placeholder="exemple@email.com"
           />
         </div>
@@ -71,7 +71,7 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-border bg-background px-4 py-2 pr-10 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 sm:px-4 py-2 sm:py-3 pr-10 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               placeholder="••••••••"
             />
             <button
@@ -95,7 +95,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full py-2 sm:py-3 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
         >
           {loading ? "Chargement..." : "Connexion"}
         </button>

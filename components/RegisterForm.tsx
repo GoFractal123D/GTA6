@@ -227,8 +227,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   if (step === "confirm") {
     return (
-      <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl p-8 mb-8 animate-fade-in">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+      <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl px-6 py-8 sm:px-8 sm:py-10 mb-4 sm:mb-6 md:mb-8 animate-fade-in">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center">
           Confirmer votre inscription
         </h2>
 
@@ -237,7 +237,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           <p className="font-semibold text-foreground mt-1">{email}</p>
         </div>
 
-        <form onSubmit={handleConfirmCode} className="space-y-5">
+        <form onSubmit={handleConfirmCode} className="space-y-4 sm:space-y-5">
           <div>
             <label
               htmlFor="confirmationCode"
@@ -312,10 +312,12 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   }
 
   return (
-    <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl p-8 mb-8 animate-fade-in">
-      <h2 className="text-2xl font-bold mb-6 text-center">Créer un compte</h2>
+    <div className="max-w-sm w-full mx-auto bg-card/80 shadow-smooth rounded-xl px-6 py-8 sm:px-8 sm:py-10 mb-4 sm:mb-6 md:mb-8 animate-fade-in">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center">
+        Créer un compte
+      </h2>
 
-      <form onSubmit={handleRegister} className="space-y-5">
+      <form onSubmit={handleRegister} className="space-y-4 sm:space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">
             Email
@@ -327,7 +329,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-border bg-background px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            className="w-full rounded-lg border border-border bg-background px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
             placeholder="exemple@email.com"
           />
         </div>
@@ -345,14 +347,18 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-lg border border-border bg-background px-4 py-2 pr-10 text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 sm:px-4 py-2 sm:py-3 pr-10 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               placeholder="••••••••"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:text-foreground"
-              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              aria-label={
+                showPassword
+                  ? "Masquer le mot de passe"
+                  : "Afficher le mot de passe"
+              }
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -390,7 +396,11 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:text-foreground"
-              aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              aria-label={
+                showConfirmPassword
+                  ? "Masquer le mot de passe"
+                  : "Afficher le mot de passe"
+              }
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -411,7 +421,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           disabled={
             loading || (!!confirmPassword && password !== confirmPassword)
           }
-          className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 sm:py-3 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-smooth hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Envoi du code..." : "Envoyer le code de confirmation"}
         </button>
