@@ -28,6 +28,14 @@ const TYPE_LABELS = {
   event: "Événement",
 };
 
+const filterCategories = [
+  { id: "all", label: "Tous" },
+  { id: "guide", label: "Guide" },
+  { id: "theory", label: "Théorie" },
+  { id: "rp", label: "RP" },
+  { id: "event", label: "Event" },
+];
+
 function ProfileAvatar({
   profile,
   userId,
@@ -93,6 +101,13 @@ export default function CommunityFeed({
   const router = useRouter();
 
   useEffect(() => {
+    // Nettoyer le cache quand la catégorie change pour forcer un rechargement
+    const CACHE_KEY = `community_feed_cache_${selectedCategory}_${searchQuery}`;
+    localStorage.removeItem(CACHE_KEY);
+    console.log(
+      "[CommunityFeed] Cache nettoyé pour nouvelle catégorie:",
+      selectedCategory
+    );
     fetchFeed();
   }, [user, searchQuery, selectedCategory]); // Recharger quand l'utilisateur change ou les filtres
 
@@ -297,6 +312,9 @@ export default function CommunityFeed({
 
       // Filtrage par catégorie
       if (selectedCategory !== "all") {
+        console.log(
+          `[CommunityFeed] Filtrage par catégorie: ${selectedCategory}`
+        );
         query = query.eq("type", selectedCategory);
       }
 
@@ -323,6 +341,8 @@ export default function CommunityFeed({
       }
 
       console.log("[CommunityFeed] Posts récupérés:", posts?.length || 0);
+      console.log("[CommunityFeed] Catégorie sélectionnée:", selectedCategory);
+      console.log("[CommunityFeed] Posts pour cette catégorie:", posts);
 
       // Récupérer tous les IDs d'utilisateurs uniques
       const userIds = [...new Set((posts || []).map((post) => post.author_id))];
@@ -551,203 +571,227 @@ export default function CommunityFeed({
       </div>
 
       {/* Liste des publications */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map((item, index) => {
-          return (
-            <article
-              key={item.id}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-fade-in cursor-pointer h-full flex flex-col"
-              style={{
-                position: "relative",
-                zIndex: 1001,
-                animationDelay: `${index * 100}ms`,
-                animationFillMode: "both",
-              }}
-              onClick={() => handleCardClick(item.id)}
-            >
-              {/* En-tête de la carte */}
-              <div className="p-4 pb-3 flex-shrink-0">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
-                        item.type === "guide"
-                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          : item.type === "theory"
-                          ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                          : item.type === "rp"
-                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                          : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                      }`}
-                    >
-                      {TYPE_LABELS[item.type as keyof typeof TYPE_LABELS] ||
-                        item.type}
-                    </span>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="w-24 h-24 rounded-full bg-muted/20 flex items-center justify-center mb-6">
+            <Search className="w-12 h-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Aucune publication trouvée
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-md text-white/70">
+            {selectedCategory !== "all"
+              ? `Il n'y a pas encore de publications dans la catégorie "${
+                  filterCategories.find((cat) => cat.id === selectedCategory)
+                    ?.label || selectedCategory
+                }".`
+              : searchQuery
+              ? `Aucune publication ne correspond à votre recherche "${searchQuery}".`
+              : "Il n'y a pas encore de publications dans la communauté."}
+          </p>
+          <p className="text-sm text-muted-foreground text-white/50">
+            Soyez le premier à publier dans cette catégorie !
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {items.map((item, index) => {
+            return (
+              <article
+                key={item.id}
+                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-fade-in cursor-pointer h-full flex flex-col"
+                style={{
+                  position: "relative",
+                  zIndex: 1001,
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: "both",
+                }}
+                onClick={() => handleCardClick(item.id)}
+              >
+                {/* En-tête de la carte */}
+                <div className="p-4 pb-3 flex-shrink-0">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
+                          item.type === "guide"
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : item.type === "theory"
+                            ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                            : item.type === "rp"
+                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                            : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                        }`}
+                      >
+                        {TYPE_LABELS[item.type as keyof typeof TYPE_LABELS] ||
+                          item.type}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ProfileAvatar
+                        profile={item.profiles}
+                        userId={item.author_id}
+                        size="w-6 h-6"
+                        textSize="text-xs"
+                      />
+                      {user &&
+                        item.author_id === user.id &&
+                        userProfile?.role &&
+                        userProfile.role !== "user" && (
+                          <AdminBadge role={userProfile.role} size="sm" />
+                        )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <ProfileAvatar
-                      profile={item.profiles}
-                      userId={item.author_id}
-                      size="w-6 h-6"
-                      textSize="text-xs"
-                    />
-                    {user &&
-                      item.author_id === user.id &&
-                      userProfile?.role &&
-                      userProfile.role !== "user" && (
-                        <AdminBadge role={userProfile.role} size="sm" />
-                      )}
+
+                  {/* Titre */}
+                  <h2 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300 line-clamp-2">
+                    {item.title}
+                  </h2>
+
+                  {/* Date */}
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {new Date(item.created_at).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+
+                {/* Média */}
+                {item.file_url && (
+                  <div className="relative overflow-hidden flex-shrink-0">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10"></div>
+                    {item.file_url.match(/\.(mp4|webm)$/) ? (
+                      <video
+                        src={
+                          supabase.storage
+                            .from("community-uploads")
+                            .getPublicUrl(item.file_url).data.publicUrl
+                        }
+                        controls
+                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <img
+                        src={
+                          supabase.storage
+                            .from("community-uploads")
+                            .getPublicUrl(item.file_url).data.publicUrl
+                        }
+                        alt="media"
+                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Contenu */}
+                <div className="p-4 pb-3 flex-grow">
+                  <div className="prose prose-sm max-w-none">
+                    <p className="text-muted-foreground leading-relaxed line-clamp-3 text-sm">
+                      {item.content}
+                    </p>
                   </div>
                 </div>
 
-                {/* Titre */}
-                <h2 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300 line-clamp-2">
-                  {item.title}
-                </h2>
-
-                {/* Date */}
-                <span className="text-xs text-muted-foreground font-medium">
-                  {new Date(item.created_at).toLocaleDateString("fr-FR", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-
-              {/* Média */}
-              {item.file_url && (
-                <div className="relative overflow-hidden flex-shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10"></div>
-                  {item.file_url.match(/\.(mp4|webm)$/) ? (
-                    <video
-                      src={
-                        supabase.storage
-                          .from("community-uploads")
-                          .getPublicUrl(item.file_url).data.publicUrl
-                      }
-                      controls
-                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <img
-                      src={
-                        supabase.storage
-                          .from("community-uploads")
-                          .getPublicUrl(item.file_url).data.publicUrl
-                      }
-                      alt="media"
-                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Contenu */}
-              <div className="p-4 pb-3 flex-grow">
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-muted-foreground leading-relaxed line-clamp-3 text-sm">
-                    {item.content}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions et interactions */}
-              <div className="p-4 pt-2 flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                {/* Actions et interactions */}
+                <div className="p-4 pt-2 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={(e) =>
+                          handleButtonClick(e, () => handleLike(item.id))
+                        }
+                        className={`flex items-center gap-1 text-xs transition-colors duration-200 ${
+                          item.userHasLiked
+                            ? "text-red-500 hover:text-red-600"
+                            : "text-muted-foreground hover:text-primary"
+                        }`}
+                      >
+                        <svg
+                          className={`w-3 h-3 transition-all duration-200 ${
+                            item.userHasLiked ? "fill-current" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                          />
+                        </svg>
+                        {item.likes || 0}
+                      </button>
+                      <button
+                        onClick={(e) =>
+                          handleButtonClick(e, () => handleComment(item.id))
+                        }
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        {item.comments || 0}
+                      </button>
+                      <button
+                        onClick={(e) =>
+                          handleButtonClick(e, () => handleShare(item.id))
+                        }
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                          />
+                        </svg>
+                        {item.share || 0}
+                      </button>
+                    </div>
                     <button
                       onClick={(e) =>
-                        handleButtonClick(e, () => handleLike(item.id))
+                        handleButtonClick(e, () => handleFavorite(item.id))
                       }
                       className={`flex items-center gap-1 text-xs transition-colors duration-200 ${
-                        item.userHasLiked
-                          ? "text-red-500 hover:text-red-600"
+                        item.favorite
+                          ? "text-yellow-500 hover:text-yellow-600"
                           : "text-muted-foreground hover:text-primary"
                       }`}
                     >
-                      <svg
+                      <Bookmark
                         className={`w-3 h-3 transition-all duration-200 ${
-                          item.userHasLiked ? "fill-current" : ""
+                          item.favorite ? "fill-current" : ""
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                        />
-                      </svg>
-                      {item.likes || 0}
-                    </button>
-                    <button
-                      onClick={(e) =>
-                        handleButtonClick(e, () => handleComment(item.id))
-                      }
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                      {item.comments || 0}
-                    </button>
-                    <button
-                      onClick={(e) =>
-                        handleButtonClick(e, () => handleShare(item.id))
-                      }
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                        />
-                      </svg>
-                      {item.share || 0}
+                      />
                     </button>
                   </div>
-                  <button
-                    onClick={(e) =>
-                      handleButtonClick(e, () => handleFavorite(item.id))
-                    }
-                    className={`flex items-center gap-1 text-xs transition-colors duration-200 ${
-                      item.favorite
-                        ? "text-yellow-500 hover:text-yellow-600"
-                        : "text-muted-foreground hover:text-primary"
-                    }`}
-                  >
-                    <Bookmark
-                      className={`w-3 h-3 transition-all duration-200 ${
-                        item.favorite ? "fill-current" : ""
-                      }`}
-                    />
-                  </button>
                 </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
