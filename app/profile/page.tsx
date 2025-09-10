@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useNavigationMount } from "@/hooks/use-navigation-mount";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Bookmark,
   Heart,
@@ -37,6 +38,7 @@ export default function ProfilePage() {
   const { user, updateUserProfile } = useAuth();
   const searchParams = useSearchParams();
   const isMounted = useNavigationMount();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [profile, setProfile] = useState<any>(null);
   const [mods, setMods] = useState<any[]>([]);
@@ -840,12 +842,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Contenu profil */}
-        <div className="pt-28 pb-8 max-w-6xl mx-auto px-4">
+        <div className="pt-20 sm:pt-24 lg:pt-28 pb-6 sm:pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header profil */}
-          <div className="relative h-64 rounded-2xl overflow-hidden mb-8 flex items-center bg-background/95 backdrop-blur-sm border border-border/50">
-            <div className="relative z-10 flex items-center gap-6 px-8">
-              <div className="flex flex-col items-center">
-                <div className="w-32 h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
+          <div className="relative min-h-[200px] sm:h-48 lg:h-64 rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 flex flex-col sm:flex-row items-center sm:items-center bg-background/95 backdrop-blur-sm border border-border/50 p-4 sm:p-6 lg:p-8">
+            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full border-4 border-pink-500 bg-background overflow-hidden flex items-center justify-center shadow-lg">
                   <Image
                     src={profile?.avatar_url || "/placeholder-user.jpg"}
                     alt={profile?.username || user?.email || "Utilisateur"}
@@ -854,29 +856,30 @@ export default function ProfilePage() {
                     className="object-cover w-full h-full"
                   />
                 </div>
-                <span className="mt-2 px-3 py-1 rounded bg-pink-600/80 text-white text-xs font-semibold">
+                <span className="mt-2 px-2 sm:px-3 py-1 rounded bg-pink-600/80 text-white text-xs font-semibold text-center">
                   Membre depuis{" "}
                   {user?.created_at
                     ? new Date(user.created_at).toLocaleDateString("fr-FR")
                     : "?"}
                 </span>
               </div>
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
+              <div className="flex-1 flex flex-col gap-2 sm:gap-3 text-center sm:text-left w-full">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
                     {profile?.username || user?.email || "Utilisateur"}
                   </h1>
                   <Button
                     onClick={openEditDialog}
                     variant="outline"
                     size="sm"
-                    className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-pink-500/10 hover:border-pink-500/50"
+                    className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-pink-500/10 hover:border-pink-500/50 self-center sm:self-auto"
                   >
                     <Edit className="w-4 h-4 mr-1" />
-                    Modifier
+                    <span className="hidden sm:inline">Modifier</span>
+                    <span className="sm:hidden">Éditer</span>
                   </Button>
                 </div>
-                <p className="text-muted-foreground text-base">
+                <p className="text-muted-foreground text-sm sm:text-base max-w-none sm:max-w-2xl">
                   {profile?.description || "Aucune description"}
                 </p>
               </div>
@@ -884,23 +887,24 @@ export default function ProfilePage() {
           </div>
 
           {/* Onglets */}
-          <div className="mb-8">
-            <div className="flex flex-wrap gap-2 border-b border-border/50">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-wrap gap-1 sm:gap-2 border-b border-border/50 overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-t-lg font-semibold transition-all duration-200 ${
+                  className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-t-lg font-semibold transition-all duration-200 text-sm sm:text-base whitespace-nowrap ${
                     activeTab === tab.id
                       ? "bg-pink-500 text-white shadow-lg"
                       : "bg-background/80 text-muted-foreground hover:bg-background/95 hover:text-foreground border border-border/30"
                   }`}
                 >
-                  {tab.icon}
-                  <span>{tab.label}</span>
+                  <span className="w-4 h-4 sm:w-5 sm:h-5">{tab.icon}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
                   {tab.count !== null && (
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
+                      className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs ${
                         activeTab === tab.id ? "bg-white/20" : "bg-pink-500/20"
                       }`}
                     >
@@ -913,7 +917,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Contenu des onglets */}
-          <div className="bg-background/95 backdrop-blur-sm rounded-lg p-6 border border-border/50">
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-border/50">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
@@ -935,18 +939,19 @@ export default function ProfilePage() {
 
       {/* Dialog d'édition du profil */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5" />
-              Modifier mon profil
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Modifier mon profil</span>
+              <span className="sm:hidden">Éditer profil</span>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Upload d'avatar */}
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-24 h-24 rounded-full border-2 border-pink-500/30 overflow-hidden bg-background">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-pink-500/30 overflow-hidden bg-background">
                 <Image
                   src={editForm.avatar_url || "/placeholder-user.jpg"}
                   alt="Avatar"
@@ -955,16 +960,17 @@ export default function ProfilePage() {
                   className="object-cover w-full h-full"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-pink-500/30 hover:bg-pink-500/10"
+                  className="border-pink-500/30 hover:bg-pink-500/10 text-xs sm:text-sm"
                 >
-                  <Upload className="w-4 h-4 mr-1" />
-                  Changer l'avatar
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">Changer l'avatar</span>
+                  <span className="sm:hidden">Changer</span>
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -978,7 +984,7 @@ export default function ProfilePage() {
 
             {/* Pseudo */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Pseudo</label>
+              <label className="text-xs sm:text-sm font-medium">Pseudo</label>
               <Input
                 value={editForm.username}
                 onChange={(e) =>
@@ -988,13 +994,15 @@ export default function ProfilePage() {
                   }))
                 }
                 placeholder="Votre pseudo..."
-                className="border-pink-500/30 focus:border-pink-500"
+                className="border-pink-500/30 focus:border-pink-500 text-sm"
               />
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <label className="text-xs sm:text-sm font-medium">
+                Description
+              </label>
               <Textarea
                 value={editForm.description}
                 onChange={(e) =>
@@ -1005,33 +1013,36 @@ export default function ProfilePage() {
                 }
                 placeholder="Décrivez-vous en quelques mots..."
                 rows={3}
-                className="border-pink-500/30 focus:border-pink-500"
+                className="border-pink-500/30 focus:border-pink-500 text-sm resize-none"
               />
             </div>
 
             {/* Boutons d'action */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
               <Button
                 onClick={() => setIsEditDialogOpen(false)}
                 variant="outline"
-                className="flex-1 border-pink-500/30 hover:bg-pink-500/10"
+                className="flex-1 border-pink-500/30 hover:bg-pink-500/10 text-sm"
+                size="sm"
               >
-                <X className="w-4 h-4 mr-1" />
+                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 Annuler
               </Button>
               <Button
                 onClick={updateProfile}
                 disabled={isUpdating}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-sm"
+                size="sm"
               >
                 {isUpdating ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
-                    Mise à jour...
+                    <div className="animate-spin rounded-full w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-white mr-1" />
+                    <span className="hidden sm:inline">Mise à jour...</span>
+                    <span className="sm:hidden">Sauvegarde...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-1" />
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     Sauvegarder
                   </>
                 )}
