@@ -59,88 +59,131 @@ export default function ModDetailTabs({
 
   return (
     <Tabs defaultValue="description" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="description">Description</TabsTrigger>
-        <TabsTrigger value="installation">Installation</TabsTrigger>
-        <TabsTrigger value="comments">
-          Commentaires ({commentsCount})
+      <TabsList className="grid w-full grid-cols-3 bg-gray-800/50 border-gray-700/50">
+        <TabsTrigger
+          value="description"
+          className="text-xs sm:text-sm data-[state=active]:bg-purple-600/30 data-[state=active]:text-white text-gray-400"
+        >
+          <span className="hidden sm:inline">Description</span>
+          <span className="sm:hidden">Info</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="installation"
+          className="text-xs sm:text-sm data-[state=active]:bg-purple-600/30 data-[state=active]:text-white text-gray-400"
+        >
+          <span className="hidden sm:inline">Installation</span>
+          <span className="sm:hidden">Install</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="comments"
+          className="text-xs sm:text-sm data-[state=active]:bg-purple-600/30 data-[state=active]:text-white text-gray-400"
+        >
+          <span className="hidden sm:inline">
+            Commentaires ({commentsCount})
+          </span>
+          <span className="sm:hidden">Com. ({commentsCount})</span>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="description" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>À propos de ce mod</CardTitle>
+      <TabsContent
+        value="description"
+        className="space-y-4 sm:space-y-6 mt-4 sm:mt-6"
+      >
+        <Card className="bg-transparent border-gray-700/50">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-white text-lg sm:text-xl">
+              À propos de ce mod
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-line">{mod.description}</p>
+          <CardContent className="pt-0">
+            <p className="whitespace-pre-line text-gray-300 text-sm sm:text-base leading-relaxed">
+              {mod.description || "Aucune description fournie."}
+            </p>
           </CardContent>
         </Card>
       </TabsContent>
 
-      <TabsContent value="installation">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Instructions d'installation</CardTitle>
-            <CardDescription>
-              Ajoute ici les instructions d'installation si besoin.
+      <TabsContent
+        value="installation"
+        className="space-y-4 sm:space-y-6 mt-4 sm:mt-6"
+      >
+        <Card className="bg-transparent border-gray-700/50">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-white text-lg sm:text-xl">
+              Instructions d'installation
+            </CardTitle>
+            <CardDescription className="text-gray-400 text-sm">
+              Suivez ces étapes pour installer le mod correctement.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+          <CardContent className="space-y-4 sm:space-y-6">
+            <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800">
+                  <p className="text-sm font-medium text-yellow-200">
                     Important
                   </p>
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-xs sm:text-sm text-yellow-300 mt-1">
                     Sauvegardez vos fichiers de jeu avant d'installer ce mod.
                   </p>
                 </div>
               </div>
             </div>
-            <pre className="whitespace-pre-line text-sm bg-muted p-4 rounded-lg">
-              {mod.installation || "Aucune instruction fournie."}
-            </pre>
+            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 sm:p-4">
+              <pre className="whitespace-pre-line text-xs sm:text-sm text-gray-300 overflow-x-auto">
+                {mod.installation ||
+                  "Aucune instruction d'installation fournie."}
+              </pre>
+            </div>
           </CardContent>
         </Card>
 
         {/* Changelog */}
         {mod.changelog && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Changelog</CardTitle>
+          <Card className="bg-transparent border-gray-700/50">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-white text-lg sm:text-xl">
+                Changelog
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="whitespace-pre-line text-sm bg-muted p-4 rounded-lg">
-                {mod.changelog}
-              </pre>
+              <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 sm:p-4">
+                <pre className="whitespace-pre-line text-xs sm:text-sm text-gray-300 overflow-x-auto">
+                  {mod.changelog}
+                </pre>
+              </div>
             </CardContent>
           </Card>
         )}
 
         {/* Prérequis système */}
         {mod.requirements && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Prérequis système</CardTitle>
+          <Card className="bg-transparent border-gray-700/50">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-white text-lg sm:text-xl">
+                Prérequis système
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="whitespace-pre-line text-sm bg-muted p-4 rounded-lg">
-                {mod.requirements}
-              </pre>
+              <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 sm:p-4">
+                <pre className="whitespace-pre-line text-xs sm:text-sm text-gray-300 overflow-x-auto">
+                  {mod.requirements}
+                </pre>
+              </div>
             </CardContent>
           </Card>
         )}
       </TabsContent>
 
-      <TabsContent value="comments">
-        <CommentSection
-          itemId={mod.id}
-          itemType="mod"
-          onCommentUpdate={updateCommentsCount}
-        />
+      <TabsContent value="comments" className="mt-4 sm:mt-6">
+        <div className="bg-transparent border border-gray-700/50 rounded-lg">
+          <CommentSection
+            itemId={mod.id}
+            itemType="mod"
+            onCommentUpdate={updateCommentsCount}
+          />
+        </div>
       </TabsContent>
     </Tabs>
   );
