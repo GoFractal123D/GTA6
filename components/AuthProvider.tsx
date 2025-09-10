@@ -14,18 +14,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkUser = async () => {
       try {
         // Vérifier d'abord si Supabase est accessible
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
         if (userError) {
-          console.warn("Erreur d'authentification Supabase, mode hors ligne:", userError);
+          console.warn(
+            "Erreur d'authentification Supabase, mode hors ligne:",
+            userError
+          );
           setUser(null);
           setUserProfile(null);
           setLoading(false);
           return;
         }
-        
+
         setUser(user);
-        
+
         // Récupérer le profil utilisateur avec le rôle
         if (user) {
           try {
@@ -34,12 +40,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .select("id, username, email, role, avatar_url, description")
               .eq("id", user.id)
               .single();
-            
+
             if (!error && profile) {
               setUserProfile(profile);
             }
           } catch (profileError) {
-            console.warn("Erreur lors de la récupération du profil:", profileError);
+            console.warn(
+              "Erreur lors de la récupération du profil:",
+              profileError
+            );
           }
         }
       } catch (error) {
@@ -62,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async (_event, session) => {
           try {
             setUser(session?.user ?? null);
-            
+
             // Récupérer le profil utilisateur avec le rôle
             if (session?.user) {
               const { data: profile, error } = await supabase
@@ -70,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .select("id, username, email, role, avatar_url, description")
                 .eq("id", session.user.id)
                 .single();
-              
+
               if (!error && profile) {
                 setUserProfile(profile);
               }
@@ -78,7 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUserProfile(null);
             }
           } catch (profileError) {
-            console.warn("Erreur lors de la récupération du profil:", profileError);
+            console.warn(
+              "Erreur lors de la récupération du profil:",
+              profileError
+            );
           } finally {
             setLoading(false);
           }
@@ -87,15 +99,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return () => listener?.subscription.unsubscribe();
     } catch (listenerError) {
-      console.warn("Erreur lors de la configuration de l'écouteur d'authentification:", listenerError);
+      console.warn(
+        "Erreur lors de la configuration de l'écouteur d'authentification:",
+        listenerError
+      );
       setLoading(false);
     }
   }, []);
 
   const signOut = async () => {
     try {
+      console.log("Début de la déconnexion...");
       await supabase.auth.signOut();
+      console.log("Déconnexion Supabase réussie");
+
+      // Forcer la mise à jour de l'état local immédiatement
       setUser(null);
+      setUserProfile(null);
+      console.log("États locaux remis à zéro");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
@@ -104,12 +125,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserProfile = (updates: any) => {
     setUserProfile((prev: any) => ({
       ...prev,
-      ...updates
+      ...updates,
     }));
   };
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, setUser, signOut, updateUserProfile, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userProfile,
+        setUser,
+        signOut,
+        updateUserProfile,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

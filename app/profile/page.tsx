@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -34,7 +34,8 @@ import {
 
 type TabType = "posts" | "favorites" | "mods" | "stats";
 
-export default function ProfilePage() {
+// Composant qui utilise useSearchParams enveloppé dans Suspense
+function ProfileContent() {
   const { user, updateUserProfile } = useAuth();
   const searchParams = useSearchParams();
   const isMounted = useNavigationMount();
@@ -1052,5 +1053,27 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
     </ProtectedRoute>
+  );
+}
+
+// Composant principal avec Suspense
+export default function ProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <ProtectedRoute>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">
+                Chargement du profil...
+              </p>
+            </div>
+          </div>
+        </ProtectedRoute>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

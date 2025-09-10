@@ -100,16 +100,23 @@ export default function Navigation() {
             <div className="ml-4 hidden md:flex items-center gap-3">
               <Link href="/profile">
                 <Avatar>
-                  <AvatarImage src={userProfile?.avatar_url || "/placeholder-user.jpg"} alt="@user" />
+                  <AvatarImage
+                    src={userProfile?.avatar_url || "/placeholder-user.jpg"}
+                    alt="@user"
+                  />
                   <AvatarFallback>
-                    {userProfile?.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+                    {userProfile?.username?.[0]?.toUpperCase() ||
+                      user.email?.[0]?.toUpperCase() ||
+                      "U"}
                   </AvatarFallback>
                 </Avatar>
               </Link>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={signOut}
+                onClick={async () => {
+                  await signOut();
+                }}
                 className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
                 title="Se déconnecter"
               >
@@ -161,8 +168,8 @@ export default function Navigation() {
                   Profil
                 </Link>
                 <button
-                  onClick={() => {
-                    signOut();
+                  onClick={async () => {
+                    await signOut();
                     setDrawerOpen(false);
                   }}
                   className="text-xl font-bold tracking-wide bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent hover:from-red-500 hover:to-red-700 transition-all duration-300 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 drop-shadow-sm focus:outline-none focus:ring-0 flex items-center gap-2"
