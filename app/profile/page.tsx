@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useNavigationMount } from "@/hooks/use-navigation-mount";
 import {
   Bookmark,
   Heart,
@@ -35,6 +36,7 @@ type TabType = "posts" | "favorites" | "mods" | "stats";
 export default function ProfilePage() {
   const { user, updateUserProfile } = useAuth();
   const searchParams = useSearchParams();
+  const isMounted = useNavigationMount();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [profile, setProfile] = useState<any>(null);
   const [mods, setMods] = useState<any[]>([]);
@@ -56,7 +58,7 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isMounted || !user) return;
 
     console.log("[Profile] Début du chargement pour l'utilisateur:", user.id);
 
@@ -136,7 +138,7 @@ export default function ProfilePage() {
     };
 
     loadAllData();
-  }, [user, searchParams]);
+  }, [isMounted, user, searchParams]);
 
   async function fetchProfile() {
     console.log("[Profile] Récupération du profil...");
@@ -807,6 +809,21 @@ export default function ProfilePage() {
       </div>
     );
   };
+
+  if (!isMounted) {
+    return (
+      <ProtectedRoute>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Chargement du profil...
+            </p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
