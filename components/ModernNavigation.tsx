@@ -81,12 +81,11 @@ export default function Navigation() {
           </div>
           {/* Mobile hamburger menu */}
           <button
-            className="md:hidden p-2 rounded hover:bg-muted transition z-50 absolute right-4 top-6 focus:outline-none focus:ring-0"
+            className="md:hidden p-2 rounded hover:bg-muted/20 transition z-50 absolute right-4 top-6 focus:outline-none focus:ring-0 bg-transparent backdrop-blur-sm border border-white/10"
             onClick={() => setDrawerOpen(true)}
             aria-label="Ouvrir le menu"
-            style={{ background: "rgba(20,20,20,0.8)" }}
           >
-            <Menu className="w-7 h-7" />
+            <Menu className="w-7 h-7 text-white" />
           </button>
           {/* Profil/avatar */}
           {!user ? (
