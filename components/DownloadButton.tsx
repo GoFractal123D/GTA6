@@ -11,7 +11,7 @@ export default function DownloadButton({
 }) {
   if (!file) return null; // Ne rien afficher si le chemin est vide
   const handleDownload = () => {
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/mods-files/${file}`;
+    const url = `https://lxazszzgjjwwfifvkfue.supabase.co/storage/v1/object/public/mods-files/${file}`;
     const link = document.createElement("a");
     link.href = url;
     link.download = "";

@@ -104,6 +104,71 @@ CREATE POLICY "Users can update their own profile" ON public.profiles
 CREATE POLICY "Users can delete their own profile" ON public.profiles
     FOR DELETE USING (auth.uid() = id);
 
+-- =================================================================
+-- ⚠️ AVERTISSEMENT IMPORTANT
+-- =================================================================
+-- Les tables suivantes doivent être créées AVANT d'exécuter leurs politiques RLS :
+-- - public.mod_ratings (utilisez CREATE_MOD_RATINGS_TABLE.sql)
+-- - public.mod_favorites (utilisez CREATE_MOD_FAVORITES_TABLE.sql)
+-- - public.downloads (utilisez CREATE_DOWNLOADS_TABLE.sql)
+--
+-- Si ces tables n'existent pas, les politiques RLS échoueront !
+-- =================================================================
+
+-- Politiques RLS pour la table mod_ratings
+-- ========================================
+
+-- Activer RLS sur la table mod_ratings
+ALTER TABLE public.mod_ratings ENABLE ROW LEVEL SECURITY;
+
+-- Politique pour permettre la lecture de toutes les notes (public)
+CREATE POLICY "Mod ratings are viewable by everyone" ON public.mod_ratings
+    FOR SELECT USING (true);
+
+-- Politique pour permettre l'insertion par les utilisateurs authentifiés
+CREATE POLICY "Authenticated users can create ratings" ON public.mod_ratings
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Politique pour permettre la mise à jour par l'utilisateur qui a créé la note
+CREATE POLICY "Users can update their own ratings" ON public.mod_ratings
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Politique pour permettre la suppression par l'utilisateur qui a créé la note
+CREATE POLICY "Users can delete their own ratings" ON public.mod_ratings
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Politiques RLS pour la table mod_favorites
+-- ==========================================
+
+-- Activer RLS sur la table mod_favorites
+ALTER TABLE public.mod_favorites ENABLE ROW LEVEL SECURITY;
+
+-- Politique pour permettre la lecture de tous les favoris (public)
+CREATE POLICY "Mod favorites are viewable by everyone" ON public.mod_favorites
+    FOR SELECT USING (true);
+
+-- Politique pour permettre l'insertion par les utilisateurs authentifiés
+CREATE POLICY "Authenticated users can create favorites" ON public.mod_favorites
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Politique pour permettre la suppression par l'utilisateur qui a créé le favori
+CREATE POLICY "Users can delete their own favorites" ON public.mod_favorites
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Politiques RLS pour la table downloads
+-- ======================================
+
+-- Activer RLS sur la table downloads
+ALTER TABLE public.downloads ENABLE ROW LEVEL SECURITY;
+
+-- Politique pour permettre l'insertion par les utilisateurs authentifiés
+CREATE POLICY "Authenticated users can create download records" ON public.downloads
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Politique pour permettre la lecture de ses propres téléchargements
+CREATE POLICY "Users can view their own downloads" ON public.downloads
+    FOR SELECT USING (auth.uid() = user_id);
+
 -- Fonction trigger pour créer automatiquement un profil lors de l'inscription
 -- ===========================================================================
 

@@ -23,25 +23,54 @@ export default function StarRatingClient({
 
   async function fetchUserRating() {
     if (!user) return;
-    const { data } = await supabase
-      .from("mod_ratings")
-      .select("rating")
-      .eq("mod_id", modId)
-      .eq("user_id", user.id)
-      .single();
-    setUserRating(data?.rating ?? null);
+    try {
+      const { data, error } = await supabase
+        .from("mod_ratings")
+        .select("rating")
+        .eq("mod_id", modId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows returned
+        console.warn(
+          "Erreur lors de la récupération de la note utilisateur:",
+          error
+        );
+        return;
+      }
+
+      setUserRating(data?.rating ?? null);
+    } catch (err) {
+      console.warn("Erreur réseau lors de la récupération de la note:", err);
+    }
   }
 
   async function fetchAvgRating() {
-    const { data } = await supabase
-      .from("mod_ratings")
-      .select("rating")
-      .eq("mod_id", modId);
-    if (data && data.length > 0) {
-      const avg =
-        data.reduce((acc, r) => acc + (r.rating || 0), 0) / data.length;
-      setAvgRating(avg);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from("mod_ratings")
+        .select("rating")
+        .eq("mod_id", modId);
+
+      if (error) {
+        console.warn(
+          "Erreur lors de la récupération des notes moyennes:",
+          error
+        );
+        setAvgRating(0);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const avg =
+          data.reduce((acc, r) => acc + (r.rating || 0), 0) / data.length;
+        setAvgRating(avg);
+      } else {
+        setAvgRating(0);
+      }
+    } catch (err) {
+      console.warn("Erreur réseau lors de la récupération des notes:", err);
       setAvgRating(0);
     }
   }
@@ -49,17 +78,30 @@ export default function StarRatingClient({
   async function handleRate(rating: number) {
     if (!user) return;
     setUserRating(rating);
-    await supabase.from("mod_ratings").upsert(
-      [
-        {
-          mod_id: modId,
-          user_id: user.id,
-          rating,
-        },
-      ],
-      { onConflict: "mod_id,user_id" }
-    );
-    fetchAvgRating();
+    try {
+      const { error } = await supabase.from("mod_ratings").upsert(
+        [
+          {
+            mod_id: modId,
+            user_id: user.id,
+            rating,
+          },
+        ],
+        { onConflict: "mod_id,user_id" }
+      );
+
+      if (error) {
+        console.error("Erreur lors de la sauvegarde de la note:", error);
+        // Revenir à l'ancienne valeur en cas d'erreur
+        fetchUserRating();
+      } else {
+        fetchAvgRating();
+      }
+    } catch (err) {
+      console.error("Erreur réseau lors de la sauvegarde:", err);
+      // Revenir à l'ancienne valeur en cas d'erreur
+      fetchUserRating();
+    }
   }
 
   return (
